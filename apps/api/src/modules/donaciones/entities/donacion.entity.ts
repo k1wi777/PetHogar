@@ -3,6 +3,7 @@ import {
   Check,
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -12,6 +13,7 @@ import type { Usuario } from '../../usuarios/entities/usuario.entity';
 import type { Fundacion } from '../../fundaciones/entities/fundacion.entity';
 
 @Check('ck_donacion_monto', '"monto" IS NULL OR "monto" >= 0')
+@Index('idx_donacion_fundacion_fecha', ['fundacionId', 'fecha', 'id'])
 @Entity()
 export class Donacion {
   @PrimaryGeneratedColumn('identity', {

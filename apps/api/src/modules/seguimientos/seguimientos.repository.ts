@@ -27,6 +27,7 @@ import type {
   SeguimientoListaAdoptante,
   SeguimientoListaFundacion,
   SeguimientoParaAccion,
+  SeguimientoParaAviso,
 } from './seguimientos.types';
 
 interface FilaBase {
@@ -166,6 +167,25 @@ export class SeguimientosRepository {
       .getRepository(Seguimiento)
       .insert({ adopcionId, tipo, fechaProgramada });
     return (resultado.identifiers[0] as { id: number }).id;
+  }
+
+  /** Solo lectura, para los avisos: sin filtro de propiedad porque el llamador no es un usuario. */
+  async buscarParaAviso(id: number): Promise<SeguimientoParaAviso | null> {
+    const filas: SeguimientoParaAviso[] = await this.seguimientos.manager.query(
+      `SELECT seg."tipo" AS "tipo", to_char(seg."fecha_programada", 'YYYY-MM-DD') AS "fechaProgramada",
+              seg."adopcion_id" AS "adopcionId", m."nombre" AS "mascotaNombre",
+              f."id" AS "fundacionId", f."nombre" AS "fundacionNombre",
+              f."usuario_id" AS "fundacionUsuarioId", ad."usuario_id" AS "adoptanteUsuarioId"
+         FROM "seguimiento" seg
+         JOIN "adopcion" a ON a."id" = seg."adopcion_id"
+         JOIN "solicitud_adopcion" s ON s."id" = a."solicitud_id"
+         JOIN "mascota" m ON m."id" = s."mascota_id"
+         JOIN "fundacion" f ON f."id" = m."fundacion_id"
+         JOIN "adoptante" ad ON ad."id" = s."adoptante_id"
+        WHERE seg."id" = $1`,
+      [id],
+    );
+    return filas[0] ?? null;
   }
 
   /** Bloquea el seguimiento de su dueño hasta el fin de la transacción (`FOR UPDATE OF seg`). */

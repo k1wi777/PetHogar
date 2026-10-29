@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository, SelectQueryBuilder } from 'typeorm';
+import { EntityManager, In, Repository, SelectQueryBuilder } from 'typeorm';
 import { Adoptante } from './entities/adoptante.entity';
 import { Rol } from './entities/rol.entity';
 import { Usuario } from './entities/usuario.entity';
@@ -53,6 +53,42 @@ export class UsuariosRepository {
   /** Consulta por clave primaria: existe y está activo. */
   estaActiva(id: number): Promise<boolean> {
     return this.usuarios.exists({ where: { id, activo: true } });
+  }
+
+  /** Solo lectura: correo de una cuenta activa o `null` si no existe o está desactivada. */
+  async buscarContactoActivo(
+    id: number,
+  ): Promise<{ email: string; primerNombre: string | null } | null> {
+    const fila = await this.usuarios
+      .createQueryBuilder('u')
+      .leftJoin(Adoptante, 'a', 'a."usuario_id" = u."id"')
+      .select(['u."email" AS "email"', 'a."primer_nombre" AS "primerNombre"'])
+      .where('u."id" = :id AND u."activo" = true', { id })
+      .getRawOne<{ email: string; primerNombre: string | null }>();
+    return fila ?? null;
+  }
+
+  async buscarUsuarioIdDeAdoptante(adoptanteId: number): Promise<number | null> {
+    const adoptante = await this.adoptantes.findOne({
+      where: { id: adoptanteId },
+      select: { usuarioId: true },
+    });
+    return adoptante?.usuarioId ?? null;
+  }
+
+  async listarIdsAdministradoresActivos(): Promise<number[]> {
+    const filas = await this.usuarios
+      .createQueryBuilder('u')
+      .innerJoin(Rol, 'r', 'r."id" = u."rol_id"')
+      .select('u."id"', 'id')
+      .where(`r."nombre" = 'administrador' AND u."activo" = true`)
+      .orderBy('u."id"', 'ASC')
+      .getRawMany<{ id: number }>();
+    return filas.map((fila) => fila.id);
+  }
+
+  buscarAdoptantesPorUsuarioIds(usuarioIds: number[]): Promise<Adoptante[]> {
+    return this.adoptantes.find({ where: { usuarioId: In(usuarioIds) } });
   }
 
   existeEmail(email: string): Promise<boolean> {

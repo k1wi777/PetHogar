@@ -20,7 +20,8 @@
     "test:auth": "jest --config jest.auth.config.ts",
     "test:mascotas": "jest --config jest.mascotas.config.ts",
     "test:adopciones": "jest --config jest.adopciones.config.ts",
-    "test:seguimientos": "jest --config jest.seguimientos.config.ts"
+    "test:seguimientos": "jest --config jest.seguimientos.config.ts",
+    "test:notificaciones": "jest --config jest.notificaciones.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.8",

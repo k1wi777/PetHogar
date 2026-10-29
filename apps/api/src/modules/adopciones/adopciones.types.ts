@@ -42,6 +42,7 @@ export interface AdopcionParaCierre {
   id: number;
   estado: EstadoAdopcion;
   mascotaId: number;
+  adoptanteId: number;
 }
 
 export interface ResumenAdopcion {

@@ -64,6 +64,22 @@ export interface FiltroSeguimientos {
   adopcionId?: number;
 }
 
+/**
+ * Lectura mínima para los avisos: solo lo necesario para dirigirlos y redactarlos. Nunca incluye
+ * bienestar, observaciones, reporte ni datos personales del adoptante.
+ */
+export interface SeguimientoParaAviso {
+  tipo: TipoSeguimiento;
+  /** `YYYY-MM-DD`. */
+  fechaProgramada: string;
+  adopcionId: number;
+  mascotaNombre: string;
+  fundacionId: number;
+  fundacionNombre: string;
+  fundacionUsuarioId: number;
+  adoptanteUsuarioId: number;
+}
+
 /** Resumen que acompaña a cada adopción en sus listados. */
 export interface ResumenSeguimiento {
   id: number;

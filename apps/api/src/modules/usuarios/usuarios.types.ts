@@ -77,6 +77,13 @@ export interface UsuarioAdmin {
   nombre: string | null;
 }
 
+/** Datos mínimos para avisar a una cuenta activa; nunca incluye teléfono ni documento. */
+export interface ContactoActivo {
+  email: string;
+  /** Primer nombre del adoptante; `null` si la cuenta no es de adoptante. */
+  nombre: string | null;
+}
+
 /** Identidad mínima del adoptante para crear una solicitud. */
 export interface AdoptanteBasico {
   id: number;

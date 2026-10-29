@@ -1,6 +1,11 @@
-import { AdoptionApproved, AdoptionRejected, AdoptionRequestCreated } from './adopcion.events';
+import {
+  AdoptionApproved,
+  AdoptionClosed,
+  AdoptionRejected,
+  AdoptionRequestCreated,
+} from './adopcion.events';
 import { DonationRegistered } from './donacion.events';
-import { FoundationValidated } from './fundacion.events';
+import { FoundationRegistered, FoundationValidated } from './fundacion.events';
 import {
   FollowUpOverdue,
   FollowUpReminder,
@@ -17,10 +22,12 @@ export * from './seguimiento.events';
 
 /** Catálogo completo de eventos de dominio. */
 export const CATALOGO_EVENTOS = [
+  FoundationRegistered,
   FoundationValidated,
   AdoptionRequestCreated,
   AdoptionApproved,
   AdoptionRejected,
+  AdoptionClosed,
   FollowUpScheduled,
   FollowUpReportReceived,
   FollowUpOverdue,

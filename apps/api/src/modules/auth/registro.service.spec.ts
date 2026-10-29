@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Logger } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { QueryFailedError } from 'typeorm';
+import { FoundationRegistered } from '../../common/events';
 import { FundacionesService } from '../fundaciones/fundaciones.service';
 import type { IMailService } from '../mail/mail.interface';
 import type { IStorageService } from '../storage/storage.interface';
@@ -59,7 +60,7 @@ function crear() {
   };
   const fundaciones = {
     existeNit: jest.fn().mockResolvedValue(false),
-    crear: jest.fn().mockResolvedValue({}),
+    crear: jest.fn().mockResolvedValue({ id: 7 }),
   };
   const verificacion = {
     generarToken: jest
@@ -75,6 +76,7 @@ function crear() {
   const dataSource = {
     transaction: jest.fn((cb: (m: unknown) => Promise<unknown>) => cb(MANAGER)),
   };
+  const eventos = { emit: jest.fn() };
   const service = new RegistroService(
     dataSource as never,
     usuarios as unknown as UsuariosService,
@@ -82,8 +84,9 @@ function crear() {
     verificacion as unknown as VerificacionService,
     storage as unknown as IStorageService,
     mail as unknown as IMailService,
+    eventos as never,
   );
-  return { service, usuarios, fundaciones, verificacion, storage, mail, dataSource };
+  return { service, usuarios, fundaciones, verificacion, storage, mail, dataSource, eventos };
 }
 
 describe('RegistroService — adoptante', () => {
@@ -234,5 +237,37 @@ describe('RegistroService — fundación', () => {
       estadoValidacion: 'pendiente',
     });
     expect(storage.eliminar).not.toHaveBeenCalled();
+  });
+
+  it('emite FoundationRegistered solo tras el COMMIT, con el id de la fundación', async () => {
+    const { service, dataSource, eventos } = crear();
+    dataSource.transaction.mockImplementation(async (cb: (m: unknown) => Promise<unknown>) => {
+      const r = await cb(MANAGER);
+      expect(eventos.emit).not.toHaveBeenCalled();
+      return r;
+    });
+    await service.registrarFundacion(FUNDACION, DOCUMENTO);
+    expect(eventos.emit).toHaveBeenCalledTimes(1);
+    expect(eventos.emit).toHaveBeenCalledWith(
+      FoundationRegistered.eventName,
+      new FoundationRegistered(7),
+    );
+  });
+
+  it('no emite si el registro falla', async () => {
+    const { service, fundaciones, eventos } = crear();
+    fundaciones.crear.mockRejectedValue(new Error('fallo de BD'));
+    await expect(service.registrarFundacion(FUNDACION, DOCUMENTO)).rejects.toThrow('fallo de BD');
+    expect(eventos.emit).not.toHaveBeenCalled();
+  });
+
+  it('un listener que lanza no rompe el registro', async () => {
+    const { service, eventos } = crear();
+    eventos.emit.mockImplementation(() => {
+      throw new Error('listener roto');
+    });
+    await expect(service.registrarFundacion(FUNDACION, DOCUMENTO)).resolves.toMatchObject({
+      estadoValidacion: 'pendiente',
+    });
   });
 });

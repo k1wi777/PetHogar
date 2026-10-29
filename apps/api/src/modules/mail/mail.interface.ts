@@ -4,6 +4,7 @@ export const MAIL_SERVICE = Symbol('MAIL_SERVICE');
 export interface DatosPlantilla {
   prueba: { nombre: string };
   notificacion: { nombre: string; titulo: string; mensaje: string; enlace?: string };
+  'donacion-confirmacion': { nombre: string; fundacion: string; detalle: string; fecha: string };
   'verificacion-correo': { nombre: string; enlace: string; horasVigencia: number };
   'recuperacion-contrasena': { nombre: string; codigo: string; minutosVigencia: number };
   'registro-fundacion-recibido': { nombreFundacion: string };

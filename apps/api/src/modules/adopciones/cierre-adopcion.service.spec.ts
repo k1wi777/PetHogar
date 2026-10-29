@@ -1,11 +1,12 @@
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Logger, NotFoundException } from '@nestjs/common';
+import { AdoptionClosed } from '../../common/events';
 import { EstadoMascota } from '../mascotas/entities/mascota.enum';
 import { CierreAdopcionService } from './cierre-adopcion.service';
 import { type CierreAdopcionDto, DestinoMascota, EstadoCierre } from './dto/cierre-adopcion.dto';
 import { EstadoAdopcion } from './entities/adopcion.enum';
 
 const MANAGER = { id: 'manager' } as never;
-const BLOQUEADA = { id: 9, estado: EstadoAdopcion.Activa, mascotaId: 4 };
+const BLOQUEADA = { id: 9, estado: EstadoAdopcion.Activa, mascotaId: 4, adoptanteId: 6 };
 const DETALLE = { id: 9 };
 const REVOCAR = {
   estado: EstadoCierre.Revocada,
@@ -27,11 +28,13 @@ describe('CierreAdopcionService', () => {
   };
   const mascotas = { transicionar: jest.fn() };
   const seguimientos = { cancelarPendientesDeAdopcion: jest.fn() };
+  const eventos = { emit: jest.fn() };
   const service = new CierreAdopcionService(
     dataSource as never,
     adopciones as never,
     mascotas as never,
     seguimientos as never,
+    eventos as never,
   );
 
   const registrar =
@@ -180,7 +183,53 @@ describe('CierreAdopcionService', () => {
     expect(llamadas).not.toContain('COMMIT');
   });
 
-  it('no depende del bus de eventos: el cierre no emite nada', () => {
-    expect(Object.keys(service)).toEqual(['dataSource', 'adopciones', 'mascotas', 'seguimientos']);
+  describe('AdoptionClosed', () => {
+    it('se emite una vez, tras el COMMIT y antes de leer, con el adoptante de la adopción', async () => {
+      eventos.emit.mockImplementation(() => llamadas.push('evento'));
+      await service.cerrar(9, 3, REVOCAR);
+      expect(llamadas).toEqual([
+        'BEGIN',
+        'bloquear',
+        'cerrar',
+        'mascota',
+        'seguimientos',
+        'COMMIT',
+        'evento',
+        'leer',
+      ]);
+      expect(eventos.emit).toHaveBeenCalledWith(
+        AdoptionClosed.eventName,
+        new AdoptionClosed(9, 'revocada', 4, 3, 6),
+      );
+    });
+
+    it('al finalizar lleva el estado finalizada', async () => {
+      await service.cerrar(9, 3, FINALIZAR);
+      expect(eventos.emit).toHaveBeenCalledWith(
+        AdoptionClosed.eventName,
+        new AdoptionClosed(9, 'finalizada', 4, 3, 6),
+      );
+    });
+
+    it('no se emite si el cierre falla, es ajeno o ya estaba cerrado', async () => {
+      adopciones.bloquearParaCierre.mockResolvedValueOnce(null);
+      await expect(service.cerrar(9, 3, REVOCAR)).rejects.toThrow(NotFoundException);
+      adopciones.bloquearParaCierre.mockResolvedValueOnce({
+        ...BLOQUEADA,
+        estado: EstadoAdopcion.Revocada,
+      });
+      await expect(service.cerrar(9, 3, REVOCAR)).rejects.toThrow(ConflictException);
+      seguimientos.cancelarPendientesDeAdopcion.mockRejectedValueOnce(new Error('fallo'));
+      await expect(service.cerrar(9, 3, REVOCAR)).rejects.toThrow('fallo');
+      expect(eventos.emit).not.toHaveBeenCalled();
+    });
+
+    it('un listener que lanza no rompe el cierre', async () => {
+      jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+      eventos.emit.mockImplementation(() => {
+        throw new Error('listener roto');
+      });
+      await expect(service.cerrar(9, 3, FINALIZAR)).resolves.toBe(DETALLE);
+    });
   });
 });

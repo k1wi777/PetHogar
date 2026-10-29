@@ -1,5 +1,8 @@
 import { BadRequestException, ConflictException, Inject, Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DataSource } from 'typeorm';
+import { FoundationRegistered } from '../../common/events';
+import { emitirSeguro } from '../../common/events/emitir-seguro';
 import { IMailService, MAIL_SERVICE } from '../mail/mail.interface';
 import { EstadoValidacion } from '../fundaciones/entities/fundacion.enum';
 import { FundacionesService } from '../fundaciones/fundaciones.service';
@@ -33,6 +36,7 @@ export class RegistroService {
     private readonly verificacion: VerificacionService,
     @Inject(STORAGE_SERVICE) private readonly storage: IStorageService,
     @Inject(MAIL_SERVICE) private readonly mail: IMailService,
+    private readonly eventos: EventEmitter2,
   ) {}
 
   async registrarAdoptante(dto: RegistroAdoptanteDto): Promise<{ mensaje: string }> {
@@ -105,8 +109,9 @@ export class RegistroService {
       { categoria: 'documento', carpeta: 'fundaciones' },
     );
 
+    let fundacionId: number;
     try {
-      await this.dataSource.transaction(async (manager) => {
+      fundacionId = await this.dataSource.transaction(async (manager) => {
         const usuario = await this.usuarios.crearUsuarioFundacion(
           {
             email: dto.email,
@@ -117,7 +122,7 @@ export class RegistroService {
           },
           manager,
         );
-        await this.fundaciones.crear(
+        const fundacion = await this.fundaciones.crear(
           {
             usuarioId: usuario.id,
             nombre: dto.nombre,
@@ -129,12 +134,20 @@ export class RegistroService {
           },
           manager,
         );
+        return fundacion.id;
       });
     } catch (error) {
       await this.limpiarArchivo(guardado.clave);
       throw traducirErrorUnico(error);
     }
 
+    // Solo tras el COMMIT: avisa a los administradores de que hay una fundación por validar.
+    emitirSeguro(
+      this.eventos,
+      FoundationRegistered.eventName,
+      new FoundationRegistered(fundacionId),
+      this.logger,
+    );
     await this.mail.enviar({
       para: dto.email,
       plantilla: 'registro-fundacion-recibido',

@@ -33,6 +33,7 @@ import type {
   SeguimientoDetalleFundacion,
   SeguimientoListaAdoptante,
   SeguimientoListaFundacion,
+  SeguimientoParaAviso,
 } from './seguimientos.types';
 
 /** Programar, consultar por rol y las piezas que `adopciones` usa (resumen y cancelación al cerrar). */
@@ -138,6 +139,11 @@ export class SeguimientosService {
     const seguimiento = await this.repo.obtenerDeAdoptante(id, adoptanteId, hoy);
     if (!seguimiento) throw new NotFoundException(MENSAJE_SEGUIMIENTO_NO_EXISTE);
     return seguimiento;
+  }
+
+  /** Para los avisos: destinatarios y textos de un seguimiento; `null` si ya no existe. */
+  datosParaAviso(seguimientoId: number): Promise<SeguimientoParaAviso | null> {
+    return this.repo.buscarParaAviso(seguimientoId);
   }
 
   // ---- Piezas para `adopciones` -------------------------------------------------------------

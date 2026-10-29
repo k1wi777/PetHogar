@@ -14,10 +14,13 @@ import { crearOpcionesTypeOrm } from './database/typeorm.options';
 import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './modules/health/health.module';
 import { AdopcionesModule } from './modules/adopciones/adopciones.module';
+import { AvisosModule } from './modules/avisos/avisos.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CatalogosModule } from './modules/catalogos/catalogos.module';
+import { DonacionesModule } from './modules/donaciones/donaciones.module';
 import { FundacionesModule } from './modules/fundaciones/fundaciones.module';
 import { MascotasModule } from './modules/mascotas/mascotas.module';
+import { NotificacionesModule } from './modules/notificaciones/notificaciones.module';
 import { SeguimientosModule } from './modules/seguimientos/seguimientos.module';
 import { SolicitudesModule } from './modules/solicitudes/solicitudes.module';
 import { CuentaActivaGuard } from './modules/usuarios/guards/cuenta-activa.guard';
@@ -55,6 +58,9 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module';
     SolicitudesModule,
     SeguimientosModule,
     AdopcionesModule,
+    DonacionesModule,
+    NotificacionesModule,
+    AvisosModule,
   ],
   // El orden es el de ejecución: primero el límite de peticiones (también para anónimos),
   // luego la autenticación, la cuenta activa y por último los roles.

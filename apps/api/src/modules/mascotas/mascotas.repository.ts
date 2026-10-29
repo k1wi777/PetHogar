@@ -35,6 +35,13 @@ export class MascotasRepository {
       .then((m) => m?.estado ?? null);
   }
 
+  /** Nombre de la mascota (para los avisos); `null` si no existe. */
+  buscarNombre(id: number): Promise<string | null> {
+    return this.mascotas
+      .findOne({ where: { id }, select: { id: true, nombre: true } })
+      .then((m) => m?.nombre ?? null);
+  }
+
   listarDeFundacion(
     fundacionId: number,
     filtro: FiltroMascotasFundacion,

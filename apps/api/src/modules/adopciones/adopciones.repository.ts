@@ -237,7 +237,8 @@ export class AdopcionesRepository {
     fundacionId: number,
   ): Promise<AdopcionParaCierre | null> {
     const filas: AdopcionParaCierre[] = await manager.query(
-      `SELECT a."id" AS "id", a."estado" AS "estado", s."mascota_id" AS "mascotaId"
+      `SELECT a."id" AS "id", a."estado" AS "estado", s."mascota_id" AS "mascotaId",
+            s."adoptante_id" AS "adoptanteId"
          FROM "adopcion" a
          JOIN "solicitud_adopcion" s ON s."id" = a."solicitud_id"
          JOIN "mascota" m ON m."id" = s."mascota_id"

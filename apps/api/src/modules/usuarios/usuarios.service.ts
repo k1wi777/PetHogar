@@ -7,6 +7,7 @@ import type { Usuario } from './entities/usuario.entity';
 import { UsuariosRepository } from './usuarios.repository';
 import type {
   AdoptanteBasico,
+  ContactoActivo,
   DatosNuevoAdoptante,
   DatosNuevoUsuarioFundacion,
   FiltroUsuarios,
@@ -92,6 +93,34 @@ export class UsuariosService {
       usuarioId,
       nombreCompleto: nombres.filter(Boolean).join(' '),
     };
+  }
+
+  /** `null` si la cuenta no existe o está desactivada (no debe recibir avisos). */
+  async contactoActivo(usuarioId: number): Promise<ContactoActivo | null> {
+    const fila = await this.repo.buscarContactoActivo(usuarioId);
+    return fila && { email: fila.email, nombre: fila.primerNombre };
+  }
+
+  usuarioIdDeAdoptante(adoptanteId: number): Promise<number | null> {
+    return this.repo.buscarUsuarioIdDeAdoptante(adoptanteId);
+  }
+
+  idsAdministradoresActivos(): Promise<number[]> {
+    return this.repo.listarIdsAdministradoresActivos();
+  }
+
+  /** Nombre completo de los adoptantes entre `usuarioIds` (los demás usuarios no aparecen). */
+  async nombresPorUsuarioIds(usuarioIds: number[]): Promise<Map<number, string>> {
+    if (usuarioIds.length === 0) return new Map();
+    const adoptantes = await this.repo.buscarAdoptantesPorUsuarioIds(usuarioIds);
+    return new Map(
+      adoptantes.map((a) => [
+        a.usuarioId,
+        [a.primerNombre, a.segundoNombre, a.primerApellido, a.segundoApellido]
+          .filter(Boolean)
+          .join(' '),
+      ]),
+    );
   }
 
   async listar(

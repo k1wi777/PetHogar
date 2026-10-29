@@ -10,6 +10,7 @@ import {
   type DecisionValidacion,
   type FundacionAdminDetalle,
   type FundacionAdminResumen,
+  type FundacionBasica,
   type FundacionResumen,
   TRANSICIONES,
 } from './fundaciones.types';
@@ -24,6 +25,26 @@ export class FundacionesService {
   /** Toda fundación nace en `pendiente`, a la espera de la validación del administrador. */
   async crear(datos: DatosNuevaFundacion, manager?: EntityManager): Promise<FundacionResumen> {
     return aResumen(await this.repo.crear(datos, manager));
+  }
+
+  /** Para donaciones y avisos; `null` si no existe. No expone documento ni observaciones. */
+  async datosBasicos(id: number): Promise<FundacionBasica | null> {
+    const f = await this.repo.buscarPorId(id);
+    return (
+      f && {
+        id: f.id,
+        nombre: f.nombre,
+        usuarioId: f.usuarioId,
+        estadoValidacion: f.estadoValidacion,
+      }
+    );
+  }
+
+  /** Nombre de las fundaciones cuyo usuario está en `usuarioIds` (clave: id de usuario). */
+  async nombresPorUsuarioIds(usuarioIds: number[]): Promise<Map<number, string>> {
+    if (usuarioIds.length === 0) return new Map();
+    const filas = await this.repo.buscarPorUsuarioIds(usuarioIds);
+    return new Map(filas.map((f) => [f.usuarioId, f.nombre]));
   }
 
   existeNit(nit: string): Promise<boolean> {

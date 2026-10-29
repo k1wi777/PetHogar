@@ -10,6 +10,12 @@ import {
 import type { Usuario } from '../../usuarios/entities/usuario.entity';
 
 @Index('idx_notificacion_usuario_leida', ['usuarioId', 'leida'])
+@Index('idx_notificacion_usuario_fecha', ['usuarioId', 'fechaCreacion', 'id'])
+// Deduplicación por destinatario: un aviso repetido choca con este índice y no crea otra fila.
+@Index('uq_notificacion_clave', ['usuarioId', 'clave'], {
+  unique: true,
+  where: '"clave" IS NOT NULL',
+})
 @Entity()
 export class Notificacion {
   @PrimaryGeneratedColumn('identity', {
@@ -33,6 +39,17 @@ export class Notificacion {
 
   @Column({ type: 'varchar', length: 300 })
   mensaje!: string;
+
+  /** Entidad relacionada (`solicitud`, `seguimiento`…); el front elige la pantalla. */
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  entidad: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  entidadId: number | null;
+
+  /** Clave de deduplicación `<evento>:<id>`; nunca se expone. */
+  @Column({ type: 'varchar', length: 80, nullable: true })
+  clave: string | null;
 
   @Column({ type: 'boolean', default: false })
   leida!: boolean;

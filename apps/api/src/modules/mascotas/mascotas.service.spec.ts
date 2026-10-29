@@ -27,6 +27,7 @@ describe('MascotasService', () => {
     crear: jest.fn(),
     buscarDeFundacion: jest.fn(),
     buscarEstado: jest.fn(),
+    buscarNombre: jest.fn(),
     listarDeFundacion: jest.fn(),
     cambiarEstado: jest.fn(),
     editar: jest.fn(),
@@ -299,5 +300,11 @@ describe('MascotasService', () => {
         'La solicitud no existe',
       );
     });
+  });
+
+  it('nombrePorId devuelve el nombre o null si la mascota no existe', async () => {
+    repo.buscarNombre.mockResolvedValueOnce('Rocky').mockResolvedValueOnce(null);
+    await expect(service.nombrePorId(4)).resolves.toBe('Rocky');
+    await expect(service.nombrePorId(5)).resolves.toBeNull();
   });
 });

@@ -3,6 +3,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Test } from '@nestjs/testing';
 import {
   AdoptionApproved,
+  AdoptionClosed,
   AdoptionRejected,
   AdoptionRequestCreated,
   CATALOGO_EVENTOS,
@@ -12,15 +13,18 @@ import {
   FollowUpReminder,
   FollowUpReportReceived,
   FollowUpScheduled,
+  FoundationRegistered,
   FoundationValidated,
   WellbeingAlertRaised,
 } from '.';
 
 const EVENTOS_DE_EJEMPLO = [
+  new FoundationRegistered(1),
   new FoundationValidated(1, 'aprobada', null),
   new AdoptionRequestCreated(2, 3, 1, 4),
   new AdoptionApproved(2, 9, 3, 1, 4),
   new AdoptionRejected(5, 3, 1, 6, 'Otra solicitud fue aprobada', true),
+  new AdoptionClosed(9, 'revocada', 3, 1, 4),
   new FollowUpScheduled(7, 9, new Date('2026-12-01T00:00:00Z')),
   new FollowUpReportReceived(7, 9),
   new FollowUpOverdue(7, 9),
@@ -33,10 +37,12 @@ const EVENTOS_DE_EJEMPLO = [
 class ListenerPrueba {
   readonly recibidos: unknown[] = [];
 
+  @OnEvent(FoundationRegistered.eventName)
   @OnEvent(FoundationValidated.eventName)
   @OnEvent(AdoptionRequestCreated.eventName)
   @OnEvent(AdoptionApproved.eventName)
   @OnEvent(AdoptionRejected.eventName)
+  @OnEvent(AdoptionClosed.eventName)
   @OnEvent(FollowUpScheduled.eventName)
   @OnEvent(FollowUpReportReceived.eventName)
   @OnEvent(FollowUpOverdue.eventName)
@@ -57,10 +63,10 @@ class ListenerQueFalla {
 }
 
 describe('catálogo de eventos de dominio', () => {
-  it('define diez eventos con nombres únicos y constantes', () => {
+  it('define doce eventos con nombres únicos y constantes', () => {
     const nombres = CATALOGO_EVENTOS.map((clase) => clase.eventName);
-    expect(nombres).toHaveLength(10);
-    expect(new Set(nombres).size).toBe(10);
+    expect(nombres).toHaveLength(12);
+    expect(new Set(nombres).size).toBe(12);
     nombres.forEach((nombre) => expect(nombre).toMatch(/^[a-z-]+\.[a-z-]+$/));
   });
 

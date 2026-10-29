@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { Fundacion } from './entities/fundacion.entity';
 import type { EstadoValidacion } from './entities/fundacion.enum';
 import type { DatosNuevaFundacion } from './fundaciones.types';
@@ -30,6 +30,13 @@ export class FundacionesRepository {
 
   buscarPorUsuarioId(usuarioId: number): Promise<Fundacion | null> {
     return this.fundaciones.findOne({ where: { usuarioId } });
+  }
+
+  buscarPorUsuarioIds(usuarioIds: number[]): Promise<Fundacion[]> {
+    return this.fundaciones.find({
+      where: { usuarioId: In(usuarioIds) },
+      select: { id: true, usuarioId: true, nombre: true },
+    });
   }
 
   buscarPorId(id: number): Promise<Fundacion | null> {

@@ -169,6 +169,7 @@ describe('SeguimientosService (lecturas y piezas para adopciones)', () => {
     obtenerDeAdoptante: jest.fn(),
     resumenPorAdopciones: jest.fn(),
     cancelarPendientesDeAdopcion: jest.fn(),
+    buscarParaAviso: jest.fn(),
   };
   const usuarios = { adoptantePorUsuarioId: jest.fn() };
   const reloj = new RelojSimulado(new Date(AHORA));
@@ -223,5 +224,13 @@ describe('SeguimientosService (lecturas y piezas para adopciones)', () => {
     repo.cancelarPendientesDeAdopcion.mockResolvedValue([4, 5]);
     await expect(service.cancelarPendientesDeAdopcion(9, MANAGER)).resolves.toBe(2);
     expect(repo.cancelarPendientesDeAdopcion).toHaveBeenCalledWith(MANAGER, 9);
+  });
+
+  it('datosParaAviso delega en el repository y devuelve null si no existe', async () => {
+    const datos = { adopcionId: 9, mascotaNombre: 'Rocky' };
+    repo.buscarParaAviso.mockResolvedValueOnce(datos).mockResolvedValueOnce(null);
+    await expect(service.datosParaAviso(5)).resolves.toBe(datos);
+    await expect(service.datosParaAviso(6)).resolves.toBeNull();
+    expect(repo.buscarParaAviso).toHaveBeenCalledWith(5);
   });
 });

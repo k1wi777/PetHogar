@@ -106,6 +106,11 @@ export class MascotasService {
     if (!aplicada) await this.explicarRechazo(id, opciones.fundacionId);
   }
 
+  /** Solo lectura, para los avisos: `null` si la mascota no existe. */
+  nombrePorId(id: number): Promise<string | null> {
+    return this.repo.buscarNombre(id);
+  }
+
   /** Para crear una solicitud: 404 si la mascota no existe. El estado lo valida el llamador. */
   async obtenerParaSolicitud(id: number): Promise<MascotaParaSolicitud> {
     const mascota = await this.repo.buscarParaSolicitud(id);

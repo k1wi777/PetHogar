@@ -22,6 +22,14 @@ export interface FundacionResumen extends EstadoFundacion {
   nombre: string;
 }
 
+/** Lectura mínima para avisos y donaciones: sin documento ni observaciones. */
+export interface FundacionBasica {
+  id: number;
+  nombre: string;
+  usuarioId: number;
+  estadoValidacion: EstadoValidacion;
+}
+
 export type DecisionValidacion = EstadoValidacion.Aprobada | EstadoValidacion.Rechazada;
 
 /**

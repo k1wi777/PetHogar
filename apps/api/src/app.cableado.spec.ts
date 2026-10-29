@@ -1,10 +1,13 @@
 import 'reflect-metadata';
 import type { Type } from '@nestjs/common';
 import { AdminModule } from './modules/admin/admin.module';
+import { AvisosModule } from './modules/avisos/avisos.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CatalogosModule } from './modules/catalogos/catalogos.module';
+import { DonacionesModule } from './modules/donaciones/donaciones.module';
 import { FundacionesModule } from './modules/fundaciones/fundaciones.module';
 import { MascotasModule } from './modules/mascotas/mascotas.module';
+import { NotificacionesModule } from './modules/notificaciones/notificaciones.module';
 import { SolicitudesModule } from './modules/solicitudes/solicitudes.module';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { AdopcionesModule } from './modules/adopciones/adopciones.module';
@@ -49,6 +52,9 @@ const MODULOS_DE_DOMINIO = [
   SeguimientosModule,
   AdopcionesModule,
   UsuariosModule,
+  DonacionesModule,
+  NotificacionesModule,
+  AvisosModule,
 ];
 
 describe('cableado de módulos', () => {

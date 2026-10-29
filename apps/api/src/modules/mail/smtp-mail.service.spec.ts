@@ -28,6 +28,21 @@ describe('renderizar', () => {
     expect(r.asunto).not.toMatch(/[\r\n]/);
   });
 
+  it('genera la confirmación de donación con detalle y fecha, escapando los datos', () => {
+    const r = renderizar('donacion-confirmacion', {
+      nombre: '<b>Ana</b>',
+      fundacion: 'Huellas & Patas',
+      detalle: 'Donación en especie: <script>x</script>',
+      fecha: '29 de octubre de 2026',
+    });
+    expect(r.asunto).toBe('Confirmamos tu donación en PetHogar');
+    expect(r.texto).toContain('Huellas & Patas');
+    expect(r.texto).toContain('29 de octubre de 2026');
+    expect(r.html).toContain('Huellas &amp; Patas');
+    expect(r.html).not.toContain('<script>');
+    expect(r.html).not.toContain('<b>Ana');
+  });
+
   it('genera el correo de verificación con el enlace y su vigencia, escapando el nombre', () => {
     const enlace = 'http://localhost:3000/verificar-correo?token=abc_-123';
     const r = renderizar('verificacion-correo', {

@@ -43,6 +43,19 @@ function contenido<P extends NombrePlantilla>(plantilla: P, datos: DatosPlantill
         enlace: d.enlace,
       };
     }
+    case 'donacion-confirmacion': {
+      const d = datos as DatosPlantilla['donacion-confirmacion'];
+      return {
+        asunto: 'Confirmamos tu donación en PetHogar',
+        parrafos: [
+          `Hola, ${d.nombre}.`,
+          `Registramos tu donación a ${d.fundacion}. ¡Gracias por ayudar!`,
+          `Detalle: ${d.detalle}`,
+          `Fecha: ${d.fecha}`,
+          'PetHogar solo registra el aporte: no procesa pagos ni transfiere dinero.',
+        ],
+      };
+    }
     case 'verificacion-correo': {
       const d = datos as DatosPlantilla['verificacion-correo'];
       return {

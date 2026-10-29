@@ -21,6 +21,18 @@ export class AdoptionApproved {
   ) {}
 }
 
+/** Una adopción activa se cerró (`finalizada` o `revocada`); se emite tras el `COMMIT`. */
+export class AdoptionClosed {
+  static readonly eventName = 'adoption.closed';
+  constructor(
+    readonly adopcionId: number,
+    readonly estado: 'finalizada' | 'revocada',
+    readonly mascotaId: number,
+    readonly fundacionId: number,
+    readonly adoptanteId: number,
+  ) {}
+}
+
 export class AdoptionRejected {
   static readonly eventName = 'adoption.rejected';
 

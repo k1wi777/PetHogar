@@ -22,6 +22,7 @@ function crear(): { service: FundacionesService; repo: jest.Mocked<FundacionesRe
     buscarPorUsuarioId: jest.fn(),
     buscarPorId: jest.fn(),
     listarPorEstado: jest.fn(),
+    buscarPorUsuarioIds: jest.fn(),
     decidirValidacion: jest.fn(),
   } as unknown as jest.Mocked<FundacionesRepository>;
   return { service: new FundacionesService(repo), repo };
@@ -209,6 +210,35 @@ describe('FundacionesService', () => {
       expect(
         (r.find((x) => x.status === 'rejected') as PromiseRejectedResult).reason,
       ).toBeInstanceOf(ConflictException);
+    });
+  });
+
+  describe('lecturas para otros módulos', () => {
+    it('datosBasicos devuelve solo id, nombre, usuario y estado (sin documento ni observación)', async () => {
+      const { service, repo } = crear();
+      repo.buscarPorId.mockResolvedValue(FILA);
+      await expect(service.datosBasicos(3)).resolves.toEqual({
+        id: 3,
+        nombre: 'Huellas',
+        usuarioId: 9,
+        estadoValidacion: EstadoValidacion.Pendiente,
+      });
+    });
+
+    it('datosBasicos devuelve null si no existe', async () => {
+      const { service, repo } = crear();
+      repo.buscarPorId.mockResolvedValue(null);
+      await expect(service.datosBasicos(3)).resolves.toBeNull();
+    });
+
+    it('nombresPorUsuarioIds indexa por usuario y no consulta con una lista vacía', async () => {
+      const { service, repo } = crear();
+      repo.buscarPorUsuarioIds.mockResolvedValue([FILA]);
+      await expect(service.nombresPorUsuarioIds([9, 10])).resolves.toEqual(
+        new Map([[9, 'Huellas']]),
+      );
+      await expect(service.nombresPorUsuarioIds([])).resolves.toEqual(new Map());
+      expect(repo.buscarPorUsuarioIds).toHaveBeenCalledTimes(1);
     });
   });
 });

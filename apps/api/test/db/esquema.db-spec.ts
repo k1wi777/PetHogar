@@ -16,6 +16,11 @@ const SQL_SEGUIMIENTO_POST = `SELECT count(*) AS n FROM pg_indexes WHERE scheman
 const SQL_COLUMNAS_SEGUIMIENTO_POST = `SELECT count(*) AS n FROM information_schema.columns
   WHERE (table_name = 'seguimiento' AND column_name IN ('recordatorio_enviado_en', 'reporte_enviado_en'))
      OR (table_name = 'seguimiento_evidencia' AND column_name = 'origen')`;
+const SQL_DONACIONES_NOTIF = `SELECT count(*) AS n FROM pg_indexes WHERE schemaname = 'public'
+  AND indexname IN ('uq_notificacion_clave', 'idx_notificacion_usuario_fecha',
+                    'idx_donacion_fundacion_fecha')`;
+const SQL_COLUMNAS_NOTIF = `SELECT count(*) AS n FROM information_schema.columns
+  WHERE table_name = 'notificacion' AND column_name IN ('entidad', 'entidad_id', 'clave')`;
 const SQL_URL_CATALOGO = `SELECT count(*) AS n FROM information_schema.columns
   WHERE table_name = 'foto_mascota' AND column_name = 'url_catalogo'`;
 
@@ -44,6 +49,14 @@ describe('esquema inicial (V8)', () => {
     expect(await contar(ds, SQL_INDICE_SOLICITUDES)).toBe(1);
     expect(await contar(ds, SQL_SEGUIMIENTO_POST)).toBe(3);
     expect(await contar(ds, SQL_COLUMNAS_SEGUIMIENTO_POST)).toBe(3);
+    expect(await contar(ds, SQL_DONACIONES_NOTIF)).toBe(3);
+    expect(await contar(ds, SQL_COLUMNAS_NOTIF)).toBe(3);
+
+    // DonacionesNotificaciones se revierte sola: columnas e índices, sin tocar lo anterior.
+    await ds.undoLastMigration();
+    expect(await contar(ds, SQL_DONACIONES_NOTIF)).toBe(0);
+    expect(await contar(ds, SQL_COLUMNAS_NOTIF)).toBe(0);
+    expect(await contar(ds, SQL_SEGUIMIENTO_POST)).toBe(3);
 
     // SeguimientoPostAdopcion se revierte sola: columnas, índices y el enum nativo `origen_evidencia`.
     await ds.undoLastMigration();
@@ -73,6 +86,8 @@ describe('esquema inicial (V8)', () => {
     expect(await contar(ds, SQL_URL_CATALOGO)).toBe(1);
     expect(await contar(ds, SQL_INDICE_SOLICITUDES)).toBe(1);
     expect(await contar(ds, SQL_SEGUIMIENTO_POST)).toBe(3);
+    expect(await contar(ds, SQL_DONACIONES_NOTIF)).toBe(3);
+    expect(await contar(ds, SQL_COLUMNAS_NOTIF)).toBe(3);
     expect(await contar(ds, SQL_ENUMS)).toBe(12);
     expect(
       await contar(ds, `SELECT count(*) AS n FROM pg_extension WHERE extname = 'unaccent'`),
@@ -230,6 +245,22 @@ describe('esquema inicial (V8)', () => {
         ds.query(`UPDATE seguimiento_evidencia SET origen = 'otro' WHERE id = $1`, [id]),
         /origen_evidencia/,
       );
+    });
+
+    it('notificacion: la clave es única por destinatario solo cuando existe', async () => {
+      const [{ id: usuarioId }] = await ds.query(`SELECT id FROM usuario LIMIT 1`);
+      const [{ id: otroId }] = await ds.query(`SELECT id FROM usuario OFFSET 1 LIMIT 1`);
+      const insertar = (usuario: number, clave: string | null) =>
+        ds.query(
+          `INSERT INTO notificacion (usuario_id, tipo, titulo, mensaje, clave)
+           VALUES ($1, 'solicitud', 't', 'm', $2)`,
+          [usuario, clave],
+        );
+      await insertar(usuarioId, 'adoption.approved:1');
+      await rechaza(insertar(usuarioId, 'adoption.approved:1'), /uq_notificacion_clave/);
+      await insertar(otroId, 'adoption.approved:1');
+      await insertar(usuarioId, null);
+      await insertar(usuarioId, null);
     });
 
     it('mascota no tiene columna de ciudad', async () => {

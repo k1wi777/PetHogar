@@ -22,6 +22,10 @@ function crear(): { service: UsuariosService; repo: jest.Mocked<UsuariosReposito
     buscarPorEmail: jest.fn(),
     buscarPorId: jest.fn(),
     buscarAdoptantePorUsuarioId: jest.fn(),
+    buscarContactoActivo: jest.fn(),
+    buscarUsuarioIdDeAdoptante: jest.fn(),
+    listarIdsAdministradoresActivos: jest.fn(),
+    buscarAdoptantesPorUsuarioIds: jest.fn(),
     crearAdoptante: jest.fn(),
     crearUsuarioFundacion: jest.fn(),
     existeEmail: jest.fn(),
@@ -226,6 +230,46 @@ describe('UsuariosService', () => {
       const { service, repo } = crear();
       repo.buscarAdoptantePorUsuarioId.mockResolvedValue(null);
       expect(await service.adoptantePorUsuarioId(9)).toBeNull();
+    });
+  });
+
+  describe('lecturas para avisos', () => {
+    it('contactoActivo devuelve correo y primer nombre, sin otros datos', async () => {
+      const { service, repo } = crear();
+      repo.buscarContactoActivo.mockResolvedValue({ email: 'a@x.co', primerNombre: 'Ana' });
+      await expect(service.contactoActivo(7)).resolves.toEqual({ email: 'a@x.co', nombre: 'Ana' });
+    });
+
+    it('contactoActivo devuelve null si la cuenta no existe o está desactivada', async () => {
+      const { service, repo } = crear();
+      repo.buscarContactoActivo.mockResolvedValue(null);
+      await expect(service.contactoActivo(7)).resolves.toBeNull();
+    });
+
+    it('usuarioIdDeAdoptante e idsAdministradoresActivos delegan', async () => {
+      const { service, repo } = crear();
+      repo.buscarUsuarioIdDeAdoptante.mockResolvedValue(11);
+      repo.listarIdsAdministradoresActivos.mockResolvedValue([1, 2]);
+      await expect(service.usuarioIdDeAdoptante(3)).resolves.toBe(11);
+      await expect(service.idsAdministradoresActivos()).resolves.toEqual([1, 2]);
+    });
+
+    it('nombresPorUsuarioIds arma el nombre completo y omite lo vacío', async () => {
+      const { service, repo } = crear();
+      repo.buscarAdoptantesPorUsuarioIds.mockResolvedValue([
+        {
+          usuarioId: 7,
+          primerNombre: 'Ana',
+          segundoNombre: null,
+          primerApellido: 'Pérez',
+          segundoApellido: 'Gómez',
+        },
+      ] as never);
+      await expect(service.nombresPorUsuarioIds([7, 8])).resolves.toEqual(
+        new Map([[7, 'Ana Pérez Gómez']]),
+      );
+      await expect(service.nombresPorUsuarioIds([])).resolves.toEqual(new Map());
+      expect(repo.buscarAdoptantesPorUsuarioIds).toHaveBeenCalledTimes(1);
     });
   });
 });
