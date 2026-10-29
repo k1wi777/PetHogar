@@ -3,11 +3,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AccesoModule } from './common/auth/acceso.module';
+import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
+import { RolesGuard } from './common/auth/roles.guard';
 import { EventosModule } from './common/events';
 import { EnvironmentVariables, validate } from './config/env.validation';
 import { crearOpcionesTypeOrm } from './database/typeorm.options';
 import { HealthModule } from './modules/health/health.module';
-import { PruebasModule } from './modules/pruebas/pruebas.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { FundacionesModule } from './modules/fundaciones/fundaciones.module';
+import { UsuariosModule } from './modules/usuarios/usuarios.module';
 
 @Module({
   imports: [
@@ -27,9 +32,18 @@ import { PruebasModule } from './modules/pruebas/pruebas.module';
       }),
     }),
     EventosModule,
+    AccesoModule,
     HealthModule,
-    PruebasModule,
+    UsuariosModule,
+    FundacionesModule,
+    AuthModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  // El orden es el de ejecución: primero el límite de peticiones (también para anónimos),
+  // luego la autenticación y por último los roles.
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}

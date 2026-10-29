@@ -8,6 +8,7 @@ import {
   IsString,
   IsUrl,
   Max,
+  MinLength,
   Min,
   validateSync,
 } from 'class-validator';
@@ -15,6 +16,11 @@ import {
 const MENSAJE_TEXTO = 'debe ser un texto no vacío';
 const MENSAJE_BOOLEANO = "debe ser 'true' o 'false'";
 const MENSAJE_PUERTO = 'debe ser un número de puerto entre 1 y 65535';
+const MENSAJE_ENTERO_POSITIVO = 'debe ser un número entero mayor o igual a 1';
+const MENSAJE_SECRETO = 'debe tener al menos 32 caracteres';
+const LONGITUD_MINIMA_SECRETO = 32;
+/** Fragmento común de los secretos de ejemplo de `.env.example`. */
+const MARCA_SECRETO_EJEMPLO = 'cambiar-en-produccion';
 
 export class EnvironmentVariables {
   @IsInt({ message: MENSAJE_PUERTO })
@@ -44,11 +50,11 @@ export class EnvironmentVariables {
   DATABASE_NAME!: string;
 
   @IsString({ message: MENSAJE_TEXTO })
-  @IsNotEmpty({ message: MENSAJE_TEXTO })
+  @MinLength(LONGITUD_MINIMA_SECRETO, { message: MENSAJE_SECRETO })
   JWT_ACCESS_SECRET!: string;
 
   @IsString({ message: MENSAJE_TEXTO })
-  @IsNotEmpty({ message: MENSAJE_TEXTO })
+  @MinLength(LONGITUD_MINIMA_SECRETO, { message: MENSAJE_SECRETO })
   JWT_REFRESH_SECRET!: string;
 
   @IsString({ message: MENSAJE_TEXTO })
@@ -94,8 +100,42 @@ export class EnvironmentVariables {
   API_PUBLIC_URL?: string;
 
   @IsOptional()
+  @IsString({ message: MENSAJE_TEXTO })
+  NODE_ENV?: string;
+
+  @IsInt({ message: MENSAJE_ENTERO_POSITIVO })
+  @Min(1, { message: MENSAJE_ENTERO_POSITIVO })
+  JWT_ACCESS_EXPIRES_MIN: number = 15;
+
+  @IsInt({ message: MENSAJE_ENTERO_POSITIVO })
+  @Min(1, { message: MENSAJE_ENTERO_POSITIVO })
+  JWT_REFRESH_EXPIRES_DAYS: number = 7;
+
+  @IsInt({ message: MENSAJE_ENTERO_POSITIVO })
+  @Min(1, { message: MENSAJE_ENTERO_POSITIVO })
+  LOGIN_MAX_INTENTOS: number = 5;
+
+  @IsInt({ message: MENSAJE_ENTERO_POSITIVO })
+  @Min(1, { message: MENSAJE_ENTERO_POSITIVO })
+  LOGIN_BLOQUEO_MIN: number = 15;
+
+  @IsInt({ message: MENSAJE_ENTERO_POSITIVO })
+  @Min(1, { message: MENSAJE_ENTERO_POSITIVO })
+  VERIFICACION_EXPIRA_HORAS: number = 24;
+
+  /** Por defecto `true` solo en producción (ver `cookieSegura`). */
+  @IsOptional()
   @IsIn(['true', 'false'], { message: MENSAJE_BOOLEANO })
-  HABILITAR_ENDPOINTS_PRUEBA?: string;
+  COOKIE_SECURE?: string;
+}
+
+/** Atributo `Secure` de la cookie de refresh: explícito o, por defecto, solo en producción. */
+export function cookieSegura(
+  env: Pick<EnvironmentVariables, 'COOKIE_SECURE' | 'NODE_ENV'>,
+): boolean {
+  return env.COOKIE_SECURE === undefined
+    ? env.NODE_ENV === 'production'
+    : esVerdadero(env.COOKIE_SECURE);
 }
 
 /**
@@ -124,5 +164,24 @@ export function validate(config: Record<string, unknown>): EnvironmentVariables 
     throw new Error(`Variables de entorno inválidas o ausentes:\n${detalle}`);
   }
 
+  validarSecretos(instancia);
   return instancia;
+}
+
+/** Reglas entre variables: secretos distintos y, en producción, distintos de los de ejemplo. */
+function validarSecretos(env: EnvironmentVariables): void {
+  const problemas: string[] = [];
+  if (env.JWT_ACCESS_SECRET === env.JWT_REFRESH_SECRET) {
+    problemas.push('  - JWT_REFRESH_SECRET: debe ser distinto de JWT_ACCESS_SECRET');
+  }
+  if (env.NODE_ENV === 'production') {
+    for (const nombre of ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'] as const) {
+      if (env[nombre].includes(MARCA_SECRETO_EJEMPLO)) {
+        problemas.push(`  - ${nombre}: en producción no puede conservar el valor de ejemplo`);
+      }
+    }
+  }
+  if (problemas.length > 0) {
+    throw new Error(`Variables de entorno inválidas o ausentes:\n${problemas.join('\n')}`);
+  }
 }

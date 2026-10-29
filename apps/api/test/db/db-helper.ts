@@ -12,7 +12,7 @@ const env: Record<string, string | undefined> = {
   ...process.env,
 };
 
-const conexion = {
+export const conexion = {
   host: env.DATABASE_HOST ?? 'localhost',
   port: Number(env.DATABASE_PORT ?? 5432),
   user: env.DATABASE_USER ?? 'pethogar',

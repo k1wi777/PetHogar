@@ -43,6 +43,29 @@ function contenido<P extends NombrePlantilla>(plantilla: P, datos: DatosPlantill
         enlace: d.enlace,
       };
     }
+    case 'verificacion-correo': {
+      const d = datos as DatosPlantilla['verificacion-correo'];
+      return {
+        asunto: 'Verifica tu correo en PetHogar',
+        parrafos: [
+          `Hola, ${d.nombre}.`,
+          'Gracias por registrarte en PetHogar. Para activar tu cuenta, confirma tu correo con el siguiente enlace.',
+          `El enlace es válido durante ${d.horasVigencia} horas. Si no creaste esta cuenta, ignora este mensaje.`,
+        ],
+        enlace: d.enlace,
+      };
+    }
+    case 'registro-fundacion-recibido': {
+      const d = datos as DatosPlantilla['registro-fundacion-recibido'];
+      return {
+        asunto: 'Recibimos el registro de tu fundación',
+        parrafos: [
+          `Hola, ${d.nombreFundacion}.`,
+          'Recibimos tu solicitud de registro y tu documento legal. Un administrador de PetHogar los revisará.',
+          'Mientras tanto puedes iniciar sesión, pero no podrás publicar mascotas hasta que tu fundación sea aprobada.',
+        ],
+      };
+    }
     default:
       throw new Error(`Plantilla de correo desconocida: ${String(plantilla)}`);
   }

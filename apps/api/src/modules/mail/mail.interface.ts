@@ -4,6 +4,8 @@ export const MAIL_SERVICE = Symbol('MAIL_SERVICE');
 export interface DatosPlantilla {
   prueba: { nombre: string };
   notificacion: { nombre: string; titulo: string; mensaje: string; enlace?: string };
+  'verificacion-correo': { nombre: string; enlace: string; horasVigencia: number };
+  'registro-fundacion-recibido': { nombreFundacion: string };
 }
 
 export type NombrePlantilla = keyof DatosPlantilla;

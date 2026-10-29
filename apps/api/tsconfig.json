@@ -21,6 +21,7 @@
     "test/**/*",
     "jest.config.ts",
     "jest.db.config.ts",
-    "jest.infra.config.ts"
+    "jest.infra.config.ts",
+    "jest.auth.config.ts"
   ]
 }

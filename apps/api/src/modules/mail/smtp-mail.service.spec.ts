@@ -27,6 +27,27 @@ describe('renderizar', () => {
     expect(r.texto).toContain('<script>alert(1)</script> & más');
     expect(r.asunto).not.toMatch(/[\r\n]/);
   });
+
+  it('genera el correo de verificación con el enlace y su vigencia, escapando el nombre', () => {
+    const enlace = 'http://localhost:3000/verificar-correo?token=abc_-123';
+    const r = renderizar('verificacion-correo', {
+      nombre: '<i>Ana</i>',
+      enlace,
+      horasVigencia: 24,
+    });
+    expect(r.asunto).toBe('Verifica tu correo en PetHogar');
+    expect(r.texto).toContain(enlace);
+    expect(r.texto).toContain('24 horas');
+    expect(r.html).toContain(`href="${enlace}"`);
+    expect(r.html).not.toContain('<i>Ana');
+  });
+
+  it('genera el correo de recepción de la fundación', () => {
+    const r = renderizar('registro-fundacion-recibido', { nombreFundacion: 'Huellas & Patas' });
+    expect(r.asunto).toBe('Recibimos el registro de tu fundación');
+    expect(r.html).toContain('Huellas &amp; Patas');
+    expect(r.texto).toContain('hasta que tu fundación sea aprobada');
+  });
 });
 
 describe('SmtpMailService', () => {

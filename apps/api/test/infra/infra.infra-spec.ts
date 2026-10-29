@@ -13,10 +13,10 @@ import request from 'supertest';
 import { AllExceptionsFilter } from '../../src/common/filters/http-exception.filter';
 import { crearValidationPipe } from '../../src/common/pipes/validation.pipe';
 import { MailModule } from '../../src/modules/mail/mail.module';
-import { PruebasModule } from '../../src/modules/pruebas/pruebas.module';
 import { servirArchivosPublicos } from '../../src/modules/storage/archivos-estaticos';
 import { StorageModule } from '../../src/modules/storage/storage.module';
 import { STORAGE_SERVICE, type IStorageService } from '../../src/modules/storage/storage.interface';
+import { ModuloPrueba } from './controlador-prueba';
 
 // V9: requiere Mailpit levantado (SMTP_HOST/SMTP_PORT y MAILPIT_UI_PORT; por defecto 1025/8025).
 const SMTP_HOST = process.env.SMTP_HOST ?? 'localhost';
@@ -90,13 +90,12 @@ describe('V9 — infraestructura real (Mailpit y disco)', () => {
               SMTP_FROM: 'PetHogar <no-reply@pethogar.local>',
               UPLOADS_DIR: raiz,
               API_PUBLIC_URL: 'http://localhost:3001',
-              HABILITAR_ENDPOINTS_PRUEBA: 'true',
             }),
           ],
         }),
         StorageModule,
         MailModule,
-        PruebasModule,
+        ModuloPrueba,
       ],
     }).compile();
     app = modulo.createNestApplication<NestExpressApplication>();
