@@ -5,6 +5,7 @@ import { FundacionesModule } from '../fundaciones/fundaciones.module';
 import { StorageModule } from '../storage/storage.module';
 import { CatalogoMascotasRepository } from './catalogo/catalogo-mascotas.repository';
 import { CatalogoMascotasService } from './catalogo/catalogo-mascotas.service';
+import { FotoFichaService } from './catalogo/foto-ficha.service';
 import { MascotasCatalogoController } from './catalogo/mascotas-catalogo.controller';
 import { FotoMascota } from './entities/foto-mascota.entity';
 import { HistorialMedico } from './entities/historial-medico.entity';
@@ -21,7 +22,8 @@ import { MascotasService } from './mascotas.service';
 /**
  * Dueño de `mascota`, `foto_mascota` e `historial_medico`. Dependencias sin ciclos: `catalogos`
  * (validar la raza), `fundaciones` (guard y `@FundacionId()`) y `storage` (fotos).
- * `MascotasService` se exporta para que la Fase 3 (adopciones) cambie el estado con `transicionar`.
+ * `MascotasService` se exporta para que `adopciones` cambie el estado con `transicionar`; `CatalogoMascotasService` y
+ * `FotoFichaService` para la ficha en PDF de `reportes` (mismo filtro «disponible» y mismo mapeo público).
  */
 @Module({
   imports: [
@@ -41,7 +43,8 @@ import { MascotasService } from './mascotas.service';
     HistorialService,
     CatalogoMascotasRepository,
     CatalogoMascotasService,
+    FotoFichaService,
   ],
-  exports: [MascotasService],
+  exports: [MascotasService, CatalogoMascotasService, FotoFichaService],
 })
 export class MascotasModule {}

@@ -1,4 +1,4 @@
-import { cookieSegura, esVerdadero, validate } from './env.validation';
+import { cookieSegura, esVerdadero, trustProxy, validate } from './env.validation';
 
 const ENV_VALIDO = {
   PORT: '3001',
@@ -174,5 +174,22 @@ describe('validate (.env)', () => {
       ).toBe(false);
       expect(cookieSegura(validate({ ...ENV_VALIDO, COOKIE_SECURE: 'true' }))).toBe(true);
     });
+  });
+});
+
+describe('TRUST_PROXY', () => {
+  it('por defecto está desactivado', () => {
+    expect(trustProxy(validate(ENV_VALIDO).TRUST_PROXY)).toBe(false);
+    expect(trustProxy('false')).toBe(false);
+  });
+
+  it.each(['1', '2', '10'])('acepta %s saltos como número', (valor) => {
+    expect(trustProxy(validate({ ...ENV_VALIDO, TRUST_PROXY: valor }).TRUST_PROXY)).toBe(
+      Number(valor),
+    );
+  });
+
+  it.each(['true', '0', '-1', '1.5', 'abc', '100'])('rechaza %s', (valor) => {
+    expect(() => validate({ ...ENV_VALIDO, TRUST_PROXY: valor })).toThrow('TRUST_PROXY');
   });
 });

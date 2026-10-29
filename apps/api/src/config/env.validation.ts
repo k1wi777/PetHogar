@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  Matches,
   Max,
   MinLength,
   Min,
@@ -22,6 +23,7 @@ const MENSAJE_ENTERO_POSITIVO = 'debe ser un número entero mayor o igual a 1';
 const MENSAJE_SECRETO = 'debe tener al menos 32 caracteres';
 const LONGITUD_MINIMA_SECRETO = 32;
 const MENSAJE_CRON = 'debe ser una expresión cron válida de 5 campos (p. ej. 10 0 * * *)';
+const MENSAJE_TRUST_PROXY = "debe ser 'false' o el número de proxies de confianza (1 a 99)";
 const MENSAJE_DIAS_RECORDATORIO = 'debe ser un número entero entre 1 y 30';
 
 /** Expresión cron de exactamente 5 campos (minuto a día de la semana) que la librería acepta. */
@@ -170,10 +172,23 @@ export class EnvironmentVariables {
   @Max(30, { message: MENSAJE_DIAS_RECORDATORIO })
   SEGUIMIENTOS_RECORDATORIO_DIAS: number = 3;
 
+  /**
+   * Proxies de confianza delante de la API para tomar la IP real (`X-Forwarded-For`): `false`
+   * (por defecto, ignora la cabecera) o el número de saltos (p. ej. `1`).
+   */
+  @IsOptional()
+  @Matches(/^(false|[1-9]\d?)$/, { message: MENSAJE_TRUST_PROXY })
+  TRUST_PROXY?: string;
+
   /** Por defecto `true` solo en producción (ver `cookieSegura`). */
   @IsOptional()
   @IsIn(['true', 'false'], { message: MENSAJE_BOOLEANO })
   COOKIE_SECURE?: string;
+}
+
+/** Valor para `app.set('trust proxy', …)`: `false` si no se configura o el número de saltos. */
+export function trustProxy(valor: string | undefined): false | number {
+  return valor === undefined || valor === 'false' ? false : Number(valor);
 }
 
 /** Atributo `Secure` de la cookie de refresh: explícito o, por defecto, solo en producción. */

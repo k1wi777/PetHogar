@@ -55,14 +55,19 @@ function crear() {
     return Promise.resolve(GUARDADA);
   });
   eventos.emit.mockImplementation(() => orden.push('evento'));
+  const manager = { id: 'manager-de-la-instantanea' };
+  const instantanea = {
+    leer: jest.fn((fn: (m: unknown) => Promise<unknown>) => fn(manager)),
+  };
   const service = new DonacionesService(
     repo as never,
     fundaciones as never,
     usuarios as never,
     storage as never,
     eventos as never,
+    instantanea as never,
   );
-  return { service, repo, fundaciones, usuarios, storage, eventos, orden };
+  return { service, repo, fundaciones, usuarios, storage, eventos, orden, instantanea, manager };
 }
 
 describe('DonacionesService.crear', () => {
@@ -299,6 +304,22 @@ describe('clausulaDeDonaciones', () => {
   });
 });
 
+describe('DonacionesService.crearManual con fundación inexistente', () => {
+  it('es 404 y no guarda archivo ni fila', async () => {
+    const { service, fundaciones, repo, storage } = crear();
+    fundaciones.datosBasicos.mockResolvedValue(null);
+    await expect(
+      service.crearManual(
+        3,
+        { nombreDonante: 'Pedro', tipo: TipoDonacion.Especie, descripcion: 'x' } as never,
+        Buffer.from('x'),
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(repo.insertar).not.toHaveBeenCalled();
+    expect(storage.guardar).not.toHaveBeenCalled();
+  });
+});
+
 describe('DonacionesService.listar', () => {
   const FILAS: FilaDonacion[] = [
     {
@@ -334,7 +355,7 @@ describe('DonacionesService.listar', () => {
   ];
 
   it('usa el MISMO filtro para la página y para el agregado y suma el total del agregado', async () => {
-    const { service, repo, usuarios, fundaciones } = crear();
+    const { service, repo, usuarios, fundaciones, instantanea, manager } = crear();
     repo.listar.mockResolvedValue(FILAS);
     repo.agregar.mockResolvedValue([
       { tipo: 'economica', cantidad: 7, monto: '1500.50' },
@@ -352,7 +373,9 @@ describe('DonacionesService.listar', () => {
 
     const filtroPagina = repo.listar.mock.calls[0][1];
     expect(repo.agregar.mock.calls[0][1]).toBe(filtroPagina);
-    expect(repo.listar).toHaveBeenCalledWith(3, filtroPagina, 3, 3);
+    expect(repo.listar).toHaveBeenCalledWith(3, filtroPagina, 3, 3, manager);
+    expect(repo.agregar.mock.calls[0][2]).toBe(manager);
+    expect(instantanea.leer).toHaveBeenCalledTimes(1);
     expect(r).toMatchObject({ total: 9, page: 2, limit: 3 });
     expect(r.totales).toEqual({
       economica: { cantidad: 7, monto: '1500.50' },
@@ -388,8 +411,40 @@ describe('DonacionesService.listar', () => {
     expect(usuarios.nombresPorUsuarioIds).toHaveBeenCalledWith([]);
   });
 
+  it('el donante sin nombre resoluble recibe un nombre genérico; el manual sin nombre también', async () => {
+    const { service, repo, usuarios, fundaciones } = crear();
+    const base = {
+      tipo: TipoDonacion.Especie,
+      monto: null,
+      descripcionEspecie: 'x',
+      fecha: new Date(),
+      tieneComprobante: false,
+    };
+    repo.listar.mockResolvedValue([
+      { ...base, id: 1, usuarioId: 77, nombreDonante: null },
+      { ...base, id: 2, usuarioId: null, nombreDonante: null },
+    ]);
+    repo.agregar.mockResolvedValue([]);
+    usuarios.nombresPorUsuarioIds.mockResolvedValue(new Map());
+    fundaciones.nombresPorUsuarioIds.mockResolvedValue(new Map());
+    const r = await service.listar(3, plainToInstance(ConsultaDonacionesDto, {}));
+    expect(r.data.map((d) => d.donante)).toEqual([
+      { nombre: 'Donante registrado', origen: 'plataforma' },
+      { nombre: 'Donante registrado', origen: 'manual' },
+    ]);
+    expect(fundaciones.nombresPorUsuarioIds).toHaveBeenCalledWith([77]);
+  });
+
+  it('si la instantánea falla, el error se propaga y no se devuelve una página parcial', async () => {
+    const { service, instantanea } = crear();
+    instantanea.leer.mockRejectedValue(new Error('fallo'));
+    await expect(service.listar(3, plainToInstance(ConsultaDonacionesDto, {}))).rejects.toThrow(
+      'fallo',
+    );
+  });
+
   it('un periodo invertido es 400 y no consulta', async () => {
-    const { service, repo } = crear();
+    const { service, repo, instantanea } = crear();
     await expect(
       service.listar(
         3,
@@ -398,6 +453,7 @@ describe('DonacionesService.listar', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(repo.listar).not.toHaveBeenCalled();
     expect(repo.agregar).not.toHaveBeenCalled();
+    expect(instantanea.leer).not.toHaveBeenCalled();
   });
 
   it('datosParaAviso delega en el repository', async () => {

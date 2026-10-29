@@ -10,6 +10,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UsuarioAutenticado } from '../../common/auth/usuario-autenticado';
 import { DonationRegistered } from '../../common/events';
 import { emitirSeguro } from '../../common/events/emitir-seguro';
+import { InstantaneaService } from '../../common/database/instantanea.service';
 import { desplazamiento } from '../../common/pagination/paginar';
 import { inicioDelDiaEnBogota } from '../../common/validation/fecha';
 import { EstadoValidacion } from '../fundaciones/entities/fundacion.enum';
@@ -64,6 +65,7 @@ export class DonacionesService {
     private readonly usuarios: UsuariosService,
     @Inject(STORAGE_SERVICE) private readonly storage: IStorageService,
     private readonly eventos: EventEmitter2,
+    private readonly instantanea: InstantaneaService,
   ) {}
 
   /** Donación de un usuario registrado: el donante es siempre el del token. */
@@ -122,10 +124,12 @@ export class DonacionesService {
   ): Promise<DonacionesDeFundacion> {
     const filtro = filtroDePeriodo(consulta);
     const { skip, take } = desplazamiento(consulta);
-    const [filas, agregado] = await Promise.all([
-      this.repo.listar(fundacionId, filtro, skip, take),
-      this.repo.agregar(fundacionId, filtro),
-    ]);
+    // Misma instantánea para la página y el agregado: bajo escrituras concurrentes el total y los
+    // totales por tipo coinciden con lo que contiene la página (las lecturas van en serie).
+    const { filas, agregado } = await this.instantanea.leer(async (manager) => ({
+      filas: await this.repo.listar(fundacionId, filtro, skip, take, manager),
+      agregado: await this.repo.agregar(fundacionId, filtro, manager),
+    }));
     return {
       data: await this.conDonantes(filas),
       // Mismo filtro que la página (misma cláusula): el total es la suma del agregado.

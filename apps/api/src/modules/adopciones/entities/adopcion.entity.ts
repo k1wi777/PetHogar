@@ -2,6 +2,7 @@ import {
   type Relation,
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -11,6 +12,7 @@ import { EstadoAdopcion } from './adopcion.enum';
 import type { SolicitudAdopcion } from '../../solicitudes/entities/solicitud-adopcion.entity';
 
 @Unique('uq_adopcion_solicitud', ['solicitudId'])
+@Index('idx_adopcion_fecha', ['fechaEntrega'])
 @Entity()
 export class Adopcion {
   @PrimaryGeneratedColumn('identity', {

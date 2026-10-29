@@ -196,6 +196,13 @@ describe('SeguimientosService (lecturas y piezas para adopciones)', () => {
     expect(repo.listarDeAdoptante.mock.calls[0][0]).toBe(8);
   });
 
+  it('el detalle del adoptante usa su id de adoptante y el día de hoy de Bogotá', async () => {
+    usuarios.adoptantePorUsuarioId.mockResolvedValue({ id: 8 });
+    repo.obtenerDeAdoptante.mockResolvedValue({ id: 5, vencido: true });
+    await expect(service.obtenerMio(21, 5)).resolves.toEqual({ id: 5, vencido: true });
+    expect(repo.obtenerDeAdoptante).toHaveBeenCalledWith(5, 8, '2026-11-10');
+  });
+
   it('un usuario sin perfil de adoptante recibe 403', async () => {
     usuarios.adoptantePorUsuarioId.mockResolvedValue(null);
     await expect(service.listarMios(21, {}, paginacion)).rejects.toThrow(ForbiddenException);

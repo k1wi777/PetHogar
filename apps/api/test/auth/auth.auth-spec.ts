@@ -651,14 +651,14 @@ describe('V10 — autenticación real (Postgres, Mailpit y disco)', () => {
   });
 
   describe('rate limit real', () => {
-    it('la petición 11 de login desde la misma IP en un minuto recibe 429', async () => {
+    it('la petición 6 de login desde la misma IP en un minuto recibe 429', async () => {
       const ip = '192.0.2.77';
       const enviar = (): request.Test =>
         request(app.getHttpServer())
           .post('/api/auth/login')
           .set('X-Forwarded-For', ip)
           .send({ email: `nadie-${SUFIJO}@example.com`, contrasena: CLAVE });
-      for (let i = 0; i < 10; i++) await enviar().expect(401);
+      for (let i = 0; i < 5; i++) await enviar().expect(401);
       const res = await enviar().expect(429);
       expect(res.body.message).toContain('Demasiadas solicitudes');
     });

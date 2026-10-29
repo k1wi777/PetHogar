@@ -7,3 +7,7 @@ allowBuilds:
   '@parcel/watcher': false
   '@scarf/scarf': false
   unrs-resolver: false
+
+# multer <2.5.0 tiene una vulnerabilidad de DoS (severidad alta) en @nestjs/platform-express.
+overrides:
+  multer: ^2.5.0

@@ -170,6 +170,20 @@ describe('AprobacionService', () => {
       expect(solicitudes.rechazarPendientesDeMascota).not.toHaveBeenCalled();
     });
 
+    it('un fallo al cambiar la mascota (ya adoptada) no crea la adopción ni rechaza a las demás', async () => {
+      mascotas.transicionar.mockRejectedValue(new ConflictException('La mascota ya fue adoptada'));
+      await expect(service.decidir(11, 3, APROBAR)).rejects.toBeInstanceOf(ConflictException);
+      expect(adopciones.crear).not.toHaveBeenCalled();
+      expect(solicitudes.rechazarPendientesDeMascota).not.toHaveBeenCalled();
+      expect(llamadas).toEqual(['BEGIN', '1-bloquear', '2-aprobar']);
+    });
+
+    it('sin fecha de entrega ni observación pasa cadena vacía y null, y deja la validación a adopciones', async () => {
+      await service.decidir(11, 3, { decision: TipoDecision.Aprobar } as DecisionSolicitudDto);
+      expect(solicitudes.aprobar).toHaveBeenCalledWith(11, 3, null, MANAGER);
+      expect(adopciones.crear).toHaveBeenCalledWith(11, '', MANAGER);
+    });
+
     it('un listener que lanza no rompe la respuesta ni impide los demás eventos', async () => {
       eventos.emit.mockImplementationOnce(() => {
         throw new Error('listener roto');
@@ -191,6 +205,12 @@ describe('AprobacionService', () => {
       expect(dataSource.transaction).not.toHaveBeenCalled();
       expect(adopciones.crear).not.toHaveBeenCalled();
       expect(r).toEqual({ solicitud: DETALLE, adopcion: null });
+    });
+
+    it('rechazar sin observación la pasa vacía para que solicitudes la rechace con 400', async () => {
+      solicitudes.rechazar.mockResolvedValue(DETALLE);
+      await service.decidir(11, 3, { decision: TipoDecision.Rechazar } as DecisionSolicitudDto);
+      expect(solicitudes.rechazar).toHaveBeenCalledWith(11, 3, '');
     });
   });
 });

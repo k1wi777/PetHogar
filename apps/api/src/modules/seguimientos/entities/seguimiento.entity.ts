@@ -11,6 +11,7 @@ import { TipoSeguimiento, EstadoSeguimiento, EstadoBienestar } from './seguimien
 import type { Adopcion } from '../../adopciones/entities/adopcion.entity';
 
 @Index('idx_seguimiento_adopcion_estado', ['adopcionId', 'estado'])
+@Index('idx_seguimiento_fecha', ['fechaProgramada', 'estado'])
 // El cron nunca recorre toda la tabla: solo los pendientes de vencer.
 @Index('idx_seguimiento_pendiente_fecha', ['fechaProgramada'], {
   where: `"estado" = 'programado'`,

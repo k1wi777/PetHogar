@@ -128,7 +128,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { limit: 5, ttl: MINUTO_MS } })
+  @Throttle({ default: { limit: 3, ttl: MINUTO_MS } })
   @Post('reset-password')
   @HttpCode(200)
   @ApiOperation({
@@ -141,7 +141,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { limit: 10, ttl: MINUTO_MS } })
+  @Throttle({ default: { limit: 5, ttl: MINUTO_MS } })
   @Post('login')
   @HttpCode(200)
   @ApiOperation({

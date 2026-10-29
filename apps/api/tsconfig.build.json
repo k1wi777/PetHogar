@@ -8,6 +8,8 @@
     "jest.db.config.ts",
     "jest.infra.config.ts",
     "jest.auth.config.ts",
+    "jest.e2e.config.ts",
+    "jest.calidad.config.ts",
     "test"
   ]
 }

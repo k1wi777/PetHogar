@@ -21,7 +21,10 @@
     "test:mascotas": "jest --config jest.mascotas.config.ts",
     "test:adopciones": "jest --config jest.adopciones.config.ts",
     "test:seguimientos": "jest --config jest.seguimientos.config.ts",
-    "test:notificaciones": "jest --config jest.notificaciones.config.ts"
+    "test:notificaciones": "jest --config jest.notificaciones.config.ts",
+    "test:e2e": "jest --config jest.e2e.config.ts",
+    "test:calidad": "jest --config jest.calidad.config.ts",
+    "test:carga": "ts-node test/carga/carga.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.8",
@@ -40,6 +43,7 @@
     "cron": "4.4.0",
     "helmet": "^8.3.0",
     "nodemailer": "^10.2.1",
+    "pdfmake": "^0.3.13",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
@@ -54,6 +58,7 @@
     "@types/multer": "^2.3.0",
     "@types/node": "^26.6.5",
     "@types/nodemailer": "^8.0.2",
+    "@types/pdfmake": "^0.3.3",
     "@types/supertest": "^7.2.1",
     "jest": "^30.5.2",
     "supertest": "^7.3.1",

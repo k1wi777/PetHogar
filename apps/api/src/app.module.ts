@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccesoModule } from './common/auth/acceso.module';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { RolesGuard } from './common/auth/roles.guard';
+import { InstantaneaModule } from './common/database/instantanea.module';
 import { EventosModule } from './common/events';
 import { RelojModule } from './common/reloj/reloj.module';
 import { EnvironmentVariables, validate } from './config/env.validation';
@@ -21,6 +22,7 @@ import { DonacionesModule } from './modules/donaciones/donaciones.module';
 import { FundacionesModule } from './modules/fundaciones/fundaciones.module';
 import { MascotasModule } from './modules/mascotas/mascotas.module';
 import { NotificacionesModule } from './modules/notificaciones/notificaciones.module';
+import { ReportesModule } from './modules/reportes/reportes.module';
 import { SeguimientosModule } from './modules/seguimientos/seguimientos.module';
 import { SolicitudesModule } from './modules/solicitudes/solicitudes.module';
 import { CuentaActivaGuard } from './modules/usuarios/guards/cuenta-activa.guard';
@@ -45,6 +47,7 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module';
     }),
     EventosModule,
     RelojModule,
+    InstantaneaModule,
     // Sin decoradores @Cron: los jobs de seguimientos se registran por código según la configuración.
     ScheduleModule.forRoot(),
     AccesoModule,
@@ -61,6 +64,7 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module';
     DonacionesModule,
     NotificacionesModule,
     AvisosModule,
+    ReportesModule,
   ],
   // El orden es el de ejecución: primero el límite de peticiones (también para anónimos),
   // luego la autenticación, la cuenta activa y por último los roles.

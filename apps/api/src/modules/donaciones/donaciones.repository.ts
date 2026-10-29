@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Donacion } from './entities/donacion.entity';
 import type {
   DatosNuevaDonacion,
@@ -57,15 +57,19 @@ export class DonacionesRepository {
     return (resultado.raw as DonacionGuardada[])[0];
   }
 
-  /** Orden estable: más reciente primero y desempate por `id`. */
+  /**
+   * Orden estable: más reciente primero y desempate por `id`. Recibe el `EntityManager` de la
+   * instantánea para leer en la misma transacción que `agregar`.
+   */
   listar(
     fundacionId: number,
     filtro: FiltroDonaciones,
     skip: number,
     take: number,
+    manager: EntityManager,
   ): Promise<FilaDonacion[]> {
     const { where, parametros } = clausulaDeDonaciones(fundacionId, filtro);
-    return this.donaciones.query(
+    return manager.query(
       `SELECT "id", "tipo", "monto"::text AS "monto", "descripcion_especie" AS "descripcionEspecie",
               "fecha", "usuario_id" AS "usuarioId", "nombre_donante" AS "nombreDonante",
               "comprobante_url" IS NOT NULL AS "tieneComprobante"
@@ -77,9 +81,13 @@ export class DonacionesRepository {
   }
 
   /** Una sola pasada sobre TODO el conjunto filtrado; `SUM` de `numeric` es exacto. */
-  agregar(fundacionId: number, filtro: FiltroDonaciones): Promise<FilaAgregado[]> {
+  agregar(
+    fundacionId: number,
+    filtro: FiltroDonaciones,
+    manager: EntityManager,
+  ): Promise<FilaAgregado[]> {
     const { where, parametros } = clausulaDeDonaciones(fundacionId, filtro);
-    return this.donaciones.query(
+    return manager.query(
       `SELECT "tipo", COUNT(*)::int AS "cantidad", COALESCE(SUM("monto"), 0.00)::text AS "monto"
          FROM "donacion" WHERE ${where} GROUP BY "tipo"`,
       parametros,

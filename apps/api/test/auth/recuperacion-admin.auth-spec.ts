@@ -293,7 +293,7 @@ describe('V10 ampliado — recuperación de contraseña y administración (Postg
       await e.login(email, perdedora).expect(401);
     });
 
-    it('límite por IP: forgot-password 3 por minuto y reset-password 5 por minuto (429)', async () => {
+    it('límite por IP: forgot-password 3 por minuto y reset-password 3 por minuto (429)', async () => {
       const ipForgot = '192.0.2.31';
       for (let i = 0; i < 3; i++)
         await olvide(`nadie-${e.sufijo}@example.com`, ipForgot).expect(200);
@@ -301,7 +301,7 @@ describe('V10 ampliado — recuperación de contraseña y administración (Postg
       expect(f.body.message).toContain('Demasiadas solicitudes');
 
       const ipReset = '192.0.2.32';
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 3; i++) {
         await restablecer(`nadie-${e.sufijo}@example.com`, '123456', NUEVA, ipReset).expect(400);
       }
       await restablecer(`nadie-${e.sufijo}@example.com`, '123456', NUEVA, ipReset).expect(429);

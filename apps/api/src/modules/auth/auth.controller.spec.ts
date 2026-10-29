@@ -388,13 +388,13 @@ describe('Rate limit de los endpoints sensibles', () => {
   });
   afterAll(() => app.close());
 
-  it('login: la petición 11 en un minuto recibe 429 en español', async () => {
+  it('login: la petición 6 en un minuto recibe 429 en español', async () => {
     login.iniciarSesion.mockRejectedValue(
       new UnauthorizedException('Correo o contraseña incorrectos'),
     );
     const enviar = (): request.Test =>
       request(app.getHttpServer()).post('/auth/login').send({ email: 'a@b.co', contrasena: 'x' });
-    for (let i = 0; i < 10; i++) await enviar().expect(401);
+    for (let i = 0; i < 5; i++) await enviar().expect(401);
     const res = await enviar().expect(429);
     expect(res.body.message).toContain('Demasiadas solicitudes');
   });
@@ -413,12 +413,12 @@ describe('Rate limit de los endpoints sensibles', () => {
     await enviar().expect(429);
   });
 
-  it('reset-password: límite de 5 por minuto', async () => {
+  it('reset-password: límite de 3 por minuto', async () => {
     const enviar = (): request.Test =>
       request(app.getHttpServer())
         .post('/auth/reset-password')
         .send({ email: 'a@b.co', codigo: '123456', nuevaContrasena: 'NuevaClave1' });
-    for (let i = 0; i < 5; i++) await enviar().expect(200);
+    for (let i = 0; i < 3; i++) await enviar().expect(200);
     await enviar().expect(429);
   });
 });

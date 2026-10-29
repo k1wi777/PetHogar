@@ -3,13 +3,15 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { crearValidationPipe } from './common/pipes/validation.pipe';
-import type { EnvironmentVariables } from './config/env.validation';
+import { trustProxy, type EnvironmentVariables } from './config/env.validation';
 import { servirArchivosPublicos } from './modules/storage/archivos-estaticos';
 
 /** Configuración HTTP común a `main.ts` y a las pruebas que levantan la aplicación real. */
 export function configurarApp(app: NestExpressApplication): void {
   const config = app.get<ConfigService<EnvironmentVariables, true>>(ConfigService);
 
+  // Desactivado por defecto: un cliente podría falsificar X-Forwarded-For y evadir el límite de peticiones.
+  app.set('trust proxy', trustProxy(config.get('TRUST_PROXY', { infer: true })));
   app.use(helmet());
   app.setGlobalPrefix('api');
   const origenPermitido = new URL(config.get('FRONTEND_URL', { infer: true })).origin;

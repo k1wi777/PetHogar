@@ -186,6 +186,19 @@ describe('RecuperacionService', () => {
       expect(mail.enviar.mock.calls[0][0].datos.nombre).toBe('Huellas');
     });
 
+    it.each([
+      ['fundación sin registro', { ...USUARIO, rol: 'fundacion' as const }],
+      ['adoptante sin perfil', USUARIO],
+    ])('%s: el correo se envía igual con un nombre genérico', async (_n, usuario) => {
+      const { service, usuarios, fundaciones, mail } = crear();
+      usuarios.buscarPorEmail.mockResolvedValue(usuario);
+      fundaciones.obtenerPorUsuarioId.mockResolvedValue(null);
+      usuarios.obtenerPerfil.mockResolvedValue(null);
+      await service.solicitar(USUARIO.email);
+      await vaciar();
+      expect(mail.enviar.mock.calls[0][0].datos.nombre).toBe('usuario');
+    });
+
     it('enfriamiento: no emite otro código hasta pasados 5 minutos del anterior', async () => {
       const { service, mail, fila, codigoEnviado } = crear();
       await service.solicitar(USUARIO.email);

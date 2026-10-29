@@ -21,6 +21,8 @@ const SQL_DONACIONES_NOTIF = `SELECT count(*) AS n FROM pg_indexes WHERE scheman
                     'idx_donacion_fundacion_fecha')`;
 const SQL_COLUMNAS_NOTIF = `SELECT count(*) AS n FROM information_schema.columns
   WHERE table_name = 'notificacion' AND column_name IN ('entidad', 'entidad_id', 'clave')`;
+const SQL_INDICES_REPORTES = `SELECT count(*) AS n FROM pg_indexes WHERE schemaname = 'public'
+  AND indexname IN ('idx_solicitud_estado_fecha', 'idx_seguimiento_fecha', 'idx_adopcion_fecha')`;
 const SQL_URL_CATALOGO = `SELECT count(*) AS n FROM information_schema.columns
   WHERE table_name = 'foto_mascota' AND column_name = 'url_catalogo'`;
 
@@ -51,6 +53,12 @@ describe('esquema inicial (V8)', () => {
     expect(await contar(ds, SQL_COLUMNAS_SEGUIMIENTO_POST)).toBe(3);
     expect(await contar(ds, SQL_DONACIONES_NOTIF)).toBe(3);
     expect(await contar(ds, SQL_COLUMNAS_NOTIF)).toBe(3);
+    expect(await contar(ds, SQL_INDICES_REPORTES)).toBe(3);
+
+    // IndicesReportes se revierte sola: solo quita sus 3 índices.
+    await ds.undoLastMigration();
+    expect(await contar(ds, SQL_INDICES_REPORTES)).toBe(0);
+    expect(await contar(ds, SQL_DONACIONES_NOTIF)).toBe(3);
 
     // DonacionesNotificaciones se revierte sola: columnas e índices, sin tocar lo anterior.
     await ds.undoLastMigration();
@@ -89,6 +97,7 @@ describe('esquema inicial (V8)', () => {
     expect(await contar(ds, SQL_DONACIONES_NOTIF)).toBe(3);
     expect(await contar(ds, SQL_COLUMNAS_NOTIF)).toBe(3);
     expect(await contar(ds, SQL_ENUMS)).toBe(12);
+    expect(await contar(ds, SQL_INDICES_REPORTES)).toBe(3);
     expect(
       await contar(ds, `SELECT count(*) AS n FROM pg_extension WHERE extname = 'unaccent'`),
     ).toBe(1);
