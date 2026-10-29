@@ -65,6 +65,9 @@ describe('seed (V8)', () => {
     ).toBe(1);
     expect(await contar(ds, 'SELECT count(*) AS n FROM mascota')).toBe(4);
     expect(await contar(ds, 'SELECT count(*) AS n FROM foto_mascota WHERE es_principal')).toBe(4);
+    expect(
+      await contar(ds, 'SELECT count(*) AS n FROM foto_mascota WHERE url_catalogo IS NOT NULL'),
+    ).toBe(4);
     expect(await contar(ds, 'SELECT count(*) AS n FROM usuario')).toBe(2);
   });
 });

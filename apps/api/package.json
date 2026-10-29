@@ -17,7 +17,8 @@
     "seed:demo": "pnpm seed --demo",
     "test:db": "jest --config jest.db.config.ts",
     "test:infra": "jest --config jest.infra.config.ts",
-    "test:auth": "jest --config jest.auth.config.ts"
+    "test:auth": "jest --config jest.auth.config.ts",
+    "test:mascotas": "jest --config jest.mascotas.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.8",
@@ -37,6 +38,7 @@
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "sharp": "^0.35.5",
     "typeorm": "^0.3.31"
   },
   "devDependencies": {

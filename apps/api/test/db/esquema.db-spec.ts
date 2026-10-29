@@ -6,6 +6,11 @@ const SQL_TABLAS_APP = `SELECT count(*) AS n FROM information_schema.tables
 const SQL_ENUMS = `SELECT count(*) AS n FROM pg_type t JOIN pg_namespace s ON s.oid = t.typnamespace
   WHERE s.nspname = 'public' AND t.typtype = 'e'`;
 
+const SQL_INDICES_CATALOGO = `SELECT count(*) AS n FROM pg_indexes WHERE schemaname = 'public'
+  AND indexname IN ('idx_mascota_catalogo', 'idx_foto_mascota_mascota', 'idx_historial_mascota_fecha')`;
+const SQL_URL_CATALOGO = `SELECT count(*) AS n FROM information_schema.columns
+  WHERE table_name = 'foto_mascota' AND column_name = 'url_catalogo'`;
+
 async function rechaza(promesa: Promise<unknown>, patron: RegExp): Promise<void> {
   await expect(promesa).rejects.toThrow(patron);
 }
@@ -28,12 +33,23 @@ describe('esquema inicial (V8)', () => {
     expect(await contar(ds, SQL_TABLAS_APP)).toBe(16);
     expect(await contar(ds, SQL_ENUMS)).toBe(11);
 
+    // La última migración (CatalogoMascotas) se revierte sola y deja el esquema inicial intacto.
+    await ds.undoLastMigration();
+    expect(await contar(ds, SQL_TABLAS_APP)).toBe(16);
+    expect(await contar(ds, SQL_INDICES_CATALOGO)).toBe(0);
+    expect(await contar(ds, SQL_URL_CATALOGO)).toBe(0);
+
     await ds.undoLastMigration();
     expect(await contar(ds, SQL_TABLAS_APP)).toBe(0);
     expect(await contar(ds, SQL_ENUMS)).toBe(0);
 
     await ds.runMigrations();
     expect(await contar(ds, SQL_TABLAS_APP)).toBe(16);
+    expect(await contar(ds, SQL_INDICES_CATALOGO)).toBe(3);
+    expect(await contar(ds, SQL_URL_CATALOGO)).toBe(1);
+    expect(
+      await contar(ds, `SELECT count(*) AS n FROM pg_extension WHERE extname = 'unaccent'`),
+    ).toBe(1);
   });
 
   it('las entidades coinciden con la migración (sin SQL pendiente)', async () => {
@@ -104,10 +120,10 @@ describe('esquema inicial (V8)', () => {
     it('rechaza una segunda foto principal y borra fotos en cascada', async () => {
       const [{ id: mascotaId }] = await mascota('Foto');
       const foto = (principal: boolean) =>
-        ds.query(`INSERT INTO foto_mascota (mascota_id, url, es_principal) VALUES ($1, 'u', $2)`, [
-          mascotaId,
-          principal,
-        ]);
+        ds.query(
+          `INSERT INTO foto_mascota (mascota_id, url, url_catalogo, es_principal) VALUES ($1, 'u', 'c', $2)`,
+          [mascotaId, principal],
+        );
       await foto(true);
       await foto(false);
       await rechaza(foto(true), /uq_foto_principal/);

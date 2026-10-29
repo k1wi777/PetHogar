@@ -106,7 +106,8 @@ export async function sembrarDemo(
       [fundacion.id, m.nombre, m.sexo, m.edadMeses, m.tamano, m.descripcion, m.especie, m.raza],
     );
     await manager.query(
-      'INSERT INTO "foto_mascota" ("mascota_id", "url", "es_principal") VALUES ($1, $2, true)',
+      `INSERT INTO "foto_mascota" ("mascota_id", "url", "url_catalogo", "es_principal")
+       VALUES ($1, $2, $2, true)`,
       [mascota.id, `/uploads/demo/${m.nombre.toLowerCase()}.jpg`],
     );
   }

@@ -8,7 +8,6 @@ import { FundacionesRepository } from './fundaciones.repository';
 import {
   type DatosNuevaFundacion,
   type DecisionValidacion,
-  type EstadoFundacion,
   type FundacionAdminDetalle,
   type FundacionAdminResumen,
   type FundacionResumen,
@@ -87,7 +86,7 @@ export class FundacionesService {
     return this.obtenerDetalle(id);
   }
 
-  async estadoPorUsuarioId(usuarioId: number): Promise<EstadoFundacion | null> {
+  async estadoPorUsuarioId(usuarioId: number): Promise<FundacionResumen | null> {
     return this.obtenerPorUsuarioId(usuarioId);
   }
 }

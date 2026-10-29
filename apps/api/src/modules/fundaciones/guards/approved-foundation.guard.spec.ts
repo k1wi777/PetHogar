@@ -8,6 +8,7 @@ import { JwtAuthGuard } from '../../../common/auth/jwt-auth.guard';
 import { Roles } from '../../../common/auth/roles.decorator';
 import { RolesGuard } from '../../../common/auth/roles.guard';
 import { AllExceptionsFilter } from '../../../common/filters/http-exception.filter';
+import { FundacionId } from '../decorators/fundacion-id.decorator';
 import { EstadoValidacion } from '../entities/fundacion.enum';
 import { FundacionesService } from '../fundaciones.service';
 import { ApprovedFoundationGuard } from './approved-foundation.guard';
@@ -17,8 +18,8 @@ class OperativaController {
   @Roles('fundacion')
   @UseGuards(ApprovedFoundationGuard)
   @Get()
-  operar(): { ok: boolean } {
-    return { ok: true };
+  operar(@FundacionId() fundacionId: number): { ok: boolean; fundacionId: number } {
+    return { ok: true, fundacionId };
   }
 }
 
@@ -65,8 +66,9 @@ describe('ApprovedFoundationGuard', () => {
   });
 
   it('deja pasar a una fundación aprobada', async () => {
-    estadoPorUsuarioId.mockResolvedValue({ estadoValidacion: EstadoValidacion.Aprobada });
-    await llamar().expect(200);
+    estadoPorUsuarioId.mockResolvedValue({ id: 4, estadoValidacion: EstadoValidacion.Aprobada });
+    const res = await llamar().expect(200);
+    expect(res.body.fundacionId).toBe(4);
     expect(estadoPorUsuarioId).toHaveBeenCalledWith(9);
   });
 

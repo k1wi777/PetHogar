@@ -13,6 +13,7 @@ import type { Fundacion } from '../../fundaciones/entities/fundacion.entity';
 import type { Raza } from '../../catalogos/entities/raza.entity';
 
 @Check('ck_mascota_edad_meses', '"edad_meses" >= 0')
+@Index('idx_mascota_catalogo', ['fechaPublicacion', 'id'], { where: '"estado" = \'disponible\'' })
 @Index('idx_mascota_estado', ['estado'])
 @Index('idx_mascota_fundacion', ['fundacionId'])
 @Index('idx_mascota_raza', ['razaId'])

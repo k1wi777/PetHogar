@@ -16,6 +16,9 @@ describe('paginación', () => {
 
     const invalido = plainToInstance(PaginacionQueryDto, { page: '0', limit: '1000' });
     expect(await validate(invalido)).toHaveLength(2);
+
+    const enorme = plainToInstance(PaginacionQueryDto, { page: '99999999999999999999' });
+    expect(await validate(enorme)).toHaveLength(1);
   });
 
   it('construye la respuesta paginada', () => {

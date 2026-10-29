@@ -31,6 +31,7 @@ describe('sembrarDemo', () => {
     expect(sqls.filter((s) => s.includes('INTO "mascota"'))).toHaveLength(4);
     expect(sqls.filter((s) => s.includes('INTO "foto_mascota"'))).toHaveLength(4);
     expect(sqls.some((s) => s.includes("'aprobada'"))).toBe(true);
+    expect(sqls.filter((s) => s.includes('"url_catalogo"'))).toHaveLength(4);
   });
 
   it('no inserta mascotas ni usuario si ya existen', async () => {

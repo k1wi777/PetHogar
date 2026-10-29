@@ -34,6 +34,7 @@ export interface Entorno {
   post: (ruta: string, ip?: string) => request.Test;
   get: (ruta: string, ip?: string) => request.Test;
   patch: (ruta: string, ip?: string) => request.Test;
+  del: (ruta: string, ip?: string) => request.Test;
   login: (email: string, contrasena?: string) => request.Test;
   /** Inicia sesión y devuelve el access token y el valor de la cookie de refresh. */
   sesion: (email: string, contrasena?: string) => Promise<{ access: string; refresh: string }>;
@@ -112,13 +113,18 @@ export async function arrancarEntorno(): Promise<Entorno> {
 
   let ipContador = 0;
   const ipNueva = (): string => `10.${Math.floor(ipContador / 250)}.1.${(ipContador++ % 250) + 1}`;
-  const http = (metodo: 'post' | 'get' | 'patch', ruta: string, ip?: string): request.Test =>
+  const http = (
+    metodo: 'post' | 'get' | 'patch' | 'delete',
+    ruta: string,
+    ip?: string,
+  ): request.Test =>
     request(app.getHttpServer())
       [metodo](`/api${ruta}`)
       .set('X-Forwarded-For', ip ?? ipNueva());
   const post = (ruta: string, ip?: string): request.Test => http('post', ruta, ip);
   const get = (ruta: string, ip?: string): request.Test => http('get', ruta, ip);
   const patch = (ruta: string, ip?: string): request.Test => http('patch', ruta, ip);
+  const del = (ruta: string, ip?: string): request.Test => http('delete', ruta, ip);
 
   let contador = 0;
   const nuevoCorreo = (): string => `v10b-${sufijo}-${contador++}@example.com`;
@@ -164,6 +170,7 @@ export async function arrancarEntorno(): Promise<Entorno> {
     post,
     get,
     patch,
+    del,
     login,
     sesion: async (email, contrasena = CLAVE) => {
       const res = await login(email, contrasena).expect(200);

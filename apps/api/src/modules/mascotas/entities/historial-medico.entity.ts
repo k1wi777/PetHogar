@@ -2,6 +2,7 @@ import {
   type Relation,
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -9,6 +10,7 @@ import {
 import { TipoHistorialMedico } from './historial-medico.enum';
 import type { Mascota } from '../../mascotas/entities/mascota.entity';
 
+@Index('idx_historial_mascota_fecha', ['mascotaId', 'fecha', 'id'])
 @Entity()
 export class HistorialMedico {
   @PrimaryGeneratedColumn('identity', {
