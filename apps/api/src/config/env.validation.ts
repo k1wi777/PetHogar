@@ -123,6 +123,14 @@ export class EnvironmentVariables {
   @Min(1, { message: MENSAJE_ENTERO_POSITIVO })
   VERIFICACION_EXPIRA_HORAS: number = 24;
 
+  @IsInt({ message: MENSAJE_ENTERO_POSITIVO })
+  @Min(1, { message: MENSAJE_ENTERO_POSITIVO })
+  RESET_CODE_EXPIRA_MIN: number = 15;
+
+  @IsInt({ message: MENSAJE_ENTERO_POSITIVO })
+  @Min(1, { message: MENSAJE_ENTERO_POSITIVO })
+  RESET_CODE_MAX_INTENTOS: number = 5;
+
   /** Por defecto `true` solo en producción (ver `cookieSegura`). */
   @IsOptional()
   @IsIn(['true', 'false'], { message: MENSAJE_BOOLEANO })

@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { LoginService } from './login.service';
 import { PerfilService } from './perfil.service';
+import { RecuperacionService } from './recuperacion.service';
 import { RefreshTokenRepository } from './refresh-token.repository';
 import { RegistroService } from './registro.service';
 import { SesionService } from './sesion.service';
@@ -30,6 +31,8 @@ import { VerificacionService } from './verificacion.service';
     LoginService,
     SesionService,
     PerfilService,
+    RecuperacionService,
   ],
+  exports: [SesionService],
 })
 export class AuthModule {}

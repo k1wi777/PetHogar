@@ -9,9 +9,11 @@ import { RolesGuard } from './common/auth/roles.guard';
 import { EventosModule } from './common/events';
 import { EnvironmentVariables, validate } from './config/env.validation';
 import { crearOpcionesTypeOrm } from './database/typeorm.options';
+import { AdminModule } from './modules/admin/admin.module';
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { FundacionesModule } from './modules/fundaciones/fundaciones.module';
+import { CuentaActivaGuard } from './modules/usuarios/guards/cuenta-activa.guard';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 
 @Module({
@@ -37,12 +39,14 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module';
     UsuariosModule,
     FundacionesModule,
     AuthModule,
+    AdminModule,
   ],
   // El orden es el de ejecución: primero el límite de peticiones (también para anónimos),
-  // luego la autenticación y por último los roles.
+  // luego la autenticación, la cuenta activa y por último los roles.
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: CuentaActivaGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })

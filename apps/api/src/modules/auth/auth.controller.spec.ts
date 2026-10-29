@@ -13,6 +13,7 @@ import { crearValidationPipe } from '../../common/pipes/validation.pipe';
 import { AuthController } from './auth.controller';
 import { LoginService } from './login.service';
 import { PerfilService } from './perfil.service';
+import { RecuperacionService } from './recuperacion.service';
 import { RegistroService } from './registro.service';
 import { SesionService } from './sesion.service';
 import { VerificacionService } from './verificacion.service';
@@ -68,6 +69,7 @@ describe('AuthController (HTTP, servicios simulados)', () => {
   const login = { iniciarSesion: jest.fn() };
   const sesion = { renovar: jest.fn(), revocar: jest.fn() };
   const perfil = { obtener: jest.fn() };
+  const recuperacion = { solicitar: jest.fn(), restablecer: jest.fn() };
 
   beforeAll(async () => {
     const modulo = await Test.createTestingModule({
@@ -93,6 +95,7 @@ describe('AuthController (HTTP, servicios simulados)', () => {
         { provide: LoginService, useValue: login },
         { provide: SesionService, useValue: sesion },
         { provide: PerfilService, useValue: perfil },
+        { provide: RecuperacionService, useValue: recuperacion },
       ],
     }).compile();
     app = modulo.createNestApplication();
@@ -228,6 +231,46 @@ describe('AuthController (HTTP, servicios simulados)', () => {
     });
   });
 
+  describe('recuperación de contraseña', () => {
+    const RESET = { email: ' ANA@Example.com ', codigo: '012345', nuevaContrasena: 'NuevaClave1' };
+
+    it('forgot-password responde 200 con el mensaje del servicio y normaliza el correo', async () => {
+      recuperacion.solicitar.mockResolvedValue({ mensaje: 'ok' });
+      await http()
+        .post('/auth/forgot-password')
+        .send({ email: ' ANA@Example.com ' })
+        .expect(200, { mensaje: 'ok' });
+      expect(recuperacion.solicitar).toHaveBeenCalledWith('ana@example.com');
+      await http().post('/auth/forgot-password').send({ email: 'no-es-correo' }).expect(400);
+    });
+
+    it('reset-password delega con el correo normalizado y el código como texto', async () => {
+      recuperacion.restablecer.mockResolvedValue({ mensaje: 'listo' });
+      await http().post('/auth/reset-password').send(RESET).expect(200, { mensaje: 'listo' });
+      expect(recuperacion.restablecer.mock.calls[0][0]).toEqual({
+        email: 'ana@example.com',
+        codigo: '012345',
+        nuevaContrasena: 'NuevaClave1',
+      });
+    });
+
+    it.each([
+      ['código corto', { codigo: '12345' }],
+      ['código con letras', { codigo: '12345a' }],
+      ['código de 7 dígitos', { codigo: '1234567' }],
+      ['código con espacios', { codigo: '123 456' }],
+      ['contraseña corta', { nuevaContrasena: 'Ab1' }],
+      ['contraseña sin mayúscula', { nuevaContrasena: 'sinmayuscula1' }],
+      ['contraseña sin número', { nuevaContrasena: 'SinNumeroAqui' }],
+    ])('reset-password rechaza %s con 400 sin llegar al servicio', async (_nombre, cambio) => {
+      await http()
+        .post('/auth/reset-password')
+        .send({ ...RESET, ...cambio })
+        .expect(400);
+      expect(recuperacion.restablecer).not.toHaveBeenCalled();
+    });
+  });
+
   describe('login, refresh y logout', () => {
     it('login: access token en el cuerpo y refresh solo en la cookie httpOnly', async () => {
       login.iniciarSesion.mockResolvedValue(SESION);
@@ -329,6 +372,13 @@ describe('Rate limit de los endpoints sensibles', () => {
         { provide: LoginService, useValue: login },
         { provide: SesionService, useValue: {} },
         { provide: PerfilService, useValue: {} },
+        {
+          provide: RecuperacionService,
+          useValue: {
+            solicitar: jest.fn().mockResolvedValue({ mensaje: 'x' }),
+            restablecer: jest.fn().mockResolvedValue({ mensaje: 'x' }),
+          },
+        },
       ],
     }).compile();
     app = modulo.createNestApplication();
@@ -353,6 +403,22 @@ describe('Rate limit de los endpoints sensibles', () => {
     const enviar = (): request.Test =>
       request(app.getHttpServer()).post('/auth/verify-email/resend').send({ email: 'a@b.co' });
     for (let i = 0; i < 3; i++) await enviar().expect(200);
+    await enviar().expect(429);
+  });
+
+  it('forgot-password: límite de 3 por minuto', async () => {
+    const enviar = (): request.Test =>
+      request(app.getHttpServer()).post('/auth/forgot-password').send({ email: 'a@b.co' });
+    for (let i = 0; i < 3; i++) await enviar().expect(200);
+    await enviar().expect(429);
+  });
+
+  it('reset-password: límite de 5 por minuto', async () => {
+    const enviar = (): request.Test =>
+      request(app.getHttpServer())
+        .post('/auth/reset-password')
+        .send({ email: 'a@b.co', codigo: '123456', nuevaContrasena: 'NuevaClave1' });
+    for (let i = 0; i < 5; i++) await enviar().expect(200);
     await enviar().expect(429);
   });
 });

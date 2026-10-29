@@ -34,7 +34,7 @@ export class RefreshTokenRepository {
     await this.tokens.update({ tokenHash, revocado: false }, { revocado: true });
   }
 
-  async revocarTodosDeUsuario(usuarioId: number): Promise<void> {
-    await this.tokens.update({ usuarioId, revocado: false }, { revocado: true });
+  async revocarTodosDeUsuario(usuarioId: number, manager?: EntityManager): Promise<void> {
+    await this.en(manager).update({ usuarioId, revocado: false }, { revocado: true });
   }
 }

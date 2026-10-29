@@ -57,3 +57,22 @@ export interface UsuarioCreado {
   id: number;
   email: string;
 }
+
+export interface FiltroUsuarios {
+  nombre?: string;
+  correo?: string;
+  rol?: RolNombre;
+}
+
+/** Vista del administrador: sin contraseña, hashes, tokens ni códigos. */
+export interface UsuarioAdmin {
+  id: number;
+  email: string;
+  telefono: string;
+  rol: RolNombre;
+  activo: boolean;
+  emailVerificado: boolean;
+  fechaCreacion: Date;
+  /** Nombre completo del adoptante, nombre de la fundación o `null` (administrador). */
+  nombre: string | null;
+}

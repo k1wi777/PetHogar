@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { Fundacion } from './entities/fundacion.entity';
+import type { EstadoValidacion } from './entities/fundacion.enum';
 import type { DatosNuevaFundacion } from './fundaciones.types';
 
 @Injectable()
@@ -29,5 +30,47 @@ export class FundacionesRepository {
 
   buscarPorUsuarioId(usuarioId: number): Promise<Fundacion | null> {
     return this.fundaciones.findOne({ where: { usuarioId } });
+  }
+
+  buscarPorId(id: number): Promise<Fundacion | null> {
+    return this.fundaciones.findOne({ where: { id } });
+  }
+
+  /** Orden por `id` ascendente: la más antigua primero y paginación estable. */
+  listarPorEstado(
+    estado: EstadoValidacion,
+    skip: number,
+    take: number,
+  ): Promise<[Fundacion[], number]> {
+    return this.fundaciones.findAndCount({
+      where: { estadoValidacion: estado },
+      order: { id: 'ASC' },
+      skip,
+      take,
+    });
+  }
+
+  /**
+   * Una sola sentencia condicionada al estado vigente: de dos decisiones simultáneas solo la que
+   * cumple una transición válida sobre el estado actual modifica la fila.
+   */
+  async decidirValidacion(
+    id: number,
+    destino: EstadoValidacion,
+    origenes: readonly EstadoValidacion[],
+    observacion: string | null,
+    fecha: Date,
+  ): Promise<boolean> {
+    const resultado = await this.fundaciones
+      .createQueryBuilder()
+      .update(Fundacion)
+      .set({
+        estadoValidacion: destino,
+        observacionValidacion: observacion,
+        fechaValidacion: fecha,
+      })
+      .where('id = :id AND "estado_validacion" IN (:...origenes)', { id, origenes })
+      .execute();
+    return (resultado.affected ?? 0) > 0;
   }
 }

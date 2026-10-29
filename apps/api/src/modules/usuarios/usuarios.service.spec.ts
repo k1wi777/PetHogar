@@ -1,3 +1,4 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { UsuariosRepository } from './usuarios.repository';
 import { UsuariosService } from './usuarios.service';
 import type { DatosNuevoAdoptante } from './usuarios.types';
@@ -24,11 +25,20 @@ function crear(): { service: UsuariosService; repo: jest.Mocked<UsuariosReposito
     crearAdoptante: jest.fn(),
     crearUsuarioFundacion: jest.fn(),
     existeEmail: jest.fn(),
+    estaActiva: jest.fn(),
+    listarParaAdmin: jest.fn(),
+    obtenerParaAdmin: jest.fn(),
+    actualizarActivo: jest.fn(),
+    bloquearAdministradores: jest.fn(),
+    contarAdministradoresActivosExcepto: jest.fn(),
     existeDocumento: jest.fn(),
     registrarIntentoFallido: jest.fn(),
     reiniciarIntentos: jest.fn(),
     guardarTokenVerificacion: jest.fn(),
     consumirTokenVerificacion: jest.fn(),
+    guardarCodigoRecuperacion: jest.fn(),
+    reclamarIntentoCodigo: jest.fn(),
+    restablecerContrasena: jest.fn(),
   } as unknown as jest.Mocked<UsuariosRepository>;
   return { service: new UsuariosService(repo), repo };
 }
@@ -108,5 +118,91 @@ describe('UsuariosService', () => {
     expect(await service.consumirTokenVerificacion('h', ahora)).toBe(true);
     await service.reiniciarIntentos(7);
     expect(repo.reiniciarIntentos).toHaveBeenCalledWith(7);
+  });
+
+  it('delega la recuperación de contraseña, pasando el manager de la transacción', async () => {
+    const { service, repo } = crear();
+    const hasta = new Date();
+    const manager = {} as never;
+    repo.guardarCodigoRecuperacion.mockResolvedValue(true);
+    repo.reclamarIntentoCodigo.mockResolvedValue('hash-vigente');
+    repo.restablecerContrasena.mockResolvedValue(true);
+
+    expect(await service.guardarCodigoRecuperacion(7, 'h', hasta, hasta)).toBe(true);
+    expect(repo.guardarCodigoRecuperacion).toHaveBeenCalledWith(7, 'h', hasta, hasta);
+    expect(await service.reclamarIntentoCodigo(7, 5, hasta)).toBe('hash-vigente');
+    expect(await service.restablecerContrasena(7, 'h', 'nuevo', manager)).toBe(true);
+    expect(repo.restablecerContrasena).toHaveBeenCalledWith(7, 'h', 'nuevo', manager);
+  });
+
+  it('estaActiva delega en la consulta por clave primaria', async () => {
+    const { service, repo } = crear();
+    repo.estaActiva.mockResolvedValue(false);
+    expect(await service.estaActiva(7)).toBe(false);
+    expect(repo.estaActiva).toHaveBeenCalledWith(7);
+  });
+
+  it('listar convierte la paginación en skip/take y devuelve el formato estándar', async () => {
+    const { service, repo } = crear();
+    repo.listarParaAdmin.mockResolvedValue([[], 42]);
+    const r = await service.listar({ nombre: 'a' }, { page: 3, limit: 10 });
+    expect(repo.listarParaAdmin).toHaveBeenCalledWith({ nombre: 'a' }, 20, 10);
+    expect(r).toEqual({ data: [], total: 42, page: 3, limit: 10 });
+  });
+
+  describe('cambiarEstado', () => {
+    const MANAGER = {} as never;
+    const admin = { id: 1, rol: 'administrador', activo: true };
+    const adoptante = { id: 7, rol: 'adoptante', activo: true };
+
+    it('usuario inexistente: 404 y no escribe', async () => {
+      const { service, repo } = crear();
+      repo.obtenerParaAdmin.mockResolvedValue(null);
+      await expect(service.cambiarEstado(9, false, MANAGER)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(repo.actualizarActivo).not.toHaveBeenCalled();
+    });
+
+    it('desactivar a un no administrador no toma el bloqueo ni cuenta administradores', async () => {
+      const { service, repo } = crear();
+      repo.obtenerParaAdmin.mockResolvedValue(adoptante as never);
+      const r = await service.cambiarEstado(7, false, MANAGER);
+      expect(r).toMatchObject({ id: 7, activo: false });
+      expect(repo.actualizarActivo).toHaveBeenCalledWith(7, false, MANAGER);
+      expect(repo.bloquearAdministradores).not.toHaveBeenCalled();
+    });
+
+    it('desactivar a un administrador toma el bloqueo ANTES de contar a los demás', async () => {
+      const { service, repo } = crear();
+      repo.obtenerParaAdmin.mockResolvedValue(admin as never);
+      repo.contarAdministradoresActivosExcepto.mockResolvedValue(1);
+      await service.cambiarEstado(1, false, MANAGER);
+      expect(repo.bloquearAdministradores).toHaveBeenCalledWith(MANAGER);
+      expect(repo.bloquearAdministradores.mock.invocationCallOrder[0]).toBeLessThan(
+        repo.contarAdministradoresActivosExcepto.mock.invocationCallOrder[0],
+      );
+      expect(repo.contarAdministradoresActivosExcepto).toHaveBeenCalledWith(1, MANAGER);
+      expect(repo.actualizarActivo).toHaveBeenCalledWith(1, false, MANAGER);
+    });
+
+    it('el último administrador activo no se puede desactivar (409, sin escribir)', async () => {
+      const { service, repo } = crear();
+      repo.obtenerParaAdmin.mockResolvedValue(admin as never);
+      repo.contarAdministradoresActivosExcepto.mockResolvedValue(0);
+      await expect(service.cambiarEstado(1, false, MANAGER)).rejects.toBeInstanceOf(
+        ConflictException,
+      );
+      expect(repo.actualizarActivo).not.toHaveBeenCalled();
+    });
+
+    it('activar no exige nada; marcar el estado que ya tiene es válido', async () => {
+      const { service, repo } = crear();
+      repo.obtenerParaAdmin.mockResolvedValue(admin as never);
+      expect(await service.cambiarEstado(1, true, MANAGER)).toMatchObject({ activo: true });
+      repo.obtenerParaAdmin.mockResolvedValue({ ...admin, activo: false } as never);
+      expect(await service.cambiarEstado(1, false, MANAGER)).toMatchObject({ activo: false });
+      expect(repo.bloquearAdministradores).not.toHaveBeenCalled();
+    });
   });
 });

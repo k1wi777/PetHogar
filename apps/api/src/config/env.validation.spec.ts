@@ -67,7 +67,25 @@ describe('validate (.env)', () => {
         LOGIN_MAX_INTENTOS: 5,
         LOGIN_BLOQUEO_MIN: 15,
         VERIFICACION_EXPIRA_HORAS: 24,
+        RESET_CODE_EXPIRA_MIN: 15,
+        RESET_CODE_MAX_INTENTOS: 5,
       });
+    });
+
+    it('valida la vigencia y los intentos del código de recuperación', () => {
+      const env = validate({
+        ...ENV_VALIDO,
+        RESET_CODE_EXPIRA_MIN: '30',
+        RESET_CODE_MAX_INTENTOS: '3',
+      });
+      expect(env.RESET_CODE_EXPIRA_MIN).toBe(30);
+      expect(env.RESET_CODE_MAX_INTENTOS).toBe(3);
+      expect(() => validate({ ...ENV_VALIDO, RESET_CODE_EXPIRA_MIN: '0' })).toThrow(
+        'RESET_CODE_EXPIRA_MIN: debe ser un número entero',
+      );
+      expect(() => validate({ ...ENV_VALIDO, RESET_CODE_MAX_INTENTOS: 'abc' })).toThrow(
+        'RESET_CODE_MAX_INTENTOS: debe ser un número entero',
+      );
     });
 
     it('convierte los valores configurados y rechaza los no positivos', () => {

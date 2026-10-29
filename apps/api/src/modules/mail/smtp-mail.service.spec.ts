@@ -42,6 +42,20 @@ describe('renderizar', () => {
     expect(r.html).not.toContain('<i>Ana');
   });
 
+  it('genera el correo de recuperación con el código y su vigencia, escapando el nombre', () => {
+    const r = renderizar('recuperacion-contrasena', {
+      nombre: '<i>Ana</i>',
+      codigo: '012345',
+      minutosVigencia: 15,
+    });
+    expect(r.asunto).toBe('Tu código de recuperación de PetHogar');
+    expect(r.texto).toContain('012345');
+    expect(r.texto).toContain('15 minutos');
+    expect(r.texto).toContain('No lo compartas');
+    expect(r.html).toContain('012345');
+    expect(r.html).not.toContain('<i>Ana');
+  });
+
   it('genera el correo de recepción de la fundación', () => {
     const r = renderizar('registro-fundacion-recibido', { nombreFundacion: 'Huellas & Patas' });
     expect(r.asunto).toBe('Recibimos el registro de tu fundación');

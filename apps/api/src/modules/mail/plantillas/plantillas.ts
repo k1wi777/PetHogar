@@ -55,6 +55,18 @@ function contenido<P extends NombrePlantilla>(plantilla: P, datos: DatosPlantill
         enlace: d.enlace,
       };
     }
+    case 'recuperacion-contrasena': {
+      const d = datos as DatosPlantilla['recuperacion-contrasena'];
+      return {
+        asunto: 'Tu código de recuperación de PetHogar',
+        parrafos: [
+          `Hola, ${d.nombre}.`,
+          `Tu código para restablecer la contraseña es: ${d.codigo}`,
+          `El código es válido durante ${d.minutosVigencia} minutos y solo sirve una vez. No lo compartas con nadie.`,
+          'Si no lo pediste, ignora este mensaje: tu contraseña no cambiará.',
+        ],
+      };
+    }
     case 'registro-fundacion-recibido': {
       const d = datos as DatosPlantilla['registro-fundacion-recibido'];
       return {

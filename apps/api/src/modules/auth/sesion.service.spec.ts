@@ -170,4 +170,12 @@ describe('SesionService', () => {
       expect(repo.revocarPorHash).toHaveBeenCalledWith(hashHmac(SECRETO, 'tok'));
     });
   });
+
+  describe('revocarTodas', () => {
+    it('revoca todas las sesiones, dentro de la transacción del llamador si se pasa su manager', async () => {
+      const { service, repo } = crear();
+      await service.revocarTodas(5, MANAGER as never);
+      expect(repo.revocarTodosDeUsuario).toHaveBeenCalledWith(5, MANAGER);
+    });
+  });
 });

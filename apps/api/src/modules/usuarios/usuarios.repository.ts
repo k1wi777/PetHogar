@@ -1,10 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository, SelectQueryBuilder } from 'typeorm';
 import { Adoptante } from './entities/adoptante.entity';
 import { Rol } from './entities/rol.entity';
 import { Usuario } from './entities/usuario.entity';
-import type { DatosNuevoAdoptante, DatosNuevoUsuarioFundacion } from './usuarios.types';
+import { construirFiltroUsuarios, SQL_NOMBRE_USUARIO } from './usuarios.filtros';
+import type {
+  DatosNuevoAdoptante,
+  DatosNuevoUsuarioFundacion,
+  FiltroUsuarios,
+  UsuarioAdmin,
+} from './usuarios.types';
+
+const BLOQUEO_ADMINISTRADORES = 'usuarios:administradores';
+
+interface FilaUsuarioAdmin {
+  id: number;
+  email: string;
+  telefono: string;
+  rol: UsuarioAdmin['rol'];
+  activo: boolean;
+  email_verificado: boolean;
+  fecha_creacion: Date;
+  nombre: string | null;
+}
 
 /** `manager` opcional: permite participar en la transacción abierta por quien orquesta. */
 @Injectable()
@@ -29,6 +48,11 @@ export class UsuariosRepository {
 
   buscarAdoptantePorUsuarioId(usuarioId: number): Promise<Adoptante | null> {
     return this.adoptantes.findOne({ where: { usuarioId } });
+  }
+
+  /** Consulta por clave primaria: existe y está activo. */
+  estaActiva(id: number): Promise<boolean> {
+    return this.usuarios.exists({ where: { id, activo: true } });
   }
 
   existeEmail(email: string): Promise<boolean> {
@@ -141,4 +165,164 @@ export class UsuariosRepository {
       .execute();
     return (resultado.affected ?? 0) > 0;
   }
+
+  /**
+   * Guarda un código de recuperación nuevo (invalida el anterior) en una sola sentencia y solo
+   * si la cuenta está activa y verificada y el último envío ya cumplió el enfriamiento:
+   * `expiraMaxima` es la expiración más tardía que aún permite emitir otro.
+   */
+  async guardarCodigoRecuperacion(
+    id: number,
+    hash: string,
+    expira: Date,
+    expiraMaxima: Date,
+  ): Promise<boolean> {
+    const resultado = await this.usuarios
+      .createQueryBuilder()
+      .update(Usuario)
+      .set({ resetCodeHash: hash, resetCodeExpira: expira, resetCodeIntentos: 0 })
+      .where(
+        `id = :id AND "activo" = true AND "email_verificado" = true
+         AND ("reset_code_expira" IS NULL OR "reset_code_expira" <= :expiraMaxima)`,
+        { id, expiraMaxima },
+      )
+      .execute();
+    return (resultado.affected ?? 0) > 0;
+  }
+
+  /**
+   * Reclama un intento de comprobación en una sola sentencia: el contador y el límite se evalúan
+   * juntos, así que peticiones paralelas no superan `maxIntentos`. Devuelve el hash vigente o
+   * `null` si no hay cuenta activa, código, vigencia o intentos disponibles.
+   */
+  async reclamarIntentoCodigo(
+    id: number,
+    maxIntentos: number,
+    ahora: Date,
+  ): Promise<string | null> {
+    const resultado = await this.usuarios
+      .createQueryBuilder()
+      .update(Usuario)
+      .set({ resetCodeIntentos: () => '"reset_code_intentos" + 1' })
+      .where(
+        `id = :id AND "activo" = true AND "reset_code_hash" IS NOT NULL
+         AND "reset_code_expira" > :ahora AND "reset_code_intentos" < :max`,
+        { id, ahora, max: maxIntentos },
+      )
+      .returning('"reset_code_hash"')
+      .execute();
+    const filas = resultado.raw as { reset_code_hash: string }[];
+    return filas[0]?.reset_code_hash ?? null;
+  }
+
+  /**
+   * Cambia la contraseña consumiendo el código (`hashCodigo` debe seguir vigente en BD) y limpia
+   * intentos y bloqueo de login. `false` si otra petición ya lo consumió.
+   */
+  async restablecerContrasena(
+    id: number,
+    hashCodigo: string,
+    contrasenaHash: string,
+    manager?: EntityManager,
+  ): Promise<boolean> {
+    const resultado = await this.usuariosEn(manager)
+      .createQueryBuilder()
+      .update(Usuario)
+      .set({
+        contrasena: contrasenaHash,
+        resetCodeHash: null,
+        resetCodeExpira: null,
+        resetCodeIntentos: 0,
+        intentosFallidos: 0,
+        bloqueadoHasta: null,
+      })
+      .where('id = :id AND "reset_code_hash" = :hashCodigo', { id, hashCodigo })
+      .execute();
+    return (resultado.affected ?? 0) > 0;
+  }
+
+  /**
+   * Base de las consultas de administración: `usuario` con su rol y, si existen, adoptante y
+   * fundación (esta última solo en lectura, por nombre de tabla). Las uniones son 1:1.
+   */
+  private consultaAdmin(manager?: EntityManager): SelectQueryBuilder<Usuario> {
+    return this.usuariosEn(manager)
+      .createQueryBuilder('u')
+      .innerJoin(Rol, 'r', 'r."id" = u."rol_id"')
+      .leftJoin(Adoptante, 'a', 'a."usuario_id" = u."id"')
+      .leftJoin('fundacion', 'f', 'f."usuario_id" = u."id"');
+  }
+
+  async listarParaAdmin(
+    filtros: FiltroUsuarios,
+    skip: number,
+    take: number,
+  ): Promise<[UsuarioAdmin[], number]> {
+    const { condiciones, parametros } = construirFiltroUsuarios(filtros);
+    const filtrada = (): SelectQueryBuilder<Usuario> => {
+      const qb = this.consultaAdmin().setParameters(parametros);
+      condiciones.forEach((condicion) => qb.andWhere(condicion));
+      return qb;
+    };
+    const total = await filtrada().select('COUNT(u."id")', 'total').getRawOne<{ total: string }>();
+    // Desempate por clave primaria: la paginación es estable aunque coincida la fecha.
+    const filas = await filtrada()
+      .select(COLUMNAS_ADMIN)
+      .orderBy('u."fecha_creacion"', 'DESC')
+      .addOrderBy('u."id"', 'DESC')
+      .offset(skip)
+      .limit(take)
+      .getRawMany<FilaUsuarioAdmin>();
+    return [filas.map(aUsuarioAdmin), Number(total?.total ?? 0)];
+  }
+
+  async obtenerParaAdmin(id: number, manager?: EntityManager): Promise<UsuarioAdmin | null> {
+    const fila = await this.consultaAdmin(manager)
+      .select(COLUMNAS_ADMIN)
+      .where('u."id" = :id', { id })
+      .getRawOne<FilaUsuarioAdmin>();
+    return fila ? aUsuarioAdmin(fila) : null;
+  }
+
+  async actualizarActivo(id: number, activo: boolean, manager?: EntityManager): Promise<void> {
+    await this.usuariosEn(manager).update({ id }, { activo });
+  }
+
+  /** Bloqueo asesor de la transacción: serializa las desactivaciones de administradores. */
+  async bloquearAdministradores(manager: EntityManager): Promise<void> {
+    await manager.query('SELECT pg_advisory_xact_lock(hashtext($1))', [BLOQUEO_ADMINISTRADORES]);
+  }
+
+  contarAdministradoresActivosExcepto(id: number, manager: EntityManager): Promise<number> {
+    return manager
+      .getRepository(Usuario)
+      .createQueryBuilder('u')
+      .innerJoin(Rol, 'r', 'r."id" = u."rol_id"')
+      .where(`r."nombre" = 'administrador' AND u."activo" = true AND u."id" <> :id`, { id })
+      .getCount();
+  }
+}
+
+const COLUMNAS_ADMIN = [
+  'u."id" AS "id"',
+  'u."email" AS "email"',
+  'u."telefono" AS "telefono"',
+  'r."nombre" AS "rol"',
+  'u."activo" AS "activo"',
+  'u."email_verificado" AS "email_verificado"',
+  'u."fecha_creacion" AS "fecha_creacion"',
+  `${SQL_NOMBRE_USUARIO} AS "nombre"`,
+];
+
+function aUsuarioAdmin(fila: FilaUsuarioAdmin): UsuarioAdmin {
+  return {
+    id: fila.id,
+    email: fila.email,
+    telefono: fila.telefono,
+    rol: fila.rol,
+    activo: fila.activo,
+    emailVerificado: fila.email_verificado,
+    fechaCreacion: fila.fecha_creacion,
+    nombre: fila.nombre,
+  };
 }

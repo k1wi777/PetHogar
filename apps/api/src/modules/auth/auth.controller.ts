@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
   ApiConsumes,
@@ -47,8 +48,10 @@ import {
   UsuarioPerfilDto,
 } from './dto/respuestas.dto';
 import { ReenviarVerificacionDto, VerificarCorreoQueryDto } from './dto/verificacion.dto';
+import { RestablecerContrasenaDto, SolicitarRecuperacionDto } from './dto/recuperacion.dto';
 import { LoginService } from './login.service';
 import { PerfilService } from './perfil.service';
+import { RecuperacionService } from './recuperacion.service';
 import { RegistroService } from './registro.service';
 import { MENSAJE_SESION_NO_VALIDA, SesionEmitida, SesionService } from './sesion.service';
 import { VerificacionService } from './verificacion.service';
@@ -64,6 +67,7 @@ export class AuthController {
     private readonly login: LoginService,
     private readonly sesion: SesionService,
     private readonly perfil: PerfilService,
+    private readonly recuperacion: RecuperacionService,
     private readonly config: ConfigService<EnvironmentVariables, true>,
   ) {}
 
@@ -109,6 +113,31 @@ export class AuthController {
   @ApiOkResponse({ type: MensajeDto })
   reenviarVerificacion(@Body() dto: ReenviarVerificacionDto): Promise<MensajeDto> {
     return this.verificacion.reenviar(dto.email);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 3, ttl: MINUTO_MS } })
+  @Post('forgot-password')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Envía un código de recuperación por correo (siempre responde lo mismo)',
+  })
+  @ApiOkResponse({ type: MensajeDto })
+  solicitarRecuperacion(@Body() dto: SolicitarRecuperacionDto): Promise<MensajeDto> {
+    return this.recuperacion.solicitar(dto.email);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: MINUTO_MS } })
+  @Post('reset-password')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Cambia la contraseña con el código recibido por correo y cierra todas las sesiones',
+  })
+  @ApiOkResponse({ type: MensajeDto })
+  @ApiBadRequestResponse({ description: 'Código no válido o vencido, o contraseña insegura' })
+  restablecerContrasena(@Body() dto: RestablecerContrasenaDto): Promise<MensajeDto> {
+    return this.recuperacion.restablecer(dto);
   }
 
   @Public()

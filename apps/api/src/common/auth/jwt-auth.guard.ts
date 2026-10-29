@@ -12,8 +12,9 @@ interface PayloadAcceso {
 }
 
 /**
- * Exige un access token válido salvo en rutas `@Public()`. No consulta la base de datos:
- * un usuario desactivado conserva su access token hasta que vence (máx. 15 min).
+ * Exige un access token válido salvo en rutas `@Public()`. Solo verifica la firma y el rol del
+ * token, sin consultar la base de datos; el estado de la cuenta lo comprueba `CuentaActivaGuard`
+ * a continuación.
  */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {

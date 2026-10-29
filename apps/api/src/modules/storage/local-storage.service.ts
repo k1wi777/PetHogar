@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import * as path from 'node:path';
-import { BadRequestException, Logger, PayloadTooLargeException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Logger,
+  NotFoundException,
+  PayloadTooLargeException,
+} from '@nestjs/common';
 import { ArchivoInvalidoException } from './archivo-invalido.exception';
 import {
   CARPETAS,
@@ -18,11 +23,14 @@ import {
 } from './storage.constants';
 import type {
   ArchivoEntrada,
+  ArchivoLeido,
   ArchivoGuardado,
   IStorageService,
   OpcionesGuardado,
 } from './storage.interface';
 import { detectarTipo } from './tipo-archivo';
+
+const MENSAJE_ARCHIVO_NO_DISPONIBLE = 'El documento no está disponible';
 
 export interface LocalStorageOpciones {
   /** Directorio raíz de uploads (relativo al cwd o absoluto). */
@@ -65,6 +73,25 @@ export class LocalStorageService implements IStorageService {
     await writeFile(destino, buffer, { flag: 'wx' });
     this.logger.log(`Archivo guardado: ${clave} (${buffer.length} bytes)`);
     return { clave, visibilidad, tipo, tamano: buffer.length };
+  }
+
+  async leer(clave: string): Promise<ArchivoLeido> {
+    const origen = this.resolverClave(clave);
+    let buffer: Buffer;
+    try {
+      buffer = await readFile(origen);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      this.logger.warn(`Archivo no encontrado: ${clave}`);
+      throw new NotFoundException(MENSAJE_ARCHIVO_NO_DISPONIBLE);
+    }
+    // El tipo sale de la firma, no de la extensión: un archivo alterado en disco no se sirve como lo que dice ser.
+    const tipo = detectarTipo(buffer);
+    if (!tipo) {
+      this.logger.warn(`Archivo con firma no reconocida: ${clave}`);
+      throw new NotFoundException(MENSAJE_ARCHIVO_NO_DISPONIBLE);
+    }
+    return { buffer, tipo, tamano: buffer.length };
   }
 
   async eliminar(clave: string): Promise<void> {

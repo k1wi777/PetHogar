@@ -1,7 +1,9 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { EstadoValidacion } from './entities/fundacion.enum';
 import type { Fundacion } from './entities/fundacion.entity';
 import { FundacionesRepository } from './fundaciones.repository';
 import { FundacionesService } from './fundaciones.service';
+import { type DecisionValidacion, TRANSICIONES } from './fundaciones.types';
 
 const FILA = {
   id: 3,
@@ -18,6 +20,9 @@ function crear(): { service: FundacionesService; repo: jest.Mocked<FundacionesRe
     crear: jest.fn(),
     existeNit: jest.fn(),
     buscarPorUsuarioId: jest.fn(),
+    buscarPorId: jest.fn(),
+    listarPorEstado: jest.fn(),
+    decidirValidacion: jest.fn(),
   } as unknown as jest.Mocked<FundacionesRepository>;
   return { service: new FundacionesService(repo), repo };
 }
@@ -64,5 +69,146 @@ describe('FundacionesService', () => {
     const { service, repo } = crear();
     repo.buscarPorUsuarioId.mockResolvedValue(null);
     expect(await service.estadoPorUsuarioId(1)).toBeNull();
+  });
+
+  describe('consultas del administrador', () => {
+    const COMPLETA = {
+      ...FILA,
+      direccion: 'Calle 1',
+      ciudad: 'Montería',
+      descripcion: null,
+      fechaValidacion: null,
+    } as Fundacion;
+
+    it('lista paginado por estado en el orden del repository y mapea sin clave de documento', async () => {
+      const { service, repo } = crear();
+      repo.listarPorEstado.mockResolvedValue([[COMPLETA], 11]);
+      const r = await service.listarPorEstado(EstadoValidacion.Pendiente, { page: 2, limit: 5 });
+      expect(repo.listarPorEstado).toHaveBeenCalledWith('pendiente', 5, 5);
+      expect(r).toMatchObject({ total: 11, page: 2, limit: 5 });
+      expect(r.data[0]).toEqual({
+        id: 3,
+        nombre: 'Huellas',
+        nit: '900123456-7',
+        ciudad: 'Montería',
+        estadoValidacion: 'pendiente',
+        fechaValidacion: null,
+      });
+      expect(JSON.stringify(r)).not.toContain('privado/');
+    });
+
+    it('el detalle lleva dirección y observación; la clave solo sale por obtenerClaveDocumento', async () => {
+      const { service, repo } = crear();
+      repo.buscarPorId.mockResolvedValue(COMPLETA);
+      const d = await service.obtenerDetalle(3);
+      expect(d).toMatchObject({
+        usuarioId: 9,
+        direccion: 'Calle 1',
+        observacionValidacion: 'texto interno',
+      });
+      expect(d).not.toHaveProperty('documentoUrl');
+      expect(await service.obtenerClaveDocumento(3)).toBe('privado/fundaciones/x.pdf');
+    });
+
+    it('fundación inexistente: 404 en detalle y documento', async () => {
+      const { service, repo } = crear();
+      repo.buscarPorId.mockResolvedValue(null);
+      await expect(service.obtenerDetalle(1)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.obtenerClaveDocumento(1)).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('decidirValidacion (máquina de estados)', () => {
+    const ESTADOS = [
+      EstadoValidacion.Pendiente,
+      EstadoValidacion.Aprobada,
+      EstadoValidacion.Rechazada,
+    ];
+    const AHORA = new Date('2026-10-29T12:00:00Z');
+
+    it('la tabla solo permite pendiente→aprobada, rechazada→aprobada y pendiente→rechazada', () => {
+      expect(TRANSICIONES).toEqual({
+        aprobada: ['pendiente', 'rechazada'],
+        rechazada: ['pendiente'],
+      });
+    });
+
+    /** El repository simulado reproduce el UPDATE condicionado sobre un estado mutable. */
+    function conEstado(inicial: EstadoValidacion) {
+      const { service, repo } = crear();
+      const fila = { ...FILA, estadoValidacion: inicial } as Fundacion;
+      repo.buscarPorId.mockImplementation(async () => ({ ...fila }) as Fundacion);
+      repo.decidirValidacion.mockImplementation(async (_id, destino, origenes, obs, fecha) => {
+        if (!origenes.includes(fila.estadoValidacion)) return false;
+        Object.assign(fila, {
+          estadoValidacion: destino,
+          observacionValidacion: obs,
+          fechaValidacion: fecha,
+        });
+        return true;
+      });
+      return { service, repo, fila };
+    }
+
+    const DESTINOS: DecisionValidacion[] = [EstadoValidacion.Aprobada, EstadoValidacion.Rechazada];
+    const casos = ESTADOS.flatMap((origen) =>
+      DESTINOS.map((destino) => [origen, destino] as const),
+    );
+
+    it.each(casos)('%s → %s', async (origen, destino) => {
+      const { service, fila } = conEstado(origen);
+      const permitida = TRANSICIONES[destino].includes(origen);
+      const resultado = service.decidirValidacion(3, destino, 'motivo', AHORA);
+      if (permitida) {
+        const d = await resultado;
+        expect(d).toMatchObject({ estadoValidacion: destino, observacionValidacion: 'motivo' });
+        expect(fila.fechaValidacion).toEqual(AHORA);
+      } else {
+        await expect(resultado).rejects.toBeInstanceOf(ConflictException);
+        expect(fila.estadoValidacion).toBe(origen);
+        expect(fila.fechaValidacion).toBeUndefined();
+      }
+    });
+
+    it('nunca vuelve a pendiente: el destino pendiente no existe en la tabla', () => {
+      expect(Object.keys(TRANSICIONES)).not.toContain('pendiente');
+    });
+
+    it('el 409 distingue repetir la decisión de una transición no permitida', async () => {
+      const a = conEstado(EstadoValidacion.Aprobada);
+      await expect(a.service.decidirValidacion(3, EstadoValidacion.Aprobada, null)).rejects.toThrow(
+        'ya está en estado «aprobada»',
+      );
+      await expect(a.service.decidirValidacion(3, EstadoValidacion.Rechazada, 'x')).rejects.toThrow(
+        'de «aprobada» a «rechazada»',
+      );
+    });
+
+    it('aprobar tras un rechazo sobrescribe el motivo anterior', async () => {
+      const { service } = conEstado(EstadoValidacion.Rechazada);
+      const d = await service.decidirValidacion(3, EstadoValidacion.Aprobada, null, AHORA);
+      expect(d.observacionValidacion).toBeNull();
+    });
+
+    it('fundación inexistente: 404 (no 409)', async () => {
+      const { service, repo } = crear();
+      repo.decidirValidacion.mockResolvedValue(false);
+      repo.buscarPorId.mockResolvedValue(null);
+      await expect(
+        service.decidirValidacion(99, EstadoValidacion.Aprobada, null),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('dos decisiones simultáneas: solo una se aplica', async () => {
+      const { service } = conEstado(EstadoValidacion.Pendiente);
+      const r = await Promise.allSettled([
+        service.decidirValidacion(3, EstadoValidacion.Aprobada, null),
+        service.decidirValidacion(3, EstadoValidacion.Aprobada, null),
+      ]);
+      expect(r.filter((x) => x.status === 'fulfilled')).toHaveLength(1);
+      expect(
+        (r.find((x) => x.status === 'rejected') as PromiseRejectedResult).reason,
+      ).toBeInstanceOf(ConflictException);
+    });
   });
 });

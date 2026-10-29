@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { EntityManager } from 'typeorm';
+import { desplazamiento, type Paginado, paginar } from '../../common/pagination/paginar';
+import type { PaginacionQueryDto } from '../../common/pagination/paginacion-query.dto';
 import type { RolNombre } from '../../common/auth/usuario-autenticado';
 import type { Usuario } from './entities/usuario.entity';
 import { UsuariosRepository } from './usuarios.repository';
 import type {
   DatosNuevoAdoptante,
   DatosNuevoUsuarioFundacion,
+  FiltroUsuarios,
   PerfilUsuario,
+  UsuarioAdmin,
   UsuarioCreado,
   UsuarioCredenciales,
 } from './usuarios.types';
@@ -42,6 +46,10 @@ export class UsuariosService {
     return usuario ? aCredenciales(usuario) : null;
   }
 
+  estaActiva(id: number): Promise<boolean> {
+    return this.repo.estaActiva(id);
+  }
+
   existeEmail(email: string): Promise<boolean> {
     return this.repo.existeEmail(email);
   }
@@ -68,6 +76,34 @@ export class UsuariosService {
     };
   }
 
+  async listar(
+    filtros: FiltroUsuarios,
+    paginacion: PaginacionQueryDto,
+  ): Promise<Paginado<UsuarioAdmin>> {
+    const { skip, take } = desplazamiento(paginacion);
+    const [filas, total] = await this.repo.listarParaAdmin(filtros, skip, take);
+    return paginar(filas, total, paginacion);
+  }
+
+  /**
+   * Activa o desactiva una cuenta dentro de la transacción del llamador (`manager`). Desactivar
+   * a un administrador exige que quede otro activo: el bloqueo asesor serializa a dos
+   * administradores que se desactiven mutuamente a la vez. Idempotente.
+   */
+  async cambiarEstado(id: number, activo: boolean, manager: EntityManager): Promise<UsuarioAdmin> {
+    const actual = await this.repo.obtenerParaAdmin(id, manager);
+    if (!actual) throw new NotFoundException('El usuario no existe');
+
+    if (actual.activo && !activo && actual.rol === 'administrador') {
+      await this.repo.bloquearAdministradores(manager);
+      if ((await this.repo.contarAdministradoresActivosExcepto(id, manager)) === 0) {
+        throw new ConflictException('Debe haber al menos un administrador activo');
+      }
+    }
+    await this.repo.actualizarActivo(id, activo, manager);
+    return { ...actual, activo };
+  }
+
   registrarIntentoFallido(
     id: number,
     maxIntentos: number,
@@ -83,6 +119,29 @@ export class UsuariosService {
 
   guardarTokenVerificacion(id: number, hash: string, expira: Date): Promise<void> {
     return this.repo.guardarTokenVerificacion(id, hash, expira);
+  }
+
+  /** `true` si se emitió; `false` si la cuenta no puede recibirlo o el enfriamiento sigue vigente. */
+  guardarCodigoRecuperacion(
+    id: number,
+    hash: string,
+    expira: Date,
+    expiraMaxima: Date,
+  ): Promise<boolean> {
+    return this.repo.guardarCodigoRecuperacion(id, hash, expira, expiraMaxima);
+  }
+
+  reclamarIntentoCodigo(id: number, maxIntentos: number, ahora: Date): Promise<string | null> {
+    return this.repo.reclamarIntentoCodigo(id, maxIntentos, ahora);
+  }
+
+  restablecerContrasena(
+    id: number,
+    hashCodigo: string,
+    contrasenaHash: string,
+    manager?: EntityManager,
+  ): Promise<boolean> {
+    return this.repo.restablecerContrasena(id, hashCodigo, contrasenaHash, manager);
   }
 
   /** `true` si el token era válido y la cuenta quedó verificada; el token no vuelve a servir. */

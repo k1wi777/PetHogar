@@ -1,7 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import type { UsuarioAutenticado } from '../../common/auth/usuario-autenticado';
 import type { EnvironmentVariables } from '../../config/env.validation';
 import { UsuariosService } from '../usuarios/usuarios.service';
@@ -69,6 +69,11 @@ export class SesionService {
   /** Logout: idempotente; un token desconocido o ya revocado no es un error. */
   async revocar(tokenPlano: string): Promise<void> {
     await this.refreshTokens.revocarPorHash(this.hashRefresh(tokenPlano));
+  }
+
+  /** Cierra todas las sesiones del usuario; con `manager` participa en la transacción del llamador. */
+  revocarTodas(usuarioId: number, manager?: EntityManager): Promise<void> {
+    return this.refreshTokens.revocarTodosDeUsuario(usuarioId, manager);
   }
 
   private async reutilizacion(usuarioId: number): Promise<never> {

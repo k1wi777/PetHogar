@@ -3,7 +3,12 @@ import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
-import { BadRequestException, Logger, PayloadTooLargeException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Logger,
+  NotFoundException,
+  PayloadTooLargeException,
+} from '@nestjs/common';
 import { LocalStorageService } from './local-storage.service';
 import { MAX_BYTES, type CarpetaArchivo } from './storage.constants';
 import { detectarTipo } from './tipo-archivo';
@@ -145,5 +150,55 @@ describe('LocalStorageService', () => {
     await writeFile(path.join(raiz, 'publico', 'x.txt'), 'x');
     await expect(servicio.eliminar('publico/x.txt')).rejects.toThrow(BadRequestException);
     expect(existsSync(path.join(raiz, 'publico', 'x.txt'))).toBe(true);
+  });
+
+  describe('leer', () => {
+    it('devuelve el contenido de un archivo privado con su tipo real y tamaño', async () => {
+      const { clave } = await servicio.guardar(
+        { buffer: PDF },
+        { categoria: 'documento', carpeta: 'fundaciones' },
+      );
+      const r = await servicio.leer(clave);
+      expect(r.tipo).toBe('application/pdf');
+      expect(r.tamano).toBe(PDF.length);
+      expect(r.buffer.equals(PDF)).toBe(true);
+    });
+
+    it('el tipo sale de la firma aunque la extensión mienta', async () => {
+      const clave = `privado/fundaciones/${randomUUID()}.png`;
+      await mkdir(path.join(raiz, 'privado', 'fundaciones'), { recursive: true });
+      await writeFile(path.join(raiz, clave), PDF);
+      expect((await servicio.leer(clave)).tipo).toBe('application/pdf');
+    });
+
+    it('archivo inexistente: 404 sin revelar la ruta', async () => {
+      const warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+      const clave = `privado/fundaciones/${randomUUID()}.pdf`;
+      const error = await servicio.leer(clave).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(NotFoundException);
+      expect((error as NotFoundException).message).toBe('El documento no está disponible');
+      expect(JSON.stringify((error as NotFoundException).getResponse())).not.toContain(raiz);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining(clave));
+      expect(JSON.stringify(warn.mock.calls)).not.toContain(raiz);
+    });
+
+    it('firma irreconocible en disco: 404 y no se sirve', async () => {
+      jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+      const clave = `privado/fundaciones/${randomUUID()}.pdf`;
+      await mkdir(path.join(raiz, 'privado', 'fundaciones'), { recursive: true });
+      await writeFile(path.join(raiz, clave), EXE);
+      await expect(servicio.leer(clave)).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it.each([
+      '../../etc/passwd',
+      'privado/../../etc/passwd',
+      'privado/fundaciones/../../../x.pdf',
+      'privado/fundaciones/no-uuid.pdf',
+      '/etc/passwd',
+      'publico/fundaciones/00000000-0000-0000-0000-000000000000.pdf',
+    ])('clave inválida %s: 400 sin tocar el disco', async (clave) => {
+      await expect(servicio.leer(clave)).rejects.toBeInstanceOf(BadRequestException);
+    });
   });
 });
