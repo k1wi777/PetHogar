@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository, SelectQueryBuilder } from 'typeorm';
 import { Adopcion } from './entities/adopcion.entity';
-import type { EstadoAdopcion } from './entities/adopcion.enum';
+import { EstadoAdopcion } from './entities/adopcion.enum';
 import type {
   AdopcionDeAdoptante,
   AdopcionDeFundacion,
   AdopcionParaActa,
+  AdopcionParaCierre,
   FiltroAdopciones,
+  SinSeguimientos,
 } from './adopciones.types';
 
 interface FilaBase {
@@ -18,6 +20,8 @@ interface FilaBase {
   mascotaId: number;
   mascotaNombre: string;
   tieneActa: boolean;
+  motivoCierre: string | null;
+  fechaCierre: Date | null;
 }
 type FilaAdoptante = FilaBase & { fundacionNombre: string; fundacionCiudad: string };
 type FilaFundacion = FilaBase & {
@@ -36,6 +40,8 @@ const COLUMNAS_BASE = [
   'm."nombre" AS "mascotaNombre"',
   // Solo se informa de que hay acta: la clave de almacenamiento nunca sale del repository.
   'a."acta_url" IS NOT NULL AS "tieneActa"',
+  'a."motivo_cierre" AS "motivoCierre"',
+  'a."fecha_cierre" AS "fechaCierre"',
 ];
 const COLUMNAS_ADOPTANTE = [
   ...COLUMNAS_BASE,
@@ -58,14 +64,16 @@ const aBase = (f: FilaBase) => ({
   solicitudId: f.solicitudId,
   mascota: { id: f.mascotaId, nombre: f.mascotaNombre },
   tieneActa: f.tieneActa,
+  motivoCierre: f.motivoCierre,
+  fechaCierre: f.fechaCierre,
 });
 
-const aAdoptante = (f: FilaAdoptante): AdopcionDeAdoptante => ({
+const aAdoptante = (f: FilaAdoptante): SinSeguimientos<AdopcionDeAdoptante> => ({
   ...aBase(f),
   fundacion: { nombre: f.fundacionNombre, ciudad: f.fundacionCiudad },
 });
 
-const aFundacion = (f: FilaFundacion): AdopcionDeFundacion => ({
+const aFundacion = (f: FilaFundacion): SinSeguimientos<AdopcionDeFundacion> => ({
   ...aBase(f),
   adoptante: {
     nombreCompleto: f.adoptanteNombre,
@@ -122,7 +130,7 @@ export class AdopcionesRepository {
     filtro: FiltroAdopciones,
     skip: number,
     take: number,
-  ): Promise<[AdopcionDeAdoptante[], number]> {
+  ): Promise<[SinSeguimientos<AdopcionDeAdoptante>[], number]> {
     const filtrada = (): SelectQueryBuilder<Adopcion> => {
       const qb = this.deAdoptante(adoptanteId);
       if (filtro.estado) qb.andWhere('a."estado" = :estado', { estado: filtro.estado });
@@ -144,7 +152,7 @@ export class AdopcionesRepository {
     filtro: FiltroAdopciones,
     skip: number,
     take: number,
-  ): Promise<[AdopcionDeFundacion[], number]> {
+  ): Promise<[SinSeguimientos<AdopcionDeFundacion>[], number]> {
     const filtrada = (): SelectQueryBuilder<Adopcion> => {
       const qb = this.deFundacion(fundacionId);
       if (filtro.estado) qb.andWhere('a."estado" = :estado', { estado: filtro.estado });
@@ -161,7 +169,10 @@ export class AdopcionesRepository {
     return [filas.map(aFundacion), total];
   }
 
-  async obtenerDeFundacion(id: number, fundacionId: number): Promise<AdopcionDeFundacion | null> {
+  async obtenerDeFundacion(
+    id: number,
+    fundacionId: number,
+  ): Promise<SinSeguimientos<AdopcionDeFundacion> | null> {
     const fila = await this.deFundacion(fundacionId)
       .select(COLUMNAS_FUNDACION)
       .andWhere('a."id" = :id', { id })
@@ -214,5 +225,43 @@ export class AdopcionesRepository {
 
   async actualizarActa(manager: EntityManager, id: number, clave: string): Promise<void> {
     await manager.getRepository(Adopcion).update({ id }, { actaUrl: clave });
+  }
+
+  /**
+   * Bloquea la adopción para cerrarla (`FOR UPDATE OF a`), con la propiedad por join en la misma
+   * sentencia. Serializa el cierre contra «programar» (que toma `FOR SHARE`) y contra otro cierre.
+   */
+  async bloquearParaCierre(
+    manager: EntityManager,
+    id: number,
+    fundacionId: number,
+  ): Promise<AdopcionParaCierre | null> {
+    const filas: AdopcionParaCierre[] = await manager.query(
+      `SELECT a."id" AS "id", a."estado" AS "estado", s."mascota_id" AS "mascotaId"
+         FROM "adopcion" a
+         JOIN "solicitud_adopcion" s ON s."id" = a."solicitud_id"
+         JOIN "mascota" m ON m."id" = s."mascota_id"
+        WHERE a."id" = $1 AND m."fundacion_id" = $2
+          FOR UPDATE OF a`,
+      [id, fundacionId],
+    );
+    return filas[0] ?? null;
+  }
+
+  /** `UPDATE` condicionado a `activa`: `false` si otro la cerró antes. */
+  async cerrar(
+    manager: EntityManager,
+    id: number,
+    estado: EstadoAdopcion.Finalizada | EstadoAdopcion.Revocada,
+    motivo: string,
+  ): Promise<boolean> {
+    const resultado = await manager
+      .getRepository(Adopcion)
+      .createQueryBuilder()
+      .update(Adopcion)
+      .set({ estado, motivoCierre: motivo, fechaCierre: () => 'now()' })
+      .where('"id" = :id AND "estado" = :activa', { id, activa: EstadoAdopcion.Activa })
+      .execute();
+    return (resultado.affected ?? 0) > 0;
   }
 }

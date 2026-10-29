@@ -5,6 +5,7 @@ import {
   MascotaResumenDto,
   SolicitudDetalleFundacionDto,
 } from '../../solicitudes/dto/respuestas.dto';
+import { ResumenSeguimientoDto } from '../../seguimientos/dto/respuestas.dto';
 import { EstadoAdopcion } from '../entities/adopcion.enum';
 
 class AdopcionBaseDto {
@@ -26,8 +27,17 @@ class AdopcionBaseDto {
   @ApiProperty({ type: EnlaceDescargaDto, nullable: true, description: 'Acta firmada, si existe' })
   acta!: EnlaceDescargaDto | null;
 
-  @ApiProperty({ type: [Object], description: 'Vacío hasta que existan los seguimientos' })
-  seguimientos!: never[];
+  @ApiProperty({ type: String, nullable: true, description: 'Motivo al finalizar o revocar' })
+  motivoCierre!: string | null;
+
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  fechaCierre!: Date | null;
+
+  @ApiProperty({
+    type: [ResumenSeguimientoDto],
+    description: 'Los 20 seguimientos más recientes, del más reciente al más antiguo',
+  })
+  seguimientos!: ResumenSeguimientoDto[];
 }
 
 export class FundacionContactoDto {

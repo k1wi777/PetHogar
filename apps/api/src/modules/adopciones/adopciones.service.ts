@@ -13,12 +13,15 @@ import type { PaginacionQueryDto } from '../../common/pagination/paginacion-quer
 import { type ArchivoDescargable, nombreDescarga } from '../storage/descarga';
 import { MENSAJE_ARCHIVO_VACIO } from '../storage/storage.constants';
 import { STORAGE_SERVICE, type IStorageService } from '../storage/storage.interface';
+import { SeguimientosService } from '../seguimientos/seguimientos.service';
+import type { ResumenSeguimiento } from '../seguimientos/seguimientos.types';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { AdopcionesRepository } from './adopciones.repository';
 import {
   MENSAJE_ADOPCION_NO_EXISTE,
   type AdopcionDeAdoptante,
   type AdopcionDeFundacion,
+  type AdopcionParaCierre,
   type FiltroAdopciones,
   type PropietarioAdopcion,
 } from './adopciones.types';
@@ -36,6 +39,7 @@ export class AdopcionesService {
     private readonly repo: AdopcionesRepository,
     private readonly usuarios: UsuariosService,
     @Inject(STORAGE_SERVICE) private readonly storage: IStorageService,
+    private readonly seguimientos: SeguimientosService,
   ) {}
 
   /** Paso 4 de la aprobación: nace `activa` dentro de la transacción del orquestador. */
@@ -52,7 +56,7 @@ export class AdopcionesService {
     if (!adoptante) throw new ForbiddenException('Esta acción es exclusiva de adoptantes');
     const { skip, take } = desplazamiento(paginacion);
     const [filas, total] = await this.repo.listarDeAdoptante(adoptante.id, filtro, skip, take);
-    return paginar(filas, total, paginacion);
+    return paginar(await this.conSeguimientos(filas), total, paginacion);
   }
 
   async listarDeFundacion(
@@ -62,7 +66,42 @@ export class AdopcionesService {
   ): Promise<Paginado<AdopcionDeFundacion>> {
     const { skip, take } = desplazamiento(paginacion);
     const [filas, total] = await this.repo.listarDeFundacion(fundacionId, filtro, skip, take);
-    return paginar(filas, total, paginacion);
+    return paginar(await this.conSeguimientos(filas), total, paginacion);
+  }
+
+  /** Paso 1 del cierre: bloquea la adopción de la fundación en la transacción del orquestador. */
+  bloquearParaCierre(
+    manager: EntityManager,
+    id: number,
+    fundacionId: number,
+  ): Promise<AdopcionParaCierre | null> {
+    return this.repo.bloquearParaCierre(manager, id, fundacionId);
+  }
+
+  /** Paso 3 del cierre: `UPDATE` condicionado a `activa` (409 si otro la cerró antes). */
+  async registrarCierre(
+    manager: EntityManager,
+    id: number,
+    estado: EstadoAdopcion.Finalizada | EstadoAdopcion.Revocada,
+    motivo: string,
+  ): Promise<void> {
+    if (!(await this.repo.cerrar(manager, id, estado, motivo))) {
+      throw new ConflictException('La adopción ya está cerrada');
+    }
+  }
+
+  async obtenerDeFundacion(id: number, fundacionId: number): Promise<AdopcionDeFundacion> {
+    const adopcion = await this.repo.obtenerDeFundacion(id, fundacionId);
+    if (!adopcion) throw new NotFoundException(MENSAJE_ADOPCION_NO_EXISTE);
+    return (await this.conSeguimientos([adopcion]))[0];
+  }
+
+  /** Una consulta posterior a la paginación: no altera el `total` ni el orden y evita el N+1. */
+  private async conSeguimientos<T extends { id: number }>(
+    filas: T[],
+  ): Promise<(T & { seguimientos: ResumenSeguimiento[] })[]> {
+    const resumen = await this.seguimientos.resumenPorAdopciones(filas.map((f) => f.id));
+    return filas.map((f) => ({ ...f, seguimientos: resumen.get(f.id) ?? [] }));
   }
 
   /**
@@ -99,9 +138,7 @@ export class AdopcionesService {
     }
     if (anterior) await this.eliminarArchivo(anterior);
 
-    const adopcion = await this.repo.obtenerDeFundacion(id, fundacionId);
-    if (!adopcion) throw new NotFoundException(MENSAJE_ADOPCION_NO_EXISTE);
-    return adopcion;
+    return this.obtenerDeFundacion(id, fundacionId);
   }
 
   /** Acta para la fundación dueña o el adoptante de la adopción; cualquier otro recibe 404. */

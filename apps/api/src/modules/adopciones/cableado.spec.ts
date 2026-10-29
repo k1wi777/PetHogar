@@ -8,6 +8,7 @@ import { SolicitudesAdoptanteController } from '../solicitudes/solicitudes-adopt
 import { SolicitudesFundacionController } from '../solicitudes/solicitudes-fundacion.controller';
 import { AdopcionesAdoptanteController } from './adopciones-adoptante.controller';
 import { AdopcionesFundacionController } from './adopciones-fundacion.controller';
+import { CierreController } from './cierre.controller';
 import { DecisionController } from './decision.controller';
 
 type Clase = { prototype: object };
@@ -29,6 +30,7 @@ describe('cableado de rutas de solicitudes y adopciones', () => {
     ['SolicitudesFundacionController', SolicitudesFundacionController, 'fundacion', true],
     ['AdopcionesFundacionController', AdopcionesFundacionController, 'fundacion', true],
     ['DecisionController', DecisionController, 'fundacion', true],
+    ['CierreController', CierreController, 'fundacion', true],
   ])('%s: ninguna ruta es pública y exige su rol', (_n, controller, rol, aprobada) => {
     expect(handlers(controller).length).toBeGreaterThan(0);
     for (const [nombre, handler] of handlers(controller)) {

@@ -1,7 +1,10 @@
 import { EstadoMascota } from './entities/mascota.enum';
 
-/** Quién pide el cambio: la ruta de la fundación o el flujo de adopción (Fase 3). */
-export type OrigenCambio = 'fundacion' | 'adopcion';
+/**
+ * Quién pide el cambio: la ruta de la fundación, el flujo de adopción o la revocación de una
+ * adopción (único camino que saca una mascota de `adoptada`).
+ */
+export type OrigenCambio = 'fundacion' | 'adopcion' | 'revocacion';
 
 interface Transicion {
   desde: EstadoMascota;
@@ -10,9 +13,10 @@ interface Transicion {
 }
 
 /**
- * Única fuente de las transiciones de estado. `adoptada` e `inactiva` son terminales: ninguna
- * ruta las revierte. La fundación solo puede dar de baja una mascota disponible; las otras dos
- * transiciones pertenecen al flujo de adopción.
+ * Única fuente de las transiciones de estado. `inactiva` es terminal y `adoptada` solo se
+ * abandona al revocar la adopción (origen `revocacion`, a `disponible` o `inactiva`). La
+ * fundación solo puede dar de baja una mascota disponible; las transiciones hacia `en_proceso`
+ * y `adoptada` pertenecen al flujo de adopción.
  */
 const TRANSICIONES: readonly Transicion[] = [
   {
@@ -35,6 +39,17 @@ const TRANSICIONES: readonly Transicion[] = [
     desde: EstadoMascota.Disponible,
     hasta: EstadoMascota.Inactiva,
     origenes: ['fundacion'],
+  },
+  // Revocar una adopción: la fundación decide si la mascota vuelve al catálogo o queda inactiva.
+  {
+    desde: EstadoMascota.Adoptada,
+    hasta: EstadoMascota.Disponible,
+    origenes: ['revocacion'],
+  },
+  {
+    desde: EstadoMascota.Adoptada,
+    hasta: EstadoMascota.Inactiva,
+    origenes: ['revocacion'],
   },
 ];
 

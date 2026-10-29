@@ -23,6 +23,15 @@ const SUCIO = {
   fechaNacimiento: '1990-01-01',
   direccion: 'Calle 1',
 };
+const RESUMEN = {
+  id: 31,
+  tipo: 'visita',
+  fechaProgramada: '2026-12-15',
+  fechaRealizada: null,
+  estado: 'programado',
+  vencido: false,
+  ...SUCIO,
+};
 const BASE = {
   id: 5,
   fechaEntrega: '2026-12-01',
@@ -30,6 +39,9 @@ const BASE = {
   solicitudId: 11,
   mascota: { id: 7, nombre: 'Luna' },
   tieneActa: true,
+  motivoCierre: null,
+  fechaCierre: null,
+  seguimientos: [RESUMEN],
   ...SUCIO,
 };
 const DE_ADOPTANTE = { ...BASE, fundacion: { nombre: 'Refugio', ciudad: 'Bogotá', ...SUCIO } };
@@ -121,7 +133,7 @@ describe('Controllers de adopciones (HTTP, servicios simulados)', () => {
     expect(adopciones.subirActa).not.toHaveBeenCalled();
   });
 
-  it('mis-adopciones mapea con acta como enlace, seguimientos [] y la fundación solo con nombre y ciudad', async () => {
+  it('mis-adopciones mapea con acta como enlace, el resumen real de seguimientos y la fundación solo con nombre y ciudad', async () => {
     adopciones.listarMias.mockResolvedValue({
       data: [DE_ADOPTANTE, { ...DE_ADOPTANTE, tieneActa: false }],
       total: 2,
@@ -138,7 +150,18 @@ describe('Controllers de adopciones (HTTP, servicios simulados)', () => {
       solicitudId: 11,
       mascota: { id: 7, nombre: 'Luna' },
       acta: { url: '/api/mis-adopciones/5/acta' },
-      seguimientos: [],
+      motivoCierre: null,
+      fechaCierre: null,
+      seguimientos: [
+        {
+          id: 31,
+          tipo: 'visita',
+          fechaProgramada: '2026-12-15',
+          fechaRealizada: null,
+          estado: 'programado',
+          vencido: false,
+        },
+      ],
       fundacion: { nombre: 'Refugio', ciudad: 'Bogotá' },
     });
     expect(res.body.data[1].acta).toBeNull();
@@ -165,7 +188,15 @@ describe('Controllers de adopciones (HTTP, servicios simulados)', () => {
       ciudad: 'Cali',
     });
     expect(res.body.data[0].acta).toEqual({ url: '/api/fundacion/adopciones/5/acta' });
-    expect(res.body.data[0].seguimientos).toEqual([]);
+    expect(res.body.data[0].seguimientos).toHaveLength(1);
+    expect(res.body.data[0].seguimientos[0]).toEqual({
+      id: 31,
+      tipo: 'visita',
+      fechaProgramada: '2026-12-15',
+      fechaRealizada: null,
+      estado: 'programado',
+      vencido: false,
+    });
     expect(JSON.stringify(res.body)).not.toMatch(
       /actaUrl|privado\/|numeroDocumento|fechaNacimiento|direccion/,
     );

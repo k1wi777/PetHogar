@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
+import { CronTime } from 'cron';
 import {
   IsIn,
   IsInt,
@@ -11,6 +12,7 @@ import {
   MinLength,
   Min,
   validateSync,
+  ValidateBy,
 } from 'class-validator';
 
 const MENSAJE_TEXTO = 'debe ser un texto no vacío';
@@ -19,6 +21,25 @@ const MENSAJE_PUERTO = 'debe ser un número de puerto entre 1 y 65535';
 const MENSAJE_ENTERO_POSITIVO = 'debe ser un número entero mayor o igual a 1';
 const MENSAJE_SECRETO = 'debe tener al menos 32 caracteres';
 const LONGITUD_MINIMA_SECRETO = 32;
+const MENSAJE_CRON = 'debe ser una expresión cron válida de 5 campos (p. ej. 10 0 * * *)';
+const MENSAJE_DIAS_RECORDATORIO = 'debe ser un número entero entre 1 y 30';
+
+/** Expresión cron de exactamente 5 campos (minuto a día de la semana) que la librería acepta. */
+export function esExpresionCron(valor: unknown): boolean {
+  if (typeof valor !== 'string' || valor.trim().split(/\s+/).length !== 5) return false;
+  try {
+    new CronTime(valor.trim());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const EsExpresionCron = (): PropertyDecorator =>
+  ValidateBy({
+    name: 'esExpresionCron',
+    validator: { validate: esExpresionCron, defaultMessage: () => MENSAJE_CRON },
+  });
 /** Fragmento común de los secretos de ejemplo de `.env.example`. */
 const MARCA_SECRETO_EJEMPLO = 'cambiar-en-produccion';
 
@@ -130,6 +151,24 @@ export class EnvironmentVariables {
   @IsInt({ message: MENSAJE_ENTERO_POSITIVO })
   @Min(1, { message: MENSAJE_ENTERO_POSITIVO })
   RESET_CODE_MAX_INTENTOS: number = 5;
+
+  /** Tareas programadas de seguimientos; con `false` no se crea ningún temporizador. */
+  @IsOptional()
+  @IsIn(['true', 'false'], { message: MENSAJE_BOOLEANO })
+  SEGUIMIENTOS_CRON_HABILITADO: string = 'true';
+
+  /** Marca como vencidos los seguimientos con fecha pasada (hora de Bogotá). */
+  @EsExpresionCron()
+  SEGUIMIENTOS_CRON_VENCIDOS: string = '10 0 * * *';
+
+  @EsExpresionCron()
+  SEGUIMIENTOS_CRON_RECORDATORIOS: string = '0 7 * * *';
+
+  /** Días de antelación con los que se avisa de un seguimiento que vence pronto. */
+  @IsInt({ message: MENSAJE_DIAS_RECORDATORIO })
+  @Min(1, { message: MENSAJE_DIAS_RECORDATORIO })
+  @Max(30, { message: MENSAJE_DIAS_RECORDATORIO })
+  SEGUIMIENTOS_RECORDATORIO_DIAS: number = 3;
 
   /** Por defecto `true` solo en producción (ver `cookieSegura`). */
   @IsOptional()

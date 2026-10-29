@@ -27,12 +27,19 @@ describe('AdopcionesService', () => {
   };
   const usuarios = { adoptantePorUsuarioId: jest.fn() };
   const storage = { guardar: jest.fn(), eliminar: jest.fn(), leer: jest.fn() };
-  const service = new AdopcionesService(repo as never, usuarios as never, storage as never);
+  const seguimientos = { resumenPorAdopciones: jest.fn() };
+  const service = new AdopcionesService(
+    repo as never,
+    usuarios as never,
+    storage as never,
+    seguimientos as never,
+  );
 
   beforeEach(() => {
     jest.resetAllMocks();
     jest.spyOn(Logger.prototype, 'warn').mockImplementation();
     usuarios.adoptantePorUsuarioId.mockResolvedValue({ id: 4 });
+    seguimientos.resumenPorAdopciones.mockResolvedValue(new Map());
     repo.enTransaccion.mockImplementation((trabajo: (m: unknown) => unknown) => trabajo(MANAGER));
   });
 
@@ -56,7 +63,7 @@ describe('AdopcionesService', () => {
         5,
         5,
       );
-      expect(r).toEqual({ data: [ADOPCION], total: 1, page: 2, limit: 5 });
+      expect(r).toEqual({ data: [{ ...ADOPCION, seguimientos: [] }], total: 1, page: 2, limit: 5 });
     });
 
     it('un usuario sin perfil de adoptante es 403', async () => {
@@ -64,6 +71,21 @@ describe('AdopcionesService', () => {
       await expect(service.listarMias(9, {}, { page: 1, limit: 10 })).rejects.toBeInstanceOf(
         ForbiddenException,
       );
+    });
+
+    it('adjunta a cada adopción su resumen de seguimientos con UNA consulta, sin alterar el total', async () => {
+      const resumen = { id: 1, tipo: 'visita', estado: 'programado', vencido: false };
+      repo.listarDeFundacion.mockResolvedValue([[{ id: 5 }, { id: 6 }, { id: 7 }], 42]);
+      seguimientos.resumenPorAdopciones.mockResolvedValue(new Map([[6, [resumen]]]));
+      const r = await service.listarDeFundacion(3, {}, { page: 1, limit: 10 });
+      expect(seguimientos.resumenPorAdopciones).toHaveBeenCalledTimes(1);
+      expect(seguimientos.resumenPorAdopciones).toHaveBeenCalledWith([5, 6, 7]);
+      expect(r.total).toBe(42);
+      expect(r.data).toEqual([
+        { id: 5, seguimientos: [] },
+        { id: 6, seguimientos: [resumen] },
+        { id: 7, seguimientos: [] },
+      ]);
     });
 
     it('la fundación lista con su id (propiedad en la consulta)', async () => {
@@ -126,7 +148,7 @@ describe('AdopcionesService', () => {
       expect(storage.eliminar).toHaveBeenCalledTimes(1);
       expect(storage.eliminar).toHaveBeenCalledWith('privado/solicitudes/vieja.pdf');
       expect(orden).toEqual(['update', 'commit', 'borrar-anterior']);
-      expect(r).toBe(ADOPCION);
+      expect(r).toEqual({ ...ADOPCION, seguimientos: [] });
     });
 
     it('la primera acta no borra nada', async () => {
@@ -164,7 +186,10 @@ describe('AdopcionesService', () => {
 
     it('un fallo al borrar el anterior se registra y no rompe la respuesta', async () => {
       storage.eliminar.mockRejectedValue(new Error('disco'));
-      await expect(service.subirActa(5, 3, PDF)).resolves.toBe(ADOPCION);
+      await expect(service.subirActa(5, 3, PDF)).resolves.toEqual({
+        ...ADOPCION,
+        seguimientos: [],
+      });
     });
   });
 

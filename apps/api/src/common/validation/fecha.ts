@@ -26,3 +26,17 @@ export function esFechaCalendario(valor: string): boolean {
 export function hoyEnBogota(ahora: Date): string {
   return formateador.format(ahora);
 }
+
+/**
+ * Instante de las 00:00 de Bogotá de un día `YYYY-MM-DD`. Colombia no usa horario de verano, así
+ * que el desfase fijo de -05:00 es exacto.
+ */
+export function inicioDelDiaEnBogota(fecha: string): Date {
+  return new Date(`${fecha}T00:00:00-05:00`);
+}
+
+/** Días enteros entre dos fechas `YYYY-MM-DD` (positivo si `hasta` es posterior a `desde`). */
+export function diasEntre(desde: string, hasta: string): number {
+  const dia = 86_400_000;
+  return Math.round((Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / dia);
+}

@@ -10,6 +10,12 @@ const SQL_INDICES_CATALOGO = `SELECT count(*) AS n FROM pg_indexes WHERE scheman
   AND indexname IN ('idx_mascota_catalogo', 'idx_foto_mascota_mascota', 'idx_historial_mascota_fecha')`;
 const SQL_INDICE_SOLICITUDES = `SELECT count(*) AS n FROM pg_indexes WHERE schemaname = 'public'
   AND indexname = 'idx_solicitud_adoptante_fecha'`;
+const SQL_SEGUIMIENTO_POST = `SELECT count(*) AS n FROM pg_indexes WHERE schemaname = 'public'
+  AND indexname IN ('uq_seguimiento_pendiente', 'idx_seguimiento_pendiente_fecha',
+                    'idx_seguimiento_evidencia_seguimiento')`;
+const SQL_COLUMNAS_SEGUIMIENTO_POST = `SELECT count(*) AS n FROM information_schema.columns
+  WHERE (table_name = 'seguimiento' AND column_name IN ('recordatorio_enviado_en', 'reporte_enviado_en'))
+     OR (table_name = 'seguimiento_evidencia' AND column_name = 'origen')`;
 const SQL_URL_CATALOGO = `SELECT count(*) AS n FROM information_schema.columns
   WHERE table_name = 'foto_mascota' AND column_name = 'url_catalogo'`;
 
@@ -33,11 +39,20 @@ describe('esquema inicial (V8)', () => {
   it('up crea 16 tablas y los enums; down los elimina; up de nuevo funciona', async () => {
     await ds.runMigrations();
     expect(await contar(ds, SQL_TABLAS_APP)).toBe(16);
-    expect(await contar(ds, SQL_ENUMS)).toBe(11);
+    expect(await contar(ds, SQL_ENUMS)).toBe(12);
 
     expect(await contar(ds, SQL_INDICE_SOLICITUDES)).toBe(1);
+    expect(await contar(ds, SQL_SEGUIMIENTO_POST)).toBe(3);
+    expect(await contar(ds, SQL_COLUMNAS_SEGUIMIENTO_POST)).toBe(3);
 
-    // La última migración (IndiceSolicitudesAdoptante) se revierte sola y deja lo anterior intacto.
+    // SeguimientoPostAdopcion se revierte sola: columnas, índices y el enum nativo `origen_evidencia`.
+    await ds.undoLastMigration();
+    expect(await contar(ds, SQL_SEGUIMIENTO_POST)).toBe(0);
+    expect(await contar(ds, SQL_COLUMNAS_SEGUIMIENTO_POST)).toBe(0);
+    expect(await contar(ds, SQL_ENUMS)).toBe(11);
+    expect(await contar(ds, SQL_INDICE_SOLICITUDES)).toBe(1);
+
+    // IndiceSolicitudesAdoptante se revierte sola y deja lo anterior intacto.
     await ds.undoLastMigration();
     expect(await contar(ds, SQL_INDICE_SOLICITUDES)).toBe(0);
     expect(await contar(ds, SQL_INDICES_CATALOGO)).toBe(3);
@@ -57,6 +72,8 @@ describe('esquema inicial (V8)', () => {
     expect(await contar(ds, SQL_INDICES_CATALOGO)).toBe(3);
     expect(await contar(ds, SQL_URL_CATALOGO)).toBe(1);
     expect(await contar(ds, SQL_INDICE_SOLICITUDES)).toBe(1);
+    expect(await contar(ds, SQL_SEGUIMIENTO_POST)).toBe(3);
+    expect(await contar(ds, SQL_ENUMS)).toBe(12);
     expect(
       await contar(ds, `SELECT count(*) AS n FROM pg_extension WHERE extname = 'unaccent'`),
     ).toBe(1);
@@ -172,6 +189,47 @@ describe('esquema inicial (V8)', () => {
         [adopcionId],
       );
       await ds.query(`UPDATE adopcion SET estado = 'finalizada' WHERE id = $1`, [adopcionId]);
+    });
+
+    it('permite un solo seguimiento pendiente por adopción, tipo y fecha', async () => {
+      const [{ id: mascotaId }] = await mascota('Seg');
+      const [{ id: solicitudId }] = await ds.query(
+        `INSERT INTO solicitud_adopcion (adoptante_id, mascota_id, motivo, tipo_vivienda,
+           tiene_otras_mascotas, formulario_url, estado)
+         VALUES ($1, $2, 'm', 'casa', false, 'u', 'aprobada') RETURNING id`,
+        [adoptanteId, mascotaId],
+      );
+      const [{ id: adopcionId }] = await ds.query(
+        `INSERT INTO adopcion (solicitud_id, fecha_entrega) VALUES ($1, '2026-01-01') RETURNING id`,
+        [solicitudId],
+      );
+      const insertar = (tipo: string, fecha: string, estado: string) =>
+        ds.query(
+          `INSERT INTO seguimiento (adopcion_id, tipo, fecha_programada, estado)
+           VALUES ($1, $2, $3, $4)`,
+          [adopcionId, tipo, fecha, estado],
+        );
+      await insertar('visita', '2026-02-01', 'programado');
+      await rechaza(insertar('visita', '2026-02-01', 'programado'), /uq_seguimiento_pendiente/);
+      await rechaza(insertar('visita', '2026-02-01', 'vencido'), /uq_seguimiento_pendiente/);
+      await insertar('reporte', '2026-02-01', 'programado');
+      await insertar('visita', '2026-02-02', 'programado');
+      // Los terminales no cuentan: se puede repetir la fecha de uno cancelado o realizado.
+      await insertar('visita', '2026-02-01', 'cancelado');
+      await insertar('visita', '2026-02-01', 'realizado');
+      const [{ id }] = await ds.query(
+        `INSERT INTO seguimiento_evidencia (seguimiento_id, url)
+         SELECT id, 'k' FROM seguimiento LIMIT 1 RETURNING id`,
+      );
+      const [{ origen }] = await ds.query(
+        `SELECT origen FROM seguimiento_evidencia WHERE id = $1`,
+        [id],
+      );
+      expect(origen).toBe('fundacion');
+      await rechaza(
+        ds.query(`UPDATE seguimiento_evidencia SET origen = 'otro' WHERE id = $1`, [id]),
+        /origen_evidencia/,
+      );
     });
 
     it('mascota no tiene columna de ciudad', async () => {

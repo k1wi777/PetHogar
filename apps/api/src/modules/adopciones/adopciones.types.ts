@@ -1,4 +1,5 @@
 import type { EstadoAdopcion } from './entities/adopcion.enum';
+import type { ResumenSeguimiento } from '../seguimientos/seguimientos.types';
 import type { AdoptanteContacto } from '../solicitudes/solicitudes.types';
 
 export const MENSAJE_ADOPCION_NO_EXISTE = 'La adopción no existe';
@@ -12,7 +13,15 @@ export interface AdopcionBase {
   mascota: { id: number; nombre: string };
   /** La clave del acta no sale del servicio: solo si existe o no. */
   tieneActa: boolean;
+  /** Motivo y fecha con que se finalizó o revocó; nulos mientras la adopción siga activa. */
+  motivoCierre: string | null;
+  fechaCierre: Date | null;
+  /** Hasta los 20 seguimientos más recientes (los resuelve el service con una sola consulta). */
+  seguimientos: ResumenSeguimiento[];
 }
+
+/** Lo que devuelve el repository: los seguimientos los añade el service. */
+export type SinSeguimientos<T> = Omit<T, 'seguimientos'>;
 
 /** El adoptante ve de la fundación solo su nombre y ciudad. */
 export interface AdopcionDeAdoptante extends AdopcionBase {
@@ -26,6 +35,13 @@ export interface AdopcionDeFundacion extends AdopcionBase {
 
 export interface FiltroAdopciones {
   estado?: EstadoAdopcion;
+}
+
+/** Adopción bloqueada para cerrarla: propiedad comprobada en la misma sentencia. */
+export interface AdopcionParaCierre {
+  id: number;
+  estado: EstadoAdopcion;
+  mascotaId: number;
 }
 
 export interface ResumenAdopcion {

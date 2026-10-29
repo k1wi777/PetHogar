@@ -15,3 +15,9 @@ export enum EstadoBienestar {
   Regular = 'regular',
   Malo = 'malo',
 }
+
+/** Quién subió la foto: las del reporte son del adoptante y las del cierre, de la fundación. */
+export enum OrigenEvidencia {
+  Fundacion = 'fundacion',
+  Adoptante = 'adoptante',
+}

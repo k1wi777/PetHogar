@@ -196,6 +196,30 @@ describe('MascotasService', () => {
       );
     });
 
+    it.each([EstadoMascota.Disponible, EstadoMascota.Inactiva])(
+      'revocar: adoptada → %s con UPDATE condicionado a adoptada',
+      async (destino) => {
+        const manager = {} as never;
+        repo.cambiarEstado.mockResolvedValue(true);
+        await service.transicionar(7, destino, 'revocacion', { manager });
+        expect(repo.cambiarEstado).toHaveBeenCalledWith(
+          7,
+          [EstadoMascota.Adoptada],
+          destino,
+          undefined,
+          manager,
+        );
+      },
+    );
+
+    it('revocar una mascota que ya no está adoptada es 409', async () => {
+      repo.cambiarEstado.mockResolvedValue(false);
+      repo.buscarEstado.mockResolvedValue(EstadoMascota.Disponible);
+      await expect(
+        service.transicionar(7, EstadoMascota.Inactiva, 'revocacion', { manager: {} as never }),
+      ).rejects.toThrow(ConflictException);
+    });
+
     it('un destino sin transición para ese origen es 409 sin tocar la base', async () => {
       repo.buscarEstado.mockResolvedValue(EstadoMascota.Disponible);
       await expect(

@@ -1,7 +1,8 @@
+import { aResumenDto } from '../seguimientos/seguimientos.mapeo';
 import type { AdopcionDeAdoptante, AdopcionDeFundacion } from './adopciones.types';
 import type { AdopcionAdoptanteDto, AdopcionFundacionDto } from './dto/respuestas.dto';
 
-/** `seguimientos` es siempre `[]` hasta la Fase 4; la clave existe para no cambiar el contrato. */
+/** Mapeo explícito de salida: el acta es un enlace y los seguimientos, un resumen sin datos sensibles. */
 export function aAdopcionAdoptanteDto(
   a: AdopcionDeAdoptante,
   rutaActa: string,
@@ -13,7 +14,9 @@ export function aAdopcionAdoptanteDto(
     solicitudId: a.solicitudId,
     mascota: { id: a.mascota.id, nombre: a.mascota.nombre },
     acta: a.tieneActa ? { url: `${rutaActa}/${a.id}/acta` } : null,
-    seguimientos: [],
+    motivoCierre: a.motivoCierre,
+    fechaCierre: a.fechaCierre,
+    seguimientos: a.seguimientos.map(aResumenDto),
     fundacion: { nombre: a.fundacion.nombre, ciudad: a.fundacion.ciudad },
   };
 }
@@ -29,7 +32,9 @@ export function aAdopcionFundacionDto(
     solicitudId: a.solicitudId,
     mascota: { id: a.mascota.id, nombre: a.mascota.nombre },
     acta: a.tieneActa ? { url: `${rutaActa}/${a.id}/acta` } : null,
-    seguimientos: [],
+    motivoCierre: a.motivoCierre,
+    fechaCierre: a.fechaCierre,
+    seguimientos: a.seguimientos.map(aResumenDto),
     adoptante: {
       nombreCompleto: a.adoptante.nombreCompleto,
       email: a.adoptante.email,

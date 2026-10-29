@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccesoModule } from './common/auth/acceso.module';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { RolesGuard } from './common/auth/roles.guard';
 import { EventosModule } from './common/events';
+import { RelojModule } from './common/reloj/reloj.module';
 import { EnvironmentVariables, validate } from './config/env.validation';
 import { crearOpcionesTypeOrm } from './database/typeorm.options';
 import { AdminModule } from './modules/admin/admin.module';
@@ -16,6 +18,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CatalogosModule } from './modules/catalogos/catalogos.module';
 import { FundacionesModule } from './modules/fundaciones/fundaciones.module';
 import { MascotasModule } from './modules/mascotas/mascotas.module';
+import { SeguimientosModule } from './modules/seguimientos/seguimientos.module';
 import { SolicitudesModule } from './modules/solicitudes/solicitudes.module';
 import { CuentaActivaGuard } from './modules/usuarios/guards/cuenta-activa.guard';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
@@ -38,6 +41,9 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module';
       }),
     }),
     EventosModule,
+    RelojModule,
+    // Sin decoradores @Cron: los jobs de seguimientos se registran por código según la configuración.
+    ScheduleModule.forRoot(),
     AccesoModule,
     HealthModule,
     UsuariosModule,
@@ -47,6 +53,7 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module';
     CatalogosModule,
     MascotasModule,
     SolicitudesModule,
+    SeguimientosModule,
     AdopcionesModule,
   ],
   // El orden es el de ejecución: primero el límite de peticiones (también para anónimos),

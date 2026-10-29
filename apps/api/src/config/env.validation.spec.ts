@@ -16,6 +16,53 @@ const ENV_VALIDO = {
   FRONTEND_URL: 'http://localhost:3000',
 };
 
+describe('tareas programadas de seguimientos', () => {
+  it('aplica los valores por defecto', () => {
+    expect(validate(ENV_VALIDO)).toMatchObject({
+      SEGUIMIENTOS_CRON_HABILITADO: 'true',
+      SEGUIMIENTOS_CRON_VENCIDOS: '10 0 * * *',
+      SEGUIMIENTOS_CRON_RECORDATORIOS: '0 7 * * *',
+      SEGUIMIENTOS_RECORDATORIO_DIAS: 3,
+    });
+  });
+
+  it('acepta valores propios', () => {
+    const env = validate({
+      ...ENV_VALIDO,
+      SEGUIMIENTOS_CRON_HABILITADO: 'false',
+      SEGUIMIENTOS_CRON_VENCIDOS: '*/5 * * * *',
+      SEGUIMIENTOS_CRON_RECORDATORIOS: '30 8 * * 1-5',
+      SEGUIMIENTOS_RECORDATORIO_DIAS: '7',
+    });
+    expect(esVerdadero(env.SEGUIMIENTOS_CRON_HABILITADO)).toBe(false);
+    expect(env.SEGUIMIENTOS_RECORDATORIO_DIAS).toBe(7);
+  });
+
+  it.each(['no es cron', '* * * *', '61 0 * * *', '0 0 * * * *', ''])(
+    'rechaza la expresión cron %p con un mensaje claro',
+    (expresion) => {
+      expect(() => validate({ ...ENV_VALIDO, SEGUIMIENTOS_CRON_VENCIDOS: expresion })).toThrow(
+        'SEGUIMIENTOS_CRON_VENCIDOS: debe ser una expresión cron válida de 5 campos',
+      );
+      expect(() => validate({ ...ENV_VALIDO, SEGUIMIENTOS_CRON_RECORDATORIOS: expresion })).toThrow(
+        'SEGUIMIENTOS_CRON_RECORDATORIOS: debe ser una expresión cron válida',
+      );
+    },
+  );
+
+  it.each(['0', '31', 'x', '2.5'])('rechaza %p días de recordatorio', (dias) => {
+    expect(() => validate({ ...ENV_VALIDO, SEGUIMIENTOS_RECORDATORIO_DIAS: dias })).toThrow(
+      'SEGUIMIENTOS_RECORDATORIO_DIAS: debe ser un número entero entre 1 y 30',
+    );
+  });
+
+  it("el habilitado solo admite 'true' o 'false'", () => {
+    expect(() => validate({ ...ENV_VALIDO, SEGUIMIENTOS_CRON_HABILITADO: 'si' })).toThrow(
+      "SEGUIMIENTOS_CRON_HABILITADO: debe ser 'true'",
+    );
+  });
+});
+
 describe('validate (.env)', () => {
   it('acepta una configuración completa y convierte los números', () => {
     const env = validate(ENV_VALIDO);

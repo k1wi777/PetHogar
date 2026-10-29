@@ -11,6 +11,15 @@ import { TipoSeguimiento, EstadoSeguimiento, EstadoBienestar } from './seguimien
 import type { Adopcion } from '../../adopciones/entities/adopcion.entity';
 
 @Index('idx_seguimiento_adopcion_estado', ['adopcionId', 'estado'])
+// El cron nunca recorre toda la tabla: solo los pendientes de vencer.
+@Index('idx_seguimiento_pendiente_fecha', ['fechaProgramada'], {
+  where: `"estado" = 'programado'`,
+})
+// Evita el duplicado por doble clic: un solo seguimiento pendiente por adopción, tipo y fecha.
+@Index('uq_seguimiento_pendiente', ['adopcionId', 'tipo', 'fechaProgramada'], {
+  unique: true,
+  where: `"estado" IN ('programado', 'vencido')`,
+})
 @Entity()
 export class Seguimiento {
   @PrimaryGeneratedColumn('identity', {
@@ -46,4 +55,12 @@ export class Seguimiento {
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   reporteAdoptante: string | null;
+
+  /** Marca persistente: el recordatorio de «vence pronto» se emite una sola vez. */
+  @Column({ type: 'timestamptz', nullable: true })
+  recordatorioEnviadoEn: Date | null;
+
+  /** Primera entrega del reporte del adoptante; nulo mientras no haya enviado nada. */
+  @Column({ type: 'timestamptz', nullable: true })
+  reporteEnviadoEn: Date | null;
 }

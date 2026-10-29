@@ -3,6 +3,7 @@ import { DonationRegistered } from './donacion.events';
 import { FoundationValidated } from './fundacion.events';
 import {
   FollowUpOverdue,
+  FollowUpReminder,
   FollowUpReportReceived,
   FollowUpScheduled,
   WellbeingAlertRaised,
@@ -23,6 +24,7 @@ export const CATALOGO_EVENTOS = [
   FollowUpScheduled,
   FollowUpReportReceived,
   FollowUpOverdue,
+  FollowUpReminder,
   WellbeingAlertRaised,
   DonationRegistered,
 ] as const;

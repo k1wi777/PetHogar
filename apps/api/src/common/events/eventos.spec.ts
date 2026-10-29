@@ -9,6 +9,7 @@ import {
   DonationRegistered,
   EventosModule,
   FollowUpOverdue,
+  FollowUpReminder,
   FollowUpReportReceived,
   FollowUpScheduled,
   FoundationValidated,
@@ -23,6 +24,7 @@ const EVENTOS_DE_EJEMPLO = [
   new FollowUpScheduled(7, 9, new Date('2026-12-01T00:00:00Z')),
   new FollowUpReportReceived(7, 9),
   new FollowUpOverdue(7, 9),
+  new FollowUpReminder(7, 9, new Date('2026-12-01T05:00:00Z'), 2),
   new WellbeingAlertRaised(7, 9, 3, 1),
   new DonationRegistered(8, 1, null),
 ];
@@ -38,6 +40,7 @@ class ListenerPrueba {
   @OnEvent(FollowUpScheduled.eventName)
   @OnEvent(FollowUpReportReceived.eventName)
   @OnEvent(FollowUpOverdue.eventName)
+  @OnEvent(FollowUpReminder.eventName)
   @OnEvent(WellbeingAlertRaised.eventName)
   @OnEvent(DonationRegistered.eventName)
   registrar(evento: unknown): void {
@@ -54,10 +57,10 @@ class ListenerQueFalla {
 }
 
 describe('catálogo de eventos de dominio', () => {
-  it('define nueve eventos con nombres únicos y constantes', () => {
+  it('define diez eventos con nombres únicos y constantes', () => {
     const nombres = CATALOGO_EVENTOS.map((clase) => clase.eventName);
-    expect(nombres).toHaveLength(9);
-    expect(new Set(nombres).size).toBe(9);
+    expect(nombres).toHaveLength(10);
+    expect(new Set(nombres).size).toBe(10);
     nombres.forEach((nombre) => expect(nombre).toMatch(/^[a-z-]+\.[a-z-]+$/));
   });
 
