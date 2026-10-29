@@ -3,7 +3,7 @@ import { Transform } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, ValidateBy } from 'class-validator';
 import { Recortar } from '../../../common/validation/decoradores';
 import { TipoHistorialMedico } from '../entities/historial-medico.enum';
-import { esFechaCalendario } from '../historial/fecha-no-futura';
+import { esFechaCalendario } from '../../../common/validation/fecha';
 
 /** Fecha `YYYY-MM-DD` que exista en el calendario; que no sea futura lo decide el service. */
 const EsFechaCalendario = (): PropertyDecorator =>

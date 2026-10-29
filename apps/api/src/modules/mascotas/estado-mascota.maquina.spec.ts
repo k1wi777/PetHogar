@@ -6,12 +6,13 @@ const ORIGENES: OrigenCambio[] = ['fundacion', 'adopcion'];
 
 const PERMITIDAS: [EstadoMascota, EstadoMascota, OrigenCambio][] = [
   [EstadoMascota.Disponible, EstadoMascota.EnProceso, 'adopcion'],
+  [EstadoMascota.Disponible, EstadoMascota.Adoptada, 'adopcion'],
   [EstadoMascota.EnProceso, EstadoMascota.Adoptada, 'adopcion'],
   [EstadoMascota.Disponible, EstadoMascota.Inactiva, 'fundacion'],
 ];
 
 describe('EstadoMascotaMaquina', () => {
-  it('solo permite las tres transiciones del plan, cada una con su origen', () => {
+  it('solo permite las cuatro transiciones definidas, cada una con su origen', () => {
     for (const desde of ESTADOS) {
       for (const hasta of ESTADOS) {
         for (const origen of ORIGENES) {
@@ -34,6 +35,12 @@ describe('EstadoMascotaMaquina', () => {
     }
   });
 
+  it('la fundación no obtiene la transición disponible → adoptada', () => {
+    expect(
+      EstadoMascotaMaquina.puede(EstadoMascota.Disponible, EstadoMascota.Adoptada, 'fundacion'),
+    ).toBe(false);
+  });
+
   it('la fundación no puede llevar una mascota adoptada a disponible', () => {
     expect(
       EstadoMascotaMaquina.puede(EstadoMascota.Adoptada, EstadoMascota.Disponible, 'fundacion'),
@@ -45,6 +52,11 @@ describe('EstadoMascotaMaquina', () => {
       EstadoMascota.Disponible,
     ]);
     expect(EstadoMascotaMaquina.origenesPara(EstadoMascota.Inactiva, 'adopcion')).toEqual([]);
+    expect(EstadoMascotaMaquina.origenesPara(EstadoMascota.Adoptada, 'adopcion')).toEqual([
+      EstadoMascota.Disponible,
+      EstadoMascota.EnProceso,
+    ]);
+    expect(EstadoMascotaMaquina.origenesPara(EstadoMascota.Adoptada, 'fundacion')).toEqual([]);
     expect(EstadoMascotaMaquina.origenesPara(EstadoMascota.Disponible, 'fundacion')).toEqual([]);
   });
 

@@ -6,6 +6,7 @@ import type { RolNombre } from '../../common/auth/usuario-autenticado';
 import type { Usuario } from './entities/usuario.entity';
 import { UsuariosRepository } from './usuarios.repository';
 import type {
+  AdoptanteBasico,
   DatosNuevoAdoptante,
   DatosNuevoUsuarioFundacion,
   FiltroUsuarios,
@@ -73,6 +74,23 @@ export class UsuariosService {
         primerApellido: adoptante.primerApellido,
         segundoApellido: adoptante.segundoApellido,
       },
+    };
+  }
+
+  /** `null` si el usuario no es un adoptante. */
+  async adoptantePorUsuarioId(usuarioId: number): Promise<AdoptanteBasico | null> {
+    const adoptante = await this.repo.buscarAdoptantePorUsuarioId(usuarioId);
+    if (!adoptante) return null;
+    const nombres = [
+      adoptante.primerNombre,
+      adoptante.segundoNombre,
+      adoptante.primerApellido,
+      adoptante.segundoApellido,
+    ];
+    return {
+      id: adoptante.id,
+      usuarioId,
+      nombreCompleto: nombres.filter(Boolean).join(' '),
     };
   }
 

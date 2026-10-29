@@ -76,3 +76,10 @@ export interface UsuarioAdmin {
   /** Nombre completo del adoptante, nombre de la fundación o `null` (administrador). */
   nombre: string | null;
 }
+
+/** Identidad mínima del adoptante para crear una solicitud. */
+export interface AdoptanteBasico {
+  id: number;
+  usuarioId: number;
+  nombreCompleto: string;
+}

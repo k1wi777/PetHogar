@@ -16,6 +16,7 @@ import type { Mascota } from '../../mascotas/entities/mascota.entity';
   where: `"estado" = 'pendiente'`,
 })
 @Index('idx_solicitud_adopcion_mascota', ['mascotaId'])
+@Index('idx_solicitud_adoptante_fecha', ['adoptanteId', 'fechaSolicitud', 'id'])
 @Entity()
 export class SolicitudAdopcion {
   @PrimaryGeneratedColumn('identity', {

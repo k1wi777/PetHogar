@@ -49,3 +49,12 @@ export interface EventoMedico {
   descripcion: string;
   veterinario: string | null;
 }
+
+/** Lo que una solicitud necesita saber de la mascota: estado y a quién pertenece. */
+export interface MascotaParaSolicitud {
+  id: number;
+  estado: EstadoMascota;
+  fundacionId: number;
+  /** Usuario titular de la fundación (interno, solo para la comprobación defensiva). */
+  fundacionUsuarioId: number;
+}

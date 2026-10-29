@@ -8,6 +8,8 @@ const SQL_ENUMS = `SELECT count(*) AS n FROM pg_type t JOIN pg_namespace s ON s.
 
 const SQL_INDICES_CATALOGO = `SELECT count(*) AS n FROM pg_indexes WHERE schemaname = 'public'
   AND indexname IN ('idx_mascota_catalogo', 'idx_foto_mascota_mascota', 'idx_historial_mascota_fecha')`;
+const SQL_INDICE_SOLICITUDES = `SELECT count(*) AS n FROM pg_indexes WHERE schemaname = 'public'
+  AND indexname = 'idx_solicitud_adoptante_fecha'`;
 const SQL_URL_CATALOGO = `SELECT count(*) AS n FROM information_schema.columns
   WHERE table_name = 'foto_mascota' AND column_name = 'url_catalogo'`;
 
@@ -33,7 +35,14 @@ describe('esquema inicial (V8)', () => {
     expect(await contar(ds, SQL_TABLAS_APP)).toBe(16);
     expect(await contar(ds, SQL_ENUMS)).toBe(11);
 
-    // La última migración (CatalogoMascotas) se revierte sola y deja el esquema inicial intacto.
+    expect(await contar(ds, SQL_INDICE_SOLICITUDES)).toBe(1);
+
+    // La última migración (IndiceSolicitudesAdoptante) se revierte sola y deja lo anterior intacto.
+    await ds.undoLastMigration();
+    expect(await contar(ds, SQL_INDICE_SOLICITUDES)).toBe(0);
+    expect(await contar(ds, SQL_INDICES_CATALOGO)).toBe(3);
+
+    // CatalogoMascotas se revierte sola y deja el esquema inicial intacto.
     await ds.undoLastMigration();
     expect(await contar(ds, SQL_TABLAS_APP)).toBe(16);
     expect(await contar(ds, SQL_INDICES_CATALOGO)).toBe(0);
@@ -47,6 +56,7 @@ describe('esquema inicial (V8)', () => {
     expect(await contar(ds, SQL_TABLAS_APP)).toBe(16);
     expect(await contar(ds, SQL_INDICES_CATALOGO)).toBe(3);
     expect(await contar(ds, SQL_URL_CATALOGO)).toBe(1);
+    expect(await contar(ds, SQL_INDICE_SOLICITUDES)).toBe(1);
     expect(
       await contar(ds, `SELECT count(*) AS n FROM pg_extension WHERE extname = 'unaccent'`),
     ).toBe(1);

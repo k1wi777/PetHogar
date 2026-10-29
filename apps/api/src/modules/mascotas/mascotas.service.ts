@@ -21,8 +21,10 @@ import type {
   FiltroMascotasFundacion,
   MascotaGestion,
   MascotaGestionDetalle,
+  MascotaParaSolicitud,
 } from './mascotas.types';
 
+const MENSAJE_SOLICITUD_NO_EXISTE = 'La solicitud no existe';
 const MENSAJE_RAZA_NO_EXISTE = 'La raza no existe';
 
 const ETIQUETA_ESTADO: Record<EstadoMascota, string> = {
@@ -88,8 +90,8 @@ export class MascotasService {
   }
 
   /**
-   * Cambio de estado atómico (UPDATE condicionado al estado vigente). Exportado para la Fase 3
-   * (adopciones), que lo llamará con `origen = 'adopcion'` y su propio `manager`.
+   * Cambio de estado atómico (UPDATE condicionado al estado vigente). Exportado para adopciones,
+   * que lo llama con `origen = 'adopcion'` y su propio `manager`.
    */
   async transicionar(
     id: number,
@@ -102,6 +104,27 @@ export class MascotasService {
       desde.length > 0 &&
       (await this.repo.cambiarEstado(id, desde, hasta, opciones.fundacionId, opciones.manager));
     if (!aplicada) await this.explicarRechazo(id, opciones.fundacionId);
+  }
+
+  /** Para crear una solicitud: 404 si la mascota no existe. El estado lo valida el llamador. */
+  async obtenerParaSolicitud(id: number): Promise<MascotaParaSolicitud> {
+    const mascota = await this.repo.buscarParaSolicitud(id);
+    if (!mascota) throw new NotFoundException(MENSAJE_MASCOTA_NO_EXISTE);
+    return mascota;
+  }
+
+  /**
+   * Bloquea la mascota de una solicitud dentro de la transacción de quien decide
+   * (404 si la solicitud no es de una mascota de la fundación).
+   */
+  async bloquearParaDecision(
+    manager: EntityManager,
+    solicitudId: number,
+    fundacionId: number,
+  ): Promise<number> {
+    const fila = await this.repo.bloquearParaDecision(manager, solicitudId, fundacionId);
+    if (!fila) throw new NotFoundException(MENSAJE_SOLICITUD_NO_EXISTE);
+    return fila.id;
   }
 
   async listarDeFundacion(

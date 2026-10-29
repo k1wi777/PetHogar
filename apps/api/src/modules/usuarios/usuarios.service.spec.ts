@@ -205,4 +205,27 @@ describe('UsuariosService', () => {
       expect(repo.bloquearAdministradores).not.toHaveBeenCalled();
     });
   });
+
+  describe('adoptantePorUsuarioId', () => {
+    it('devuelve id y nombre completo sin documento ni dirección', async () => {
+      const { service, repo } = crear();
+      repo.buscarAdoptantePorUsuarioId.mockResolvedValue({
+        id: 4,
+        primerNombre: 'Ana',
+        segundoNombre: null,
+        primerApellido: 'Pérez',
+        segundoApellido: 'Gil',
+        numeroDocumento: '123',
+        direccion: 'Calle 1',
+      } as never);
+      const r = await service.adoptantePorUsuarioId(7);
+      expect(r).toEqual({ id: 4, usuarioId: 7, nombreCompleto: 'Ana Pérez Gil' });
+    });
+
+    it('un usuario que no es adoptante devuelve null', async () => {
+      const { service, repo } = crear();
+      repo.buscarAdoptantePorUsuarioId.mockResolvedValue(null);
+      expect(await service.adoptantePorUsuarioId(9)).toBeNull();
+    });
+  });
 });

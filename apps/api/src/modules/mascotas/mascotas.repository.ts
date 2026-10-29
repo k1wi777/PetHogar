@@ -3,7 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { Mascota } from './entities/mascota.entity';
 import type { EstadoMascota } from './entities/mascota.enum';
-import type { CambiosMascota, DatosMascota, FiltroMascotasFundacion } from './mascotas.types';
+import type {
+  CambiosMascota,
+  DatosMascota,
+  FiltroMascotasFundacion,
+  MascotaParaSolicitud,
+} from './mascotas.types';
 
 /**
  * Dueño de `mascota` (escritura y lecturas de la fundación dueña). Toda operación del dueño
@@ -101,5 +106,36 @@ export class MascotasRepository {
       [id, fundacionId],
     );
     return filas.length > 0;
+  }
+
+  /** Lectura de solo tres datos por clave primaria: estado, fundación y su usuario titular. */
+  async buscarParaSolicitud(id: number): Promise<MascotaParaSolicitud | null> {
+    const fila = await this.mascotas
+      .createQueryBuilder('m')
+      .innerJoin('m.fundacion', 'f')
+      .select(['m.id AS id', 'm.estado AS estado', 'm.fundacion_id AS "fundacionId"'])
+      .addSelect('f.usuario_id', 'fundacionUsuarioId')
+      .where('m.id = :id', { id })
+      .getRawOne<MascotaParaSolicitud>();
+    return fila ?? null;
+  }
+
+  /**
+   * Bloquea la fila de la mascota de una solicitud de la fundación (propiedad por join en la
+   * misma sentencia) hasta el fin de la transacción: serializa toda aprobación de esa mascota.
+   */
+  async bloquearParaDecision(
+    manager: EntityManager,
+    solicitudId: number,
+    fundacionId: number,
+  ): Promise<{ id: number } | null> {
+    const filas: { id: number }[] = await manager.query(
+      `SELECT m."id" FROM "mascota" m
+         JOIN "solicitud_adopcion" s ON s."mascota_id" = m."id"
+        WHERE s."id" = $1 AND m."fundacion_id" = $2
+          FOR UPDATE OF m`,
+      [solicitudId, fundacionId],
+    );
+    return filas[0] ?? null;
   }
 }

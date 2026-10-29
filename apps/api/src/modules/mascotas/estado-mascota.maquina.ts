@@ -20,6 +20,12 @@ const TRANSICIONES: readonly Transicion[] = [
     hasta: EstadoMascota.EnProceso,
     origenes: ['adopcion'],
   },
+  // Aprobar una solicitud no pasa antes por `en_proceso`: crear solicitudes no cambia el estado.
+  {
+    desde: EstadoMascota.Disponible,
+    hasta: EstadoMascota.Adoptada,
+    origenes: ['adopcion'],
+  },
   {
     desde: EstadoMascota.EnProceso,
     hasta: EstadoMascota.Adoptada,

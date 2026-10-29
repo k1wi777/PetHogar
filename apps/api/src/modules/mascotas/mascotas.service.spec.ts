@@ -30,6 +30,8 @@ describe('MascotasService', () => {
     listarDeFundacion: jest.fn(),
     cambiarEstado: jest.fn(),
     editar: jest.fn(),
+    buscarParaSolicitud: jest.fn(),
+    bloquearParaDecision: jest.fn(),
   };
   const catalogos = { existeRaza: jest.fn() };
   const fotos = { listar: jest.fn() };
@@ -187,7 +189,7 @@ describe('MascotasService', () => {
       await service.transicionar(7, EstadoMascota.Adoptada, 'adopcion', { manager });
       expect(repo.cambiarEstado).toHaveBeenCalledWith(
         7,
-        [EstadoMascota.EnProceso],
+        [EstadoMascota.Disponible, EstadoMascota.EnProceso],
         EstadoMascota.Adoptada,
         undefined,
         manager,
@@ -246,6 +248,32 @@ describe('MascotasService', () => {
     it('detalle de una mascota ajena o inexistente: 404', async () => {
       repo.buscarDeFundacion.mockResolvedValue(null);
       await expect(service.obtenerDeFundacion(7, 3)).rejects.toThrow('La mascota no existe');
+    });
+  });
+
+  describe('apoyo a solicitudes y adopciones', () => {
+    it('obtenerParaSolicitud devuelve estado y propietario; inexistente es 404', async () => {
+      const datos = {
+        id: 7,
+        estado: EstadoMascota.Disponible,
+        fundacionId: 3,
+        fundacionUsuarioId: 9,
+      };
+      repo.buscarParaSolicitud.mockResolvedValue(datos);
+      expect(await service.obtenerParaSolicitud(7)).toEqual(datos);
+      repo.buscarParaSolicitud.mockResolvedValue(null);
+      await expect(service.obtenerParaSolicitud(8)).rejects.toThrow('La mascota no existe');
+    });
+
+    it('bloquearParaDecision devuelve la mascota; ajena o inexistente es 404 uniforme', async () => {
+      const manager = {} as never;
+      repo.bloquearParaDecision.mockResolvedValue({ id: 7 });
+      expect(await service.bloquearParaDecision(manager, 5, 3)).toBe(7);
+      expect(repo.bloquearParaDecision).toHaveBeenCalledWith(manager, 5, 3);
+      repo.bloquearParaDecision.mockResolvedValue(null);
+      await expect(service.bloquearParaDecision(manager, 5, 3)).rejects.toThrow(
+        'La solicitud no existe',
+      );
     });
   });
 });
