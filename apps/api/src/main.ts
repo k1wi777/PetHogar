@@ -1,15 +1,17 @@
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { crearValidationPipe } from './common/pipes/validation.pipe';
 import type { EnvironmentVariables } from './config/env.validation';
+import { servirArchivosPublicos } from './modules/storage/archivos-estaticos';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get<ConfigService<EnvironmentVariables, true>>(ConfigService);
   const logger = new Logger('Bootstrap');
 
@@ -24,6 +26,7 @@ async function bootstrap(): Promise<void> {
     ) => callback(null, origen === origenPermitido ? origen : false),
     credentials: true,
   });
+  servirArchivosPublicos(app, config.get('UPLOADS_DIR', { infer: true }));
   app.useGlobalPipes(crearValidationPipe());
   app.useGlobalFilters(new AllExceptionsFilter());
 

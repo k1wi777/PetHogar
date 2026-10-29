@@ -15,12 +15,14 @@
     "migration:revert": "pnpm typeorm migration:revert",
     "seed": "ts-node src/database/seeds/seed.ts",
     "seed:demo": "pnpm seed --demo",
-    "test:db": "jest --config jest.db.config.ts"
+    "test:db": "jest --config jest.db.config.ts",
+    "test:infra": "jest --config jest.infra.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.8",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.2.8",
+    "@nestjs/event-emitter": "^3.1.0",
     "@nestjs/platform-express": "^11.2.8",
     "@nestjs/swagger": "^11.4.7",
     "@nestjs/throttler": "^6.7.1",
@@ -29,6 +31,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "helmet": "^8.3.0",
+    "nodemailer": "^10.2.1",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
@@ -39,8 +42,12 @@
     "@nestjs/testing": "^11.2.8",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
+    "@types/multer": "^2.3.0",
     "@types/node": "^26.6.5",
+    "@types/nodemailer": "^8.0.2",
+    "@types/supertest": "^7.2.1",
     "jest": "^30.5.2",
+    "supertest": "^7.3.1",
     "ts-jest": "^29.4.15",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0"

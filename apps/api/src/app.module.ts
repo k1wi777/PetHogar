@@ -3,9 +3,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventosModule } from './common/events';
 import { EnvironmentVariables, validate } from './config/env.validation';
 import { crearOpcionesTypeOrm } from './database/typeorm.options';
 import { HealthModule } from './modules/health/health.module';
+import { PruebasModule } from './modules/pruebas/pruebas.module';
 
 @Module({
   imports: [
@@ -24,7 +26,9 @@ import { HealthModule } from './modules/health/health.module';
         autoLoadEntities: true,
       }),
     }),
+    EventosModule,
     HealthModule,
+    PruebasModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

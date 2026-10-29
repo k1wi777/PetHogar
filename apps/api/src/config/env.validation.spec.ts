@@ -1,4 +1,4 @@
-import { validate } from './env.validation';
+import { esVerdadero, validate } from './env.validation';
 
 const ENV_VALIDO = {
   PORT: '3001',
@@ -31,5 +31,30 @@ describe('validate (.env)', () => {
     expect(() => validate(entrada)).toThrow('DATABASE_HOST: es obligatoria');
     expect(() => validate(entrada)).toThrow('PORT: debe ser un número de puerto');
     expect(() => validate(entrada)).toThrow('FRONTEND_URL: debe ser una URL válida');
+  });
+
+  it('trata como opcionales las variables de correo, URL pública y endpoints de prueba', () => {
+    const env = validate(ENV_VALIDO);
+    expect(env.SMTP_USER).toBeUndefined();
+    expect(esVerdadero(env.HABILITAR_ENDPOINTS_PRUEBA)).toBe(false);
+  });
+
+  it("valida los booleanos como 'true' o 'false' sin convertir la cadena 'false' en true", () => {
+    const env = validate({
+      ...ENV_VALIDO,
+      HABILITAR_ENDPOINTS_PRUEBA: 'false',
+      SMTP_SECURE: 'true',
+    });
+    expect(esVerdadero(env.HABILITAR_ENDPOINTS_PRUEBA)).toBe(false);
+    expect(esVerdadero(env.SMTP_SECURE)).toBe(true);
+    expect(() => validate({ ...ENV_VALIDO, SMTP_SECURE: 'si' })).toThrow(
+      "SMTP_SECURE: debe ser 'true'",
+    );
+  });
+
+  it('rechaza una API_PUBLIC_URL inválida', () => {
+    expect(() => validate({ ...ENV_VALIDO, API_PUBLIC_URL: 'localhost' })).toThrow(
+      'API_PUBLIC_URL: debe ser una URL válida',
+    );
   });
 });

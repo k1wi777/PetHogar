@@ -1,8 +1,19 @@
 import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsString, IsUrl, Max, Min, validateSync } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Max,
+  Min,
+  validateSync,
+} from 'class-validator';
 
 const MENSAJE_TEXTO = 'debe ser un texto no vacío';
+const MENSAJE_BOOLEANO = "debe ser 'true' o 'false'";
 const MENSAJE_PUERTO = 'debe ser un número de puerto entre 1 y 65535';
 
 export class EnvironmentVariables {
@@ -62,6 +73,37 @@ export class EnvironmentVariables {
     { message: 'debe ser una URL válida (p. ej. http://localhost:3000)' },
   )
   FRONTEND_URL!: string;
+
+  @IsOptional()
+  @IsString({ message: MENSAJE_TEXTO })
+  SMTP_USER?: string;
+
+  @IsOptional()
+  @IsString({ message: MENSAJE_TEXTO })
+  SMTP_PASSWORD?: string;
+
+  @IsOptional()
+  @IsIn(['true', 'false'], { message: MENSAJE_BOOLEANO })
+  SMTP_SECURE?: string;
+
+  @IsOptional()
+  @IsUrl(
+    { require_tld: false, require_protocol: true },
+    { message: 'debe ser una URL válida (p. ej. http://localhost:3001)' },
+  )
+  API_PUBLIC_URL?: string;
+
+  @IsOptional()
+  @IsIn(['true', 'false'], { message: MENSAJE_BOOLEANO })
+  HABILITAR_ENDPOINTS_PRUEBA?: string;
+}
+
+/**
+ * Los booleanos se leen como cadena: con `enableImplicitConversion` la cadena 'false'
+ * se convertiría en `true`.
+ */
+export function esVerdadero(valor: string | undefined): boolean {
+  return valor === 'true';
 }
 
 /** Valida y convierte las variables de entorno; aborta el arranque si alguna falla. */
