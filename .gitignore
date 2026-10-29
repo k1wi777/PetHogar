@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.next/
+coverage/
+.env
+.env.*
+!.env.example
+uploads/
+*.tsbuildinfo
+*.log
+next-env.d.ts
+
+# Arnés y documentos del usuario (fuera de Git; README.md sí se versiona)
+.claude/
+.rei/
+AGENTS.md
+CLAUDE.md
+ERSOFT_PetHogar.docx
+PetHogar — Plan de tareas (monorepo).md

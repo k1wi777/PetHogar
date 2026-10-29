@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.next/
+coverage/
+pnpm-lock.yaml
+.rei/
+.claude/
+AGENTS.md
+CLAUDE.md
+README.md
+PetHogar — Plan de tareas (monorepo).md
+ERSOFT_PetHogar.docx
+next-env.d.ts
