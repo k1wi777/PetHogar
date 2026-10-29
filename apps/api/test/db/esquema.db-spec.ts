@@ -1,0 +1,161 @@
+import type { DataSource } from 'typeorm';
+import { borrarBaseDePrueba, contar, crearDataSource, recrearBaseDePrueba } from './db-helper';
+
+const SQL_TABLAS_APP = `SELECT count(*) AS n FROM information_schema.tables
+  WHERE table_schema = 'public' AND table_name <> 'migrations'`;
+const SQL_ENUMS = `SELECT count(*) AS n FROM pg_type t JOIN pg_namespace s ON s.oid = t.typnamespace
+  WHERE s.nspname = 'public' AND t.typtype = 'e'`;
+
+async function rechaza(promesa: Promise<unknown>, patron: RegExp): Promise<void> {
+  await expect(promesa).rejects.toThrow(patron);
+}
+
+describe('esquema inicial (V8)', () => {
+  let ds: DataSource;
+
+  beforeAll(async () => {
+    await recrearBaseDePrueba();
+    ds = await crearDataSource();
+  });
+
+  afterAll(async () => {
+    await ds.destroy();
+    await borrarBaseDePrueba();
+  });
+
+  it('up crea 16 tablas y los enums; down los elimina; up de nuevo funciona', async () => {
+    await ds.runMigrations();
+    expect(await contar(ds, SQL_TABLAS_APP)).toBe(16);
+    expect(await contar(ds, SQL_ENUMS)).toBe(11);
+
+    await ds.undoLastMigration();
+    expect(await contar(ds, SQL_TABLAS_APP)).toBe(0);
+    expect(await contar(ds, SQL_ENUMS)).toBe(0);
+
+    await ds.runMigrations();
+    expect(await contar(ds, SQL_TABLAS_APP)).toBe(16);
+  });
+
+  it('las entidades coinciden con la migración (sin SQL pendiente)', async () => {
+    const log = await ds.driver.createSchemaBuilder().log();
+    expect(log.upQueries.map((q) => q.query)).toEqual([]);
+  });
+
+  describe('restricciones', () => {
+    let fundacionId: number;
+    let razaId: number;
+    let adoptanteId: number;
+
+    const mascota = (nombre: string, edad = 12) =>
+      ds.query(
+        `INSERT INTO mascota (fundacion_id, raza_id, nombre, sexo, edad_meses, tamano, estado_salud)
+         VALUES ($1, $2, $3, 'macho', $4, 'pequeño', 'Sano') RETURNING id`,
+        [fundacionId, razaId, nombre, edad],
+      ) as Promise<{ id: number }[]>;
+
+    beforeAll(async () => {
+      await ds.query(`INSERT INTO rol (nombre) VALUES ('fundacion'), ('adoptante')`);
+      await ds.query(`INSERT INTO usuario (rol_id, email, contrasena, telefono)
+        SELECT id, nombre || '@x.co', 'h', '1' FROM rol`);
+      const [u1] = await ds.query(`SELECT id FROM usuario WHERE email = 'fundacion@x.co'`);
+      const [u2] = await ds.query(`SELECT id FROM usuario WHERE email = 'adoptante@x.co'`);
+      [{ id: fundacionId }] = await ds.query(
+        `INSERT INTO fundacion (usuario_id, nombre, nit, direccion, ciudad, documento_url)
+         VALUES ($1, 'F', '1', 'd', 'Bogotá', 'u') RETURNING id`,
+        [u1.id],
+      );
+      await ds.query(`INSERT INTO especie (nombre) VALUES ('perro')`);
+      [{ id: razaId }] = await ds.query(
+        `INSERT INTO raza (especie_id, nombre) SELECT id, 'Mestizo' FROM especie RETURNING id`,
+      );
+      [{ id: adoptanteId }] = await ds.query(
+        `INSERT INTO adoptante (usuario_id, primer_nombre, primer_apellido, tipo_documento,
+           numero_documento, fecha_nacimiento, direccion, ciudad)
+         VALUES ($1, 'A', 'B', 'CC', '123', '1990-01-01', 'd', 'Bogotá') RETURNING id`,
+        [u2.id],
+      );
+    });
+
+    it('rechaza edad_meses negativa y monto negativo', async () => {
+      await rechaza(mascota('Neg', -1), /ck_mascota_edad_meses/);
+      await rechaza(
+        ds.query(`INSERT INTO donacion (fundacion_id, tipo, monto) VALUES ($1, 'economica', -1)`, [
+          fundacionId,
+        ]),
+        /ck_donacion_monto/,
+      );
+    });
+
+    it('rechaza una segunda solicitud pendiente pero permite otra no pendiente', async () => {
+      const [{ id: mascotaId }] = await mascota('Sol');
+      const insertar = (estado: string) =>
+        ds.query(
+          `INSERT INTO solicitud_adopcion (adoptante_id, mascota_id, motivo, tipo_vivienda,
+             tiene_otras_mascotas, formulario_url, estado)
+           VALUES ($1, $2, 'm', 'casa', false, 'u', $3)`,
+          [adoptanteId, mascotaId, estado],
+        );
+      await insertar('pendiente');
+      await rechaza(insertar('pendiente'), /uq_solicitud_pendiente/);
+      await insertar('rechazada');
+      await insertar('rechazada');
+    });
+
+    it('rechaza una segunda foto principal y borra fotos en cascada', async () => {
+      const [{ id: mascotaId }] = await mascota('Foto');
+      const foto = (principal: boolean) =>
+        ds.query(`INSERT INTO foto_mascota (mascota_id, url, es_principal) VALUES ($1, 'u', $2)`, [
+          mascotaId,
+          principal,
+        ]);
+      await foto(true);
+      await foto(false);
+      await rechaza(foto(true), /uq_foto_principal/);
+      await ds.query(`DELETE FROM mascota WHERE id = $1`, [mascotaId]);
+      expect(
+        await contar(ds, `SELECT count(*) AS n FROM foto_mascota WHERE mascota_id = ${mascotaId}`),
+      ).toBe(0);
+    });
+
+    it('no cascadea otras relaciones: borrar una mascota con solicitudes falla', async () => {
+      const [{ id: mascotaId }] = await mascota('Ref');
+      await ds.query(
+        `INSERT INTO solicitud_adopcion (adoptante_id, mascota_id, motivo, tipo_vivienda,
+           tiene_otras_mascotas, formulario_url) VALUES ($1, $2, 'm', 'casa', false, 'u')`,
+        [adoptanteId, mascotaId],
+      );
+      await rechaza(ds.query(`DELETE FROM mascota WHERE id = $1`, [mascotaId]), /fk_solicitud/);
+    });
+
+    it('admite los estados de B-32: adopcion revocada y seguimiento cancelado', async () => {
+      const [{ id: mascotaId }] = await mascota('B32');
+      const [{ id: solicitudId }] = await ds.query(
+        `INSERT INTO solicitud_adopcion (adoptante_id, mascota_id, motivo, tipo_vivienda,
+           tiene_otras_mascotas, formulario_url, estado)
+         VALUES ($1, $2, 'm', 'casa', false, 'u', 'aprobada') RETURNING id`,
+        [adoptanteId, mascotaId],
+      );
+      const [{ id: adopcionId }] = await ds.query(
+        `INSERT INTO adopcion (solicitud_id, fecha_entrega, estado, motivo_cierre, fecha_cierre)
+         VALUES ($1, '2026-01-01', 'revocada', 'incumplimiento', now()) RETURNING id`,
+        [solicitudId],
+      );
+      await ds.query(
+        `INSERT INTO seguimiento (adopcion_id, tipo, fecha_programada, estado)
+         VALUES ($1, 'visita', '2026-02-01', 'cancelado')`,
+        [adopcionId],
+      );
+      await ds.query(`UPDATE adopcion SET estado = 'finalizada' WHERE id = $1`, [adopcionId]);
+    });
+
+    it('mascota no tiene columna de ciudad', async () => {
+      expect(
+        await contar(
+          ds,
+          `SELECT count(*) AS n FROM information_schema.columns
+           WHERE table_name = 'mascota' AND column_name = 'ciudad'`,
+        ),
+      ).toBe(0);
+    });
+  });
+});

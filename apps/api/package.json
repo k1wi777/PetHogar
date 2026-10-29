@@ -12,7 +12,10 @@
     "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
     "migration:generate": "pnpm typeorm migration:generate",
     "migration:run": "pnpm typeorm migration:run",
-    "migration:revert": "pnpm typeorm migration:revert"
+    "migration:revert": "pnpm typeorm migration:revert",
+    "seed": "ts-node src/database/seeds/seed.ts",
+    "seed:demo": "pnpm seed --demo",
+    "test:db": "jest --config jest.db.config.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.8",
@@ -22,6 +25,7 @@
     "@nestjs/swagger": "^11.4.7",
     "@nestjs/throttler": "^6.7.1",
     "@nestjs/typeorm": "^11.0.3",
+    "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "helmet": "^8.3.0",
