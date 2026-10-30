@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Rol, Usuario } from '@/shared/api/tipos';
 import type { ContextoSesion, EstadoSesion } from '@/shared/auth/SesionProvider';
@@ -48,15 +47,14 @@ describe('AccionAdoptar', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('adoptante: botón habilitado que muestra el aviso en una región de estado, sin navegar', async () => {
+  it('adoptante: enlace al formulario de solicitud de esa mascota, sin aviso provisional', () => {
     con('autenticado', 'adoptante');
     render(<AccionAdoptar mascotaId={5} />);
-    const boton = screen.getByRole('button', { name: 'Quiero adoptar' });
-    expect(boton).toBeEnabled();
-    expect(screen.getByRole('status')).toBeEmptyDOMElement();
-    await userEvent.setup().click(boton);
-    expect(screen.getByRole('status')).toHaveTextContent(/pronto podrás enviar tu solicitud/);
-    expect(screen.queryByRole('link')).toBeNull();
+    const enlace = screen.getByRole('link', { name: 'Quiero adoptar' });
+    expect(enlace).toHaveAttribute('href', '/adoptante/solicitudes/nueva?mascota=5');
+    expect(enlace.getAttribute('href')).toBe(rutaSolicitud(5));
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByText(/pronto podrás/)).toBeNull();
   });
 
   it('la ruta de la solicitud está centralizada', () => {

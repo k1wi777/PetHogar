@@ -25,7 +25,8 @@
     "test:e2e": "jest --config jest.e2e.config.ts",
     "test:calidad": "jest --config jest.calidad.config.ts",
     "test:carga": "nest build && ts-node test/carga/carga.ts",
-    "demo:pdfs": "ts-node test/demo/demo-pdfs.ts"
+    "demo:pdfs": "ts-node test/demo/demo-pdfs.ts",
+    "plantilla:adopcion": "ts-node test/demo/plantilla-adopcion.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.8",

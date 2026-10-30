@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
-import { PaginaPlaceholder } from '@/features/panel/components/PaginaPlaceholder';
+import { Suspense } from 'react';
+import { ListaAdopciones } from '@/features/adopciones/components/ListaAdopciones';
+import { Skeleton } from '@/shared/ui/Skeleton';
 
 export const metadata: Metadata = { title: 'Mis adopciones | PetHogar' };
 
 export default function Pagina() {
   return (
-    <PaginaPlaceholder
-      titulo="Mis adopciones"
-      descripcion="Aquí verás tus adopciones y sus seguimientos."
-    />
+    <Suspense fallback={<Skeleton className="h-48 max-w-4xl" etiqueta="Cargando" />}>
+      <ListaAdopciones />
+    </Suspense>
   );
 }

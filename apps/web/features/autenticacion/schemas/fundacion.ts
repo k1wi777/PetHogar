@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validarDocumento } from '@/shared/lib/archivo';
 import {
   aceptaPolitica,
   contrasenaSegura,
@@ -7,7 +8,7 @@ import {
   textoObligatorio,
   textoOpcional,
 } from './comunes';
-import { MENSAJE_DOCUMENTO_OBLIGATORIO, validarDocumento } from '../lib/archivo-documento';
+const MENSAJE_DOCUMENTO_OBLIGATORIO = 'Debes adjuntar el documento legal';
 
 export const esquemaFundacion = z.object({
   nombre: textoObligatorio(

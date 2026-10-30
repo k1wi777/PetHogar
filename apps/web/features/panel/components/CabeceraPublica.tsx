@@ -26,7 +26,7 @@ export function CabeceraPublica() {
                 </Link>
               </li>
               <li>
-                <Link href="/adoptante/donar" className={ENLACE}>
+                <Link href="/donar" className={ENLACE}>
                   Donar
                 </Link>
               </li>

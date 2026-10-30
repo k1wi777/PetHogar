@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { fichaEjemplo } from '../prueba-datos';
 import { DatosMascota } from './DatosMascota';
-import { FundacionResponsable } from './FundacionResponsable';
+import { FundacionResponsable, rutaDonarAFundacion } from './FundacionResponsable';
 import { GaleriaFotos } from './GaleriaFotos';
 import { HistorialMedico } from './HistorialMedico';
 
@@ -72,5 +72,21 @@ describe('FundacionResponsable', () => {
     expect(screen.getByText('Montería')).toBeInTheDocument();
     expect(screen.getByText('Rescatamos animales.')).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/@|NIT|teléfono/i);
+  });
+
+  it('ofrece «Donar a esta fundación» con el id y el nombre en la URL', () => {
+    render(<FundacionResponsable fundacion={fichaEjemplo().fundacion} />);
+    const enlace = screen.getByRole('link', { name: 'Donar a esta fundación' });
+    const url = new URL(enlace.getAttribute('href')!, 'http://x');
+    expect(url.pathname).toBe('/adoptante/donar');
+    expect(url.searchParams.get('fundacion')).toBe(String(fichaEjemplo().fundacion.id));
+    expect(url.searchParams.get('nombre')).toBe('Huellitas');
+  });
+
+  it('recorta el nombre a 100 caracteres y lo codifica', () => {
+    const ruta = rutaDonarAFundacion({ id: 3, nombre: 'Ñ & <b>' + 'x'.repeat(200) });
+    const nombre = new URL(ruta, 'http://x').searchParams.get('nombre')!;
+    expect(nombre).toHaveLength(100);
+    expect(ruta).not.toContain('<b>');
   });
 });

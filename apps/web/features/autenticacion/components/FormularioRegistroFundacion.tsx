@@ -7,13 +7,13 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Boton } from '@/shared/ui/Boton';
 import { AreaControlada, CampoControlado } from '@/shared/ui/CampoControlado';
+import { CampoDocumento } from '@/shared/ui/CampoDocumento';
 import { registrarFundacion } from '../api/autenticacion';
 import { aplicarError } from '../lib/errores-servidor';
 import { esquemaFundacion, type DatosFundacion } from '../schemas/fundacion';
 import { AvisoFormulario } from './AvisoFormulario';
 import { CampoAceptacion } from './CampoAceptacion';
 import { CampoContrasena } from './CampoContrasena';
-import { CampoDocumento } from './CampoDocumento';
 
 const CAMPOS: ReadonlyArray<keyof DatosFundacion> = [
   'nombre',

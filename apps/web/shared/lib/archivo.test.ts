@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_BYTES_DOCUMENTO,
   formatearTamano,
+  SOLO_IMAGENES,
   tipoDeDocumento,
   validarDocumento,
-} from './archivo-documento';
+} from './archivo';
 
 const archivo = (name: string, type: string, size: number) => ({ name, type, size });
 
@@ -43,6 +44,16 @@ describe('validarDocumento', () => {
       ok: false,
       mensaje: 'El archivo está vacío',
     });
+  });
+});
+
+describe('validarDocumento solo imágenes', () => {
+  it('rechaza el PDF cuando solo se permiten imágenes', () => {
+    expect(validarDocumento(archivo('a.pdf', 'application/pdf', 10), SOLO_IMAGENES)).toEqual({
+      ok: false,
+      mensaje: 'Solo se permiten fotos JPG o PNG',
+    });
+    expect(validarDocumento(archivo('a.png', 'image/png', 10), SOLO_IMAGENES).ok).toBe(true);
   });
 });
 

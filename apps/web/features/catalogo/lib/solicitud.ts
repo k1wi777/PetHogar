@@ -1,7 +1,4 @@
-/**
- * Destino del formulario de solicitud de adopción. Hoy la acción es provisional (aviso en línea);
- * cuando exista la pantalla de solicitud (F-10) solo cambia esta función.
- */
+/** Destino del formulario de solicitud de adopción (feature `solicitudes`). */
 export function rutaSolicitud(mascotaId: number): string {
   return `/adoptante/solicitudes/nueva?mascota=${mascotaId}`;
 }

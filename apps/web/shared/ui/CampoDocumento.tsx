@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Controller, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { Boton } from '@/shared/ui/Boton';
 import { Campo } from '@/shared/ui/Campo';
-import { esImagen, formatearTamano, validarDocumento } from '../lib/archivo-documento';
+import { esImagen, formatearTamano, validarDocumento } from '../lib/archivo';
 
 const ACEPTADOS = '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf';
 
@@ -25,11 +25,18 @@ export function CampoDocumento<T extends FieldValues>({
   nombre,
   etiqueta,
   ayuda,
+  requerido = true,
+  textoQuitar = 'Quitar documento',
+  textoVistaPrevia = 'Vista previa del documento',
 }: {
   control: Control<T>;
   nombre: Path<T>;
   etiqueta: string;
   ayuda?: string;
+  /** Por defecto `true`; el comprobante de una donación es opcional. */
+  requerido?: boolean;
+  textoQuitar?: string;
+  textoVistaPrevia?: string;
 }) {
   const [vista, setVista] = useState<Vista | null>(null);
   const [errorLocal, setErrorLocal] = useState<string | null>(null);
@@ -87,7 +94,7 @@ export function CampoDocumento<T extends FieldValues>({
         <div className="flex flex-col gap-3">
           <Campo
             etiqueta={etiqueta}
-            requerido
+            requerido={requerido}
             ayuda={ayuda}
             error={errorLocal ?? fieldState.error?.message}
           >
@@ -108,7 +115,7 @@ export function CampoDocumento<T extends FieldValues>({
                 // eslint-disable-next-line @next/next/no-img-element -- vista local (blob:) que next/image no puede optimizar
                 <img
                   src={vista.url}
-                  alt={`Vista previa del documento ${vista.nombre}`}
+                  alt={`${textoVistaPrevia} ${vista.nombre}`}
                   className="size-20 rounded object-cover"
                 />
               ) : (
@@ -120,7 +127,7 @@ export function CampoDocumento<T extends FieldValues>({
               </p>
               <Boton variante="contorno" onClick={() => quitar(field.onChange)}>
                 <Trash2 className="size-4" aria-hidden="true" />
-                Quitar documento
+                {textoQuitar}
               </Boton>
             </div>
           )}
