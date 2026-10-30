@@ -7,6 +7,9 @@
   },
   "scripts": {
     "dev": "pnpm --parallel -r dev",
+    "db:up": "docker compose up -d --wait",
+    "db:reset": "docker compose down -v && docker compose up -d --wait && pnpm --filter api migration:run && pnpm --filter api seed",
+    "seed": "pnpm --filter api seed",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint && prettier --check .",
     "typecheck": "pnpm -r typecheck",

@@ -2,7 +2,7 @@
 
 **Plataforma web de adopción y seguimiento de mascotas en fundaciones y refugios de animales.**
 
-> **Estado:** en planificación. Aún no hay código; este README describe el producto, el stack acordado y dónde está la documentación. Las instrucciones de instalación y arranque se completarán cuando exista la base del monorepo.
+> **Estado:** el backend (API REST) está completo y la web tiene su base lista: sistema de diseño, sesión, navegación por rol y paneles con páginas provisionales. Las pantallas de negocio llegan en las siguientes Features del front.
 
 ---
 
@@ -87,9 +87,9 @@ Además, un sistema de **notificaciones** (en la plataforma y por correo) atravi
 | Correo | Nodemailer (SMTP) con Mailpit en local |
 | PDF | pdfmake en el backend |
 | Pruebas | Jest (api), Vitest + Testing Library (web), Playwright (e2e) |
-| Entorno local | Docker Compose con PostgreSQL y Mailpit; Next.js hace *rewrites* de `/api/*` hacia la API |
+| Entorno local | Docker Compose con PostgreSQL y Mailpit; el navegador llama directamente a la API (`NEXT_PUBLIC_API_URL`, con CORS y cookies con credenciales) |
 
-## Estructura prevista
+## Estructura
 
 ```
 apps/
@@ -102,7 +102,76 @@ docker-compose.yml
 
 ## Puesta en marcha
 
-*Pendiente.* Se documentará cuando existan el monorepo, Docker Compose, migraciones y seeds (requisitos, variables de entorno, comandos, URLs de front, API, Swagger y Mailpit, y usuarios de prueba).
+### Requisitos
+
+- **Node.js 24 o superior** y **pnpm 11** (`corepack enable` lo activa).
+- **Docker** con Docker Compose (para PostgreSQL 16 y Mailpit).
+- Git.
+
+### Pasos
+
+1. Clona el repositorio y entra en la carpeta.
+2. Copia los archivos de entorno (los valores de ejemplo sirven para trabajar en local):
+
+   ```bash
+   cp .env.example .env
+   cp apps/api/.env.example apps/api/.env
+   cp apps/web/.env.example apps/web/.env.local
+   ```
+
+3. Instala las dependencias: `pnpm install`.
+4. Levanta PostgreSQL y Mailpit: `pnpm db:up` (equivale a `docker compose up -d --wait`).
+5. Crea las tablas: `pnpm --filter api migration:run`.
+6. Carga los datos base (roles, especies, razas y el administrador): `pnpm seed`. Para añadir además una fundación, un adoptante y mascotas de ejemplo: `pnpm --filter api seed:demo`.
+7. Arranca la API y la web a la vez: `pnpm dev`.
+
+`pnpm dev` **no** levanta Docker ni la base de datos: se hace aparte (paso 4) para que puedas apagar la API o la base y comprobar cómo responde la web (muestra «No pudimos conectar con el servidor» con un botón para reintentar).
+
+### Direcciones
+
+| Servicio | URL |
+|----------|-----|
+| Web | http://localhost:3000 |
+| API | http://localhost:3001/api |
+| Swagger (documentación de la API) | http://localhost:3001/api/docs |
+| Mailpit (correos de prueba) | http://localhost:8025 |
+
+En desarrollo, http://localhost:3000/_kit muestra todos los componentes del sistema de diseño (en producción responde 404).
+
+### Usuarios de prueba
+
+Los crea el seed; las contraseñas son las que definas en `apps/api/.env` (no se publican aquí).
+
+| Rol | Correo | Contraseña |
+|-----|--------|-----------|
+| Administrador | `admin@pethogar.local` | `SEED_ADMIN_PASSWORD` |
+| Fundación (seed demo) | `fundacion.demo@pethogar.local` | `SEED_DEMO_PASSWORD` |
+| Adoptante (seed demo) | `adoptante.demo@pethogar.local` | `SEED_DEMO_PASSWORD` |
+
+La pantalla de inicio de sesión llega en una Feature posterior; hasta entonces, el inicio de sesión real se comprueba con las pruebas (`pnpm --filter web test:api`).
+
+### Comandos útiles
+
+| Comando | Qué hace |
+|---------|----------|
+| `pnpm db:up` | Levanta PostgreSQL y Mailpit y espera a que estén listos. |
+| `pnpm db:reset` | **Destructivo:** borra la base de datos, la recrea, aplica las migraciones y carga el seed base. |
+| `pnpm seed` | Carga los datos base (idempotente). |
+| `pnpm dev` | API (3001) y web (3000) con recarga automática. |
+| `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` | Verificación rápida y build. |
+
+### Problemas comunes
+
+- **Un puerto está ocupado** (3000, 3001, 5432, 1025 u 8025). Cambia el puerto y avisa a las demás piezas:
+  - PostgreSQL: `POSTGRES_PORT` en `.env` de la raíz y el mismo valor en `DATABASE_PORT` de `apps/api/.env`.
+  - Mailpit: `MAILPIT_SMTP_PORT` y `MAILPIT_UI_PORT` en `.env`; `SMTP_PORT` de `apps/api/.env` debe coincidir con el primero.
+  - API: `PORT` en `apps/api/.env` y `NEXT_PUBLIC_API_URL` en `apps/web/.env.local` (por ejemplo `http://localhost:3002/api`).
+  - Web: arranca con `pnpm --filter web exec next dev --port 3010` y pon esa URL en `FRONTEND_URL` de `apps/api/.env`.
+- **Docker no está encendido** (`Cannot connect to the Docker daemon`): inicia Docker Desktop o el servicio y repite `pnpm db:up`.
+- **La web dice «No pudimos conectar con el servidor»:** la API no está en marcha o `NEXT_PUBLIC_API_URL` apunta a otra dirección. Revisa la terminal de `pnpm dev` y recarga la web.
+- **Error de CORS en la consola del navegador:** `FRONTEND_URL` de `apps/api/.env` debe ser exactamente el origen de la web (por ejemplo `http://localhost:3000`). Reinicia la API tras cambiarlo.
+- **Quiero empezar de cero:** `pnpm db:reset` (borra todos los datos locales) y, si quieres los datos de ejemplo, `pnpm --filter api seed:demo`.
+- **Las migraciones fallan por conexión:** comprueba que PostgreSQL esté «healthy» (`docker compose ps`) y que `DATABASE_PORT` coincida con `POSTGRES_PORT`.
 
 ## Documentación
 
