@@ -1,5 +1,6 @@
 import { PawPrint } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { BadgeEstado } from './BadgeEstado';
 
@@ -11,6 +12,8 @@ export interface DatosTarjetaMascota {
   edad?: string | null;
   fotoUrl?: string | null;
   estado?: string;
+  /** Si existe, el nombre es un enlace cuya área clicable cubre toda la tarjeta. */
+  href?: string;
 }
 
 /** Tarjeta de mascota; el enlace (si lo hay) lo aporta quien la usa mediante `children`. */
@@ -23,7 +26,7 @@ export function TarjetaMascota({
 }) {
   const detalle = [mascota.especie, mascota.raza, mascota.edad].filter(Boolean).join(' · ');
   return (
-    <article className="bg-card border-border-suave flex flex-col overflow-hidden rounded-lg border shadow-sm">
+    <article className="bg-card border-border-suave relative flex flex-col overflow-hidden rounded-lg border shadow-sm">
       <div className="bg-muted relative aspect-[4/3]">
         {mascota.fotoUrl ? (
           <Image
@@ -46,7 +49,15 @@ export function TarjetaMascota({
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-heading text-xl font-bold">{mascota.nombre}</h3>
+          <h3 className="font-heading text-xl font-bold">
+            {mascota.href ? (
+              <Link href={mascota.href} className="after:absolute after:inset-0">
+                {mascota.nombre}
+              </Link>
+            ) : (
+              mascota.nombre
+            )}
+          </h3>
           {mascota.estado && <BadgeEstado estado={mascota.estado} />}
         </div>
         <p className="text-muted-foreground text-sm">{detalle}</p>

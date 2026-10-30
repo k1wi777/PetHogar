@@ -19,9 +19,9 @@ export function CabeceraPublica() {
             PetHogar
           </Link>
           <nav aria-label="Principal" className="ml-auto">
-            <ul className="flex items-center gap-1">
+            <ul className="flex flex-wrap items-center justify-end gap-1">
               <li>
-                <Link href="/" className={ENLACE}>
+                <Link href="/adoptar" className={ENLACE}>
                   Adoptar
                 </Link>
               </li>

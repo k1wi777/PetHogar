@@ -133,6 +133,26 @@ describe('Paginacion', () => {
     expect(screen.getByRole('button', { name: /Siguiente/ })).toBeDisabled();
   });
 
+  it('en modo enlaces usa <a> con la URL de cada página y sin enlace en los extremos', () => {
+    const hrefPara = (n: number) => `/adoptar?tamano=grande&pagina=${n}`;
+    const { rerender } = render(
+      <Paginacion pagina={2} limite={10} total={25} hrefPara={hrefPara} />,
+    );
+    expect(screen.getByRole('link', { name: /Anterior/ })).toHaveAttribute(
+      'href',
+      '/adoptar?tamano=grande&pagina=1',
+    );
+    expect(screen.getByRole('link', { name: /Siguiente/ })).toHaveAttribute(
+      'href',
+      '/adoptar?tamano=grande&pagina=3',
+    );
+    rerender(<Paginacion pagina={3} limite={10} total={25} hrefPara={hrefPara} />);
+    const ultimo = screen.getByRole('link', { name: /Siguiente/ });
+    expect(ultimo).not.toHaveAttribute('href');
+    expect(ultimo).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
   it('con total 0 muestra una sola página', () => {
     render(<Paginacion pagina={1} limite={10} total={0} onCambio={() => {}} />);
     expect(screen.getByText(/Página 1 de 1 · 0 resultados/)).toBeInTheDocument();

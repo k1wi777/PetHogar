@@ -212,7 +212,7 @@ describe('CabeceraPublica', () => {
     poner('anonimo');
     render(<CabeceraPublica />);
     const nav = screen.getByRole('navigation', { name: 'Principal' });
-    expect(within(nav).getByRole('link', { name: 'Adoptar' })).toBeInTheDocument();
+    expect(within(nav).getByRole('link', { name: 'Adoptar' })).toHaveAttribute('href', '/adoptar');
     expect(within(nav).getByRole('link', { name: 'Donar' })).toHaveAttribute(
       'href',
       '/adoptante/donar',

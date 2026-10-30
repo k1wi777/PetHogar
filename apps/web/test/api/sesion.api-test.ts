@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { crearClienteHttp } from '@/shared/api/cliente';
 import type { RespuestaSesion, Usuario } from '@/shared/api/tipos';
 import { crearFetchConCookies } from './cookies';
+import { conLimite } from './limite';
 
 const API = process.env.TEST_API_URL;
 const ORIGEN = process.env.TEST_WEB_ORIGIN ?? 'http://localhost:3000';
@@ -49,10 +50,12 @@ describe('V17: sesión del front contra la API real', () => {
     const { jar, cliente } = nuevoCliente();
 
     // Inicio de sesión (el cuerpo trae el token; el refresh queda en la cookie).
-    const sesion = await cliente.post<RespuestaSesion>('/auth/login', {
-      autenticada: false,
-      cuerpo: { email: EMAIL, contrasena: CLAVE },
-    });
+    const sesion = await conLimite(() =>
+      cliente.post<RespuestaSesion>('/auth/login', {
+        autenticada: false,
+        cuerpo: { email: EMAIL, contrasena: CLAVE },
+      }),
+    );
     cliente.tokens.guardar(sesion.accessToken);
     expect(sesion.usuario.rol).toBe('fundacion');
 
@@ -94,16 +97,18 @@ describe('V17: sesión del front contra la API real', () => {
     // El refresh anterior, aunque se conserve, ya no sirve.
     jar.restaurar('refresh_token', cookieAntes, '/api/auth');
     await expect(cliente.renovar()).rejects.toMatchObject({ tipo: 'sesion-vencida' });
-  });
+  }, 150_000);
 
   it('credenciales incorrectas dan un 401 de tipo http con mensaje en español, sin intentar refresh', async () => {
     const { jar, cliente } = nuevoCliente();
     await expect(
-      cliente.post('/auth/login', {
-        autenticada: false,
-        cuerpo: { email: EMAIL, contrasena: 'incorrecta-123' },
-      }),
+      conLimite(() =>
+        cliente.post('/auth/login', {
+          autenticada: false,
+          cuerpo: { email: EMAIL, contrasena: 'incorrecta-123' },
+        }),
+      ),
     ).rejects.toMatchObject({ tipo: 'http', estado: 401 });
     expect(jar.llamadas.some((l) => l.ruta.endsWith('/auth/refresh'))).toBe(false);
-  });
+  }, 150_000);
 });

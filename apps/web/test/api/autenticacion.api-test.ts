@@ -13,6 +13,7 @@ import { clasificarErrorLogin } from '@/features/autenticacion/lib/estado-cuenta
 import { esquemaAdoptante } from '@/features/autenticacion/schemas/adoptante';
 import { esquemaFundacion } from '@/features/autenticacion/schemas/fundacion';
 import { crearClienteHttp } from '@/shared/api/cliente';
+import { conLimite } from './limite';
 import { esErrorApi } from '@/shared/api/errores';
 import type { RespuestaSesion, Usuario } from '@/shared/api/tipos';
 import { crearFetchConCookies } from './cookies';
@@ -38,19 +39,6 @@ function nuevoCliente() {
 }
 
 const esperar = (ms: number) => new Promise((resolver) => setTimeout(resolver, ms));
-
-/** Si la API responde 429 (límite por minuto) espera a que se renueve la ventana y reintenta una vez. */
-async function conLimite<T>(accion: () => Promise<T>): Promise<T> {
-  try {
-    return await accion();
-  } catch (error) {
-    if (esErrorApi(error) && error.estado === 429) {
-      await esperar(61_000);
-      return accion();
-    }
-    throw error;
-  }
-}
 
 async function fallo(accion: () => Promise<unknown>) {
   try {
