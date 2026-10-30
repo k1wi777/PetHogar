@@ -24,6 +24,7 @@ describe('porcentajes', () => {
       [5],
       [1, 2],
       [33, 33, 34],
+      [1, 1, 1, 197],
     ]) {
       expect(
         porcentajes(v).reduce((a, b) => a + b, 0),
@@ -32,6 +33,11 @@ describe('porcentajes', () => {
     }
     expect(porcentajes([1, 1, 1])).toEqual([34, 33, 33]);
     expect(porcentajes([5])).toEqual([100]);
+  });
+  it('[1,1,1,197] suma 100 con el mayor resto (un Math.round daría 102)', () => {
+    const p = porcentajes([1, 1, 1, 197]);
+    expect(p.reduce((a, b) => a + b, 0)).toBe(100);
+    expect(p).toEqual([1, 1, 0, 98]);
   });
   it('con todo en cero devuelve ceros (la serie no se dibuja)', () => {
     expect(porcentajes([0, 0, 0])).toEqual([0, 0, 0]);

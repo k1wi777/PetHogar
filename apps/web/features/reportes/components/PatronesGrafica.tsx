@@ -1,4 +1,9 @@
-import { COLOR_TRAZO_PATRON, PALETA_GRAFICA, type PatronGrafica } from '@/shared/lib/grafica';
+import {
+  COLOR_TRAZO_PATRON,
+  OPACIDAD_TRAZO_PATRON,
+  PALETA_GRAFICA,
+  type PatronGrafica,
+} from '@/shared/lib/grafica';
 
 /** Identificador de un patrón dentro de una gráfica (`prefijo` evita choques entre gráficas). */
 export function idPatron(prefijo: string, indice: number): string {
@@ -10,12 +15,24 @@ export function rellenoDe(prefijo: string, indice: number): string {
 }
 
 function Trazo({ patron }: { patron: PatronGrafica }) {
-  const comun = { stroke: COLOR_TRAZO_PATRON, strokeOpacity: 0.7, fill: 'none' } as const;
+  const comun = {
+    stroke: COLOR_TRAZO_PATRON,
+    strokeOpacity: OPACIDAD_TRAZO_PATRON,
+    fill: 'none',
+  } as const;
   switch (patron) {
     case 'rayas':
       return <path d="M0 2 H8 M0 6 H8" strokeWidth={1.5} {...comun} />;
     case 'puntos':
-      return <circle cx={4} cy={4} r={1.5} fill={COLOR_TRAZO_PATRON} fillOpacity={0.7} />;
+      return (
+        <circle
+          cx={4}
+          cy={4}
+          r={1.5}
+          fill={COLOR_TRAZO_PATRON}
+          fillOpacity={OPACIDAD_TRAZO_PATRON}
+        />
+      );
     case 'cuadricula':
       return <path d="M0 4 H8 M4 0 V8" strokeWidth={1.2} {...comun} />;
     case 'diagonal':

@@ -30,6 +30,9 @@ export const SEPARACION_REBANADAS_PX = 2;
 /** Color de las líneas de los patrones sobre el color de relleno. */
 export const COLOR_TRAZO_PATRON = '#ffffff';
 
+/** Opacidad con la que se dibuja el trazo del patrón (la usa `PatronesGrafica`). */
+export const OPACIDAD_TRAZO_PATRON = 0.7;
+
 export function estiloDeSerie(indice: number): EstiloSerie {
   return PALETA_GRAFICA[indice % PALETA_GRAFICA.length]!;
 }

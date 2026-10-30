@@ -2,7 +2,7 @@
 
 **Plataforma web de adopción y seguimiento de mascotas en fundaciones y refugios de animales.**
 
-> **Estado:** el backend (API REST) está completo y la web tiene su base lista: sistema de diseño, sesión, navegación por rol y paneles con páginas provisionales. Las pantallas de negocio llegan en las siguientes Features del front.
+> **Estado:** el backend (API REST) está completo y el front cubre autenticación, catálogo público y los paneles de adoptante, fundación y administrador (mascotas, solicitudes, adopciones y seguimientos, donaciones, reportes con gráficas, notificaciones y cierre de adopciones). Quedan por pulir mensajes y estados vacíos, accesibilidad y pruebas e2e.
 
 ---
 
@@ -89,16 +89,30 @@ Además, un sistema de **notificaciones** (en la plataforma y por correo) atravi
 | Pruebas | Jest (api), Vitest + Testing Library (web), Playwright (e2e) |
 | Entorno local | Docker Compose con PostgreSQL y Mailpit; el navegador llama directamente a la API (`NEXT_PUBLIC_API_URL`, con CORS y cookies con credenciales) |
 
-## Estructura
+## Estructura del monorepo
+
+Monorepo gestionado con **pnpm workspaces** (`pnpm-workspace.yaml`). Cada paquete tiene su propio `package.json`; los comandos de la raíz delegan en ellos con `pnpm -r` o `pnpm --filter <paquete>`.
 
 ```
 apps/
-  api/        # NestJS (puerto 3001)
-  web/        # Next.js (puerto 3000)
+  api/          # API REST en NestJS (puerto 3001)
+  web/          # Web en Next.js, App Router (puerto 3000)
 packages/
-  shared/     # Tipos y esquemas compartidos (opcional)
-docker-compose.yml
+  shared/       # Tipos y esquemas compartidos (opcional; hoy vacío)
+docs/           # Operación: HTTPS, respaldos, riesgos aceptados, datos de demostración
+scripts/        # Respaldo y restauración de base de datos y archivos
+docker-compose.yml   # PostgreSQL 16 + Mailpit para desarrollo local
+eslint.config.mjs    # ESLint compartido (api y web lo extienden)
+tsconfig.base.json   # Configuración base de TypeScript
+.rei/                # REI Harness: specs, progreso y documentación del proyecto
 ```
+
+| Paquete | Qué contiene | Detalle |
+|---------|--------------|---------|
+| `apps/api` | Un módulo por dominio en `src/modules/`: `auth`, `usuarios`, `fundaciones`, `admin`, `catalogos`, `mascotas`, `solicitudes`, `adopciones`, `seguimientos`, `donaciones`, `notificaciones`, `avisos`, `reportes`, `mail`, `storage`, `health`. Además `database/` (migraciones y seeds) y `common/`. | Swagger en `/api/docs`. |
+| `apps/web` | Estructura *feature-first*: `app/` (rutas por grupo: `(publico)`, `(adoptante)`, `(fundacion)`, `(administrador)`), `features/` (una carpeta por funcionalidad; no se importan entre sí) y `shared/` (cliente HTTP, componentes y utilidades comunes). | `/_kit` muestra el sistema de diseño (solo en desarrollo). |
+
+Reglas de dependencia: `apps/web` nunca importa código de `apps/api` (se comunican solo por la API REST); lo que ambos necesiten compartir va en `packages/shared`.
 
 ## Puesta en marcha
 
@@ -148,17 +162,36 @@ Los crea el seed; las contraseñas son las que definas en `apps/api/.env` (no se
 | Fundación (seed demo) | `fundacion.demo@pethogar.local` | `SEED_DEMO_PASSWORD` |
 | Adoptante (seed demo) | `adoptante.demo@pethogar.local` | `SEED_DEMO_PASSWORD` |
 
-La pantalla de inicio de sesión llega en una Feature posterior; hasta entonces, el inicio de sesión real se comprueba con las pruebas (`pnpm --filter web test:api`).
+Inicia sesión en http://localhost:3000/ingresar; cada rol aterriza en su panel (`/adoptante`, `/fundacion`, `/administrador`).
 
 ### Comandos útiles
 
+**Desde la raíz** (afectan a todo el monorepo):
+
 | Comando | Qué hace |
 |---------|----------|
+| `pnpm dev` | API (3001) y web (3000) con recarga automática. |
 | `pnpm db:up` | Levanta PostgreSQL y Mailpit y espera a que estén listos. |
 | `pnpm db:reset` | **Destructivo:** borra la base de datos, la recrea, aplica las migraciones y carga el seed base. |
 | `pnpm seed` | Carga los datos base (idempotente). |
-| `pnpm dev` | API (3001) y web (3000) con recarga automática. |
-| `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` | Verificación rápida y build. |
+| `pnpm lint` | ESLint de todos los paquetes y comprobación de formato con Prettier. |
+| `pnpm typecheck` | Comprobación de tipos de api y web. |
+| `pnpm test` | Pruebas rápidas de api y web (una tras otra). |
+| `pnpm build` | Build de api y web. |
+| `pnpm format` | Aplica Prettier a todo el repositorio. |
+
+**Por paquete** (`pnpm --filter <api|web> <script>`):
+
+| Comando | Qué hace |
+|---------|----------|
+| `--filter api migration:run` / `migration:generate` / `migration:revert` | Gestión de migraciones. |
+| `--filter api seed:demo` | Seed base más una fundación, un adoptante y mascotas de ejemplo. |
+| `--filter api test:db`, `test:infra`, `test:auth`, `test:mascotas`, `test:adopciones`, `test:seguimientos`, `test:notificaciones`, `test:e2e`, `test:calidad` | Pruebas lentas contra PostgreSQL, Mailpit y disco reales (requieren `pnpm db:up`). |
+| `--filter api demo:pdfs` | Genera PDF de ejemplo para revisarlos a mano. |
+| `--filter web test:api` | Pruebas del front contra la API real (arranca API, base y Mailpit; tarda varios minutos). |
+| `--filter web exec next dev --port 3010` | Web en otro puerto. |
+
+Respaldo y restauración de la base y de los archivos subidos: `scripts/respaldo.sh` y `scripts/restaurar.sh` (ver `docs/operacion.md`).
 
 ### Problemas comunes
 
@@ -178,7 +211,8 @@ La pantalla de inicio de sesión llega en una Feature posterior; hasta entonces,
 | Documento | Contenido |
 |-----------|-----------|
 | `ERSOFT_PetHogar.docx` | Especificación de requisitos: problema, objetivos, roles, RF/RNF, casos de uso, modelo entidad-relación, diagramas de secuencia y diccionario de datos. |
-| `PetHogar — Plan de tareas (monorepo).md` | Plan de tareas propuesto (backend, frontend e integración), ajustes al modelo de datos, hitos y decisiones abiertas. **Todavía no adoptado** como Work Items. |
+| `PetHogar — Plan de tareas (monorepo).md` | Plan de tareas propuesto (backend, frontend e integración), ajustes al modelo de datos, hitos y decisiones abiertas. Referencia histórica; el avance real se registra en `.rei/`. |
+| `docs/operacion.md` | Operación del backend: lista de verificación para HTTPS, respaldo y restauración, riesgos aceptados, datos de demostración y notas para el front. |
 | `AGENTS.md` y `.rei/` | REI Harness: workflow, roles de agentes, specs y progreso del desarrollo asistido por IA. |
 
 ## Fuera del alcance

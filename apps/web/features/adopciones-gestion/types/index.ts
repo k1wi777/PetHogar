@@ -38,6 +38,19 @@ export interface AdoptanteContacto {
   ciudad: string;
 }
 
+/** Cierre de una adopción activa (el backend solo admite estas dos). */
+export const ESTADOS_CIERRE = ['finalizada', 'revocada'] as const;
+export type EstadoCierre = (typeof ESTADOS_CIERRE)[number];
+
+/** Estado al que pasa la mascota cuando se revoca la adopción. */
+export const DESTINOS_MASCOTA = ['disponible', 'inactiva'] as const;
+export type DestinoMascota = (typeof DESTINOS_MASCOTA)[number];
+
+/** Acta firmada: ruta `/api/…` autenticada (nunca una URL pública). */
+export interface ActaAdopcion {
+  url: string;
+}
+
 /** Fila de «Adopciones» (`GET /fundacion/adopciones`); trae adoptante y seguimientos. */
 export interface AdopcionFundacion {
   id: number;
@@ -47,6 +60,7 @@ export interface AdopcionFundacion {
   mascota: { id: number; nombre: string };
   motivoCierre: string | null;
   fechaCierre: string | null;
+  acta: ActaAdopcion | null;
   adoptante: AdoptanteContacto;
   seguimientos: ResumenSeguimiento[];
 }
@@ -91,3 +105,8 @@ export interface DatosResultado {
   observaciones: string;
   evidencias: File[];
 }
+
+/** Cuerpo de `PATCH /adopciones/:id/estado`; el destino solo existe al revocar. */
+export type DatosCierre =
+  | { estado: 'finalizada'; motivo: string }
+  | { estado: 'revocada'; motivo: string; mascotaDestino: DestinoMascota };

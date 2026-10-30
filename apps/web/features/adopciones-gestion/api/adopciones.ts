@@ -4,6 +4,7 @@ import type { Pagina } from '@/shared/api/tipos';
 import type {
   AdopcionFundacion,
   ConsultaAdopciones,
+  DatosCierre,
   DatosProgramar,
   DatosResultado,
   DetalleSeguimientoFundacion,
@@ -49,4 +50,31 @@ export function registrarResultado(
   cuerpo.append('observaciones', datos.observaciones);
   for (const evidencia of datos.evidencias) cuerpo.append('evidencias', evidencia);
   return cliente.patch<DetalleSeguimientoFundacion>(`/seguimientos/${id}/resultado`, { cuerpo });
+}
+
+/**
+ * Cierra una adopción activa en una sola transacción del backend (adopción, mascota y
+ * seguimientos pendientes). El destino de la mascota solo se envía al revocar.
+ */
+export function cerrarAdopcion(
+  adopcionId: number,
+  datos: DatosCierre,
+  cliente: ClienteHttp = http,
+): Promise<AdopcionFundacion> {
+  const cuerpo =
+    datos.estado === 'revocada'
+      ? { estado: datos.estado, motivo: datos.motivo, mascotaDestino: datos.mascotaDestino }
+      : { estado: datos.estado, motivo: datos.motivo };
+  return cliente.patch<AdopcionFundacion>(`/adopciones/${adopcionId}/estado`, { cuerpo });
+}
+
+/** Multipart con el campo `acta`; reemplaza la anterior (solo con la adopción activa). */
+export function subirActa(
+  adopcionId: number,
+  acta: File,
+  cliente: ClienteHttp = http,
+): Promise<AdopcionFundacion> {
+  const cuerpo = new FormData();
+  cuerpo.append('acta', acta);
+  return cliente.post<AdopcionFundacion>(`/fundacion/adopciones/${adopcionId}/acta`, { cuerpo });
 }

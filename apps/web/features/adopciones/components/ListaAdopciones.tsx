@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { formatearFecha } from '@/shared/lib/fechas';
 import { BadgeEstado } from '@/shared/ui/BadgeEstado';
+import { BotonDescarga } from '@/shared/ui/BotonDescarga';
 import { Boton } from '@/shared/ui/Boton';
 import { EstadoError } from '@/shared/ui/EstadoError';
 import { EstadoVacio } from '@/shared/ui/EstadoVacio';
@@ -34,6 +35,15 @@ function TarjetaAdopcion({ a }: { a: AdopcionAdoptante }) {
           <p className="text-sm">
             <strong>Motivo del cierre:</strong> {a.motivoCierre}
           </p>
+        )}
+        {a.acta && (
+          <div className="mt-2">
+            <BotonDescarga
+              url={a.acta.url}
+              nombreBase={`acta-adopcion-${a.id}`}
+              etiqueta={`Descargar acta de ${a.mascota.nombre}`}
+            />
+          </div>
         )}
       </header>
       <section aria-label={`Seguimientos de ${a.mascota.nombre}`} className="flex flex-col gap-2">

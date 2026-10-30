@@ -25,6 +25,8 @@ export interface AdopcionAdoptante {
   fundacion: { nombre: string; ciudad: string };
   motivoCierre: string | null;
   fechaCierre: string | null;
+  /** Ruta `/api/mis-adopciones/:id/acta` autenticada; nula si la fundación aún no subió el acta. */
+  acta: { url: string } | null;
   seguimientos: ResumenSeguimiento[];
 }
 

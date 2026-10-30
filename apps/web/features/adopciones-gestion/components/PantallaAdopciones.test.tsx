@@ -131,7 +131,9 @@ describe('PantallaAdopciones', () => {
     await userEvent.click(screen.getByRole('radio', { name: /Visita/ }));
     await userEvent.type(screen.getByLabelText(/Fecha límite del seguimiento/), '2026-11-20');
     await userEvent.click(
-      within(screen.getByRole('form')).getByRole('button', { name: 'Programar seguimiento' }),
+      within(screen.getByRole('form', { name: /Programar seguimiento de/ })).getByRole('button', {
+        name: 'Programar seguimiento',
+      }),
     );
     expect(
       await screen.findByText(
@@ -147,7 +149,9 @@ describe('PantallaAdopciones', () => {
     );
     await userEvent.click(await screen.findByRole('button', { name: /Programar seguimiento/ }));
     await userEvent.click(
-      within(screen.getByRole('form')).getByRole('button', { name: 'Programar seguimiento' }),
+      within(screen.getByRole('form', { name: /Programar seguimiento de/ })).getByRole('button', {
+        name: 'Programar seguimiento',
+      }),
     );
     expect(await screen.findByText('El tipo debe ser visita o reporte')).toBeInTheDocument();
     expect(screen.getByText('Debes indicar la fecha del seguimiento')).toBeInTheDocument();
@@ -181,13 +185,15 @@ describe('PantallaAdopciones', () => {
     await userEvent.click(screen.getByRole('radio', { name: /Visita/ }));
     await userEvent.type(screen.getByLabelText(/Fecha límite del seguimiento/), FUTURO);
     await userEvent.click(
-      within(screen.getByRole('form')).getByRole('button', { name: 'Programar seguimiento' }),
+      within(screen.getByRole('form', { name: /Programar seguimiento de/ })).getByRole('button', {
+        name: 'Programar seguimiento',
+      }),
     );
     await waitFor(() => expect(document.getElementById('seguimiento-9')).not.toBeNull());
     expect(cuerpos).toEqual([{ tipo: 'visita', fechaProgramada: FUTURO }]);
     await waitFor(() => expect(document.getElementById('seguimiento-9')).toHaveFocus());
     expect(screen.getByRole('status')).toHaveTextContent('Seguimiento programado para Luna.');
-    expect(screen.queryByRole('form')).toBeNull();
+    expect(screen.queryByRole('form', { name: /Programar seguimiento de/ })).toBeNull();
     expect(
       within(screen.getByRole('list', { name: 'Seguimientos de Luna' })).getAllByRole('listitem'),
     ).toHaveLength(2);
@@ -203,10 +209,12 @@ describe('PantallaAdopciones', () => {
     await userEvent.click(screen.getByRole('radio', { name: /Reporte/ }));
     await userEvent.type(screen.getByLabelText(/Fecha límite del seguimiento/), FUTURO);
     await userEvent.click(
-      within(screen.getByRole('form')).getByRole('button', { name: 'Programar seguimiento' }),
+      within(screen.getByRole('form', { name: /Programar seguimiento de/ })).getByRole('button', {
+        name: 'Programar seguimiento',
+      }),
     );
     expect(await screen.findByRole('alert')).toHaveTextContent('Ya hay un seguimiento de ese tipo');
-    expect(screen.getByRole('form')).toBeInTheDocument();
+    expect(screen.getByRole('form', { name: /Programar seguimiento de/ })).toBeInTheDocument();
   });
 
   it('Cancelar cierra el panel y devuelve el foco al botón; solo un panel abierto a la vez', async () => {
@@ -218,10 +226,10 @@ describe('PantallaAdopciones', () => {
     const botones = await screen.findAllByRole('button', { name: /Programar seguimiento/ });
     await userEvent.click(botones[0]!);
     await userEvent.click(botones[1]!);
-    expect(screen.getAllByRole('form')).toHaveLength(1);
+    expect(screen.getAllByRole('form', { name: /Programar seguimiento de/ })).toHaveLength(1);
     expect(botones[0]).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
-    expect(screen.queryByRole('form')).toBeNull();
+    expect(screen.queryByRole('form', { name: /Programar seguimiento de/ })).toBeNull();
     await waitFor(() => expect(botones[1]).toHaveFocus());
   });
 

@@ -2,7 +2,7 @@
 
 import { Heart } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { mensajeDe } from '@/shared/api/errores';
 import { AvisoFundacionNoAprobada } from '@/shared/ui/AvisoFundacionNoAprobada';
 import { ESTADOS } from '@/shared/ui/BadgeEstado';
@@ -18,8 +18,9 @@ import { ADOPCIONES_POR_PAGINA } from '../api/adopciones';
 import { useAdopciones } from '../hooks/useAdopcionesGestion';
 import { consultaAUrl, leerConsulta } from '../lib/consulta';
 import { esFundacionNoAprobada } from '../lib/errores';
+import { anuncioDeCierre } from '../lib/cierre';
 import { ESTADOS_ADOPCION, type ConsultaAdopciones, type EstadoAdopcion } from '../types';
-import { TarjetaAdopcion } from './TarjetaAdopcion';
+import { TarjetaAdopcion, type PanelTarjeta } from './TarjetaAdopcion';
 
 const TODOS = 'todos';
 const OPCIONES = [
@@ -34,9 +35,17 @@ function Contenido() {
   const consulta = leerConsulta(params);
   const adopciones = useAdopciones(consulta);
   // Solo un panel de «Programar» abierto a la vez; `foco` marca el seguimiento recién creado.
-  const [abierta, setAbierta] = useState<number | null>(null);
+  const [abierta, setAbierta] = useState<{ id: number; panel: PanelTarjeta } | null>(null);
   const [foco, setFoco] = useState<{ adopcionId: number; seguimientoId: number } | null>(null);
   const [anuncio, setAnuncio] = useState('');
+  // Tras cerrar una adopción el foco vuelve a su tarjeta (o al título si ya no está en la lista).
+  const focoCierre = useRef<number | null>(null);
+  const titulo = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (focoCierre.current === null || adopciones.isFetching) return;
+    (document.getElementById(`adopcion-${focoCierre.current}`) ?? titulo.current)?.focus();
+    focoCierre.current = null;
+  }, [anuncio, adopciones.isFetching]);
 
   function ir(siguiente: ConsultaAdopciones) {
     setAbierta(null);
@@ -50,7 +59,9 @@ function Contenido() {
   return (
     <div className="flex max-w-4xl flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl">Adopciones y seguimientos</h1>
+        <h1 ref={titulo} tabIndex={-1} className="text-3xl focus:outline-2">
+          Adopciones y seguimientos
+        </h1>
         <p className="text-muted-foreground">
           Consulta tus adopciones, programa seguimientos y registra cómo está cada mascota.
         </p>
@@ -111,14 +122,24 @@ function Contenido() {
               <li key={a.id}>
                 <TarjetaAdopcion
                   adopcion={a}
-                  panelAbierto={abierta === a.id}
-                  alAbrirPanel={() => setAbierta(a.id)}
+                  panelAbierto={abierta?.id === a.id ? abierta.panel : null}
+                  alAbrirPanel={(panel) => setAbierta({ id: a.id, panel })}
                   alCerrarPanel={(devolverFoco) => {
                     if (!devolverFoco) setFoco(null);
                     setAbierta(null);
                   }}
                   foco={foco?.adopcionId === a.id ? foco.seguimientoId : null}
                   alFocoAplicado={() => setFoco(null)}
+                  alCerrada={(cierre) => {
+                    setAbierta(null);
+                    setFoco(null);
+                    focoCierre.current = a.id;
+                    setAnuncio(anuncioDeCierre(cierre, a.mascota.nombre));
+                  }}
+                  alAviso={(mensaje) => {
+                    setAbierta(null);
+                    setAnuncio(mensaje);
+                  }}
                   alProgramado={(s) => {
                     setAbierta(null);
                     setFoco({ adopcionId: a.id, seguimientoId: s.id });

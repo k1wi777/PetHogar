@@ -22,6 +22,7 @@ export function adopcion(p: Partial<AdopcionFundacion> = {}): AdopcionFundacion 
     mascota: { id: 7, nombre: 'Luna' },
     motivoCierre: null,
     fechaCierre: null,
+    acta: null,
     adoptante: {
       nombreCompleto: 'Ana Pérez',
       email: 'ana@correo.co',

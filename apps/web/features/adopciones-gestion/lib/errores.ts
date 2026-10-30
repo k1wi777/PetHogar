@@ -16,3 +16,26 @@ export function esNoEncontrada(error: unknown): boolean {
 export function esFundacionNoAprobada(error: unknown): boolean {
   return esErrorApi(error) && error.estado === 403;
 }
+
+/** Campos de «Cerrar adopción» según el texto del servidor cuando no trae el campo. */
+export function campoDelMensajeCierre(mensaje: string): string | null {
+  const t = mensaje.toLowerCase();
+  if (t.includes('motivo')) return 'motivo';
+  if (t.includes('disponible') || t.includes('inactiva') || t.includes('destino')) {
+    return 'mascotaDestino';
+  }
+  return null;
+}
+
+/** Los errores 400 y 413 de la subida del acta (tipo, contenido o tamaño) pertenecen al campo `acta`. */
+export function esErrorDeArchivoActa(error: unknown): boolean {
+  return esErrorApi(error) && (error.estado === 400 || error.estado === 413);
+}
+
+export function esAdopcionCerrada(error: unknown): boolean {
+  return esErrorApi(error) && error.estado === 409;
+}
+
+export function esAdopcionInexistente(error: unknown): boolean {
+  return esErrorApi(error) && error.estado === 404;
+}

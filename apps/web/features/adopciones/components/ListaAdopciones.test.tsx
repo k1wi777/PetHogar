@@ -104,4 +104,50 @@ describe('ListaAdopciones', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Reintentar' }));
     expect(screen.getByRole('alert')).toBeInTheDocument();
   });
+
+  describe('acta firmada', () => {
+    const URL_ACTA = '/api/mis-adopciones/1/acta';
+    let enlaces: HTMLAnchorElement[] = [];
+    beforeEach(() => {
+      enlaces = [];
+      URL.createObjectURL = vi.fn(() => 'blob:acta');
+      URL.revokeObjectURL = vi.fn();
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+        this: HTMLAnchorElement,
+      ) {
+        enlaces.push(this);
+      });
+    });
+
+    it('sin acta no ofrece descarga', async () => {
+      montarPanel(<ListaAdopciones />, () => pagina([adopcion()]));
+      await screen.findByRole('list', { name: 'Adopciones' });
+      expect(screen.queryByRole('button', { name: /Descargar acta/ })).toBeNull();
+    });
+
+    it('con acta la descarga con la sesión, también en adopciones cerradas', async () => {
+      const { llamadas } = montarPanel(<ListaAdopciones />, (ruta) =>
+        ruta.startsWith('/mis-adopciones/1/acta')
+          ? new Response(new Uint8Array([37, 80, 68, 70]), {
+              status: 200,
+              headers: { 'Content-Type': 'application/pdf' },
+            })
+          : pagina([adopcion({ estado: 'finalizada', acta: { url: URL_ACTA } })]),
+      );
+      await userEvent.click(await screen.findByRole('button', { name: 'Descargar acta de Luna' }));
+      await screen.findByText(/acta-adopcion-1\.pdf/);
+      expect(llamadas('/mis-adopciones/1/acta', 'GET')).toHaveLength(1);
+      expect(enlaces[0]?.download).toBe('acta-adopcion-1.pdf');
+    });
+
+    it('un 404 se explica junto al botón', async () => {
+      montarPanel(<ListaAdopciones />, (ruta) =>
+        ruta.startsWith('/mis-adopciones/1/acta')
+          ? errorApi(404, 'No existe')
+          : pagina([adopcion({ acta: { url: URL_ACTA } })]),
+      );
+      await userEvent.click(await screen.findByRole('button', { name: 'Descargar acta de Luna' }));
+      expect(await screen.findByText('Este archivo ya no está disponible.')).toBeInTheDocument();
+    });
+  });
 });

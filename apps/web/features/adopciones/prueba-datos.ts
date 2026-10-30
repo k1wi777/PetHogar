@@ -23,6 +23,7 @@ export function adopcion(p: Partial<AdopcionAdoptante> = {}): AdopcionAdoptante 
     fundacion: { nombre: 'Patitas', ciudad: 'Montería' },
     motivoCierre: null,
     fechaCierre: null,
+    acta: null,
     seguimientos: [seguimiento()],
     ...p,
   };

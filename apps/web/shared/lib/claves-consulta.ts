@@ -10,3 +10,4 @@ export const CLAVE_DONACIONES_GESTION = 'donaciones-gestion';
 export const CLAVE_ADMIN_FUNDACIONES = 'admin-fundaciones';
 export const CLAVE_ADMIN_USUARIOS = 'admin-usuarios';
 export const CLAVE_REPORTES = 'reportes';
+export const CLAVE_NOTIFICACIONES = 'notificaciones';
