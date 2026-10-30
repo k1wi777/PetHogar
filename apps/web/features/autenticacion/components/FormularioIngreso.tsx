@@ -48,7 +48,13 @@ export function FormularioIngreso({ siguiente }: { siguiente?: string | null }) 
       const usuario = await iniciarSesion(datos.email, datos.contrasena);
       const aviso_ = avisoDeFundacion(usuario);
       if (aviso_) aviso.info(aviso_);
-      router.replace(rutaInternaSegura(siguiente) ?? PANEL_POR_ROL[usuario.rol]);
+      const destino = rutaInternaSegura(siguiente);
+      const duenoDelDestino = destino ? rolDelPanel(destino.split('?')[0]) : null;
+      router.replace(
+        destino && (!duenoDelDestino || duenoDelDestino === usuario.rol)
+          ? destino
+          : PANEL_POR_ROL[usuario.rol],
+      );
     } catch (error) {
       const estado = clasificarErrorLogin(error);
       const salida = traducirError(error, []);
