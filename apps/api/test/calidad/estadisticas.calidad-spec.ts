@@ -1,7 +1,15 @@
 import 'reflect-metadata';
 import type { DataSource } from 'typeorm';
 import { sembrarBase } from '../../src/database/seeds/seed';
-import { sembrarDemo } from '../../src/database/seeds/seed.demo';
+import { DEMO_EMAIL, sembrarDemo } from '../../src/database/seeds/seed.demo';
+import {
+  ADOPCIONES_DEMO,
+  DONACIONES_DEMO,
+  MASCOTAS_ADOPTADAS_DEMO,
+  SEGUIMIENTOS_DEMO,
+  SOLICITUDES_DEMO,
+  type Desfase,
+} from '../../src/database/seeds/seed.demo.data';
 import { DonacionesService } from '../../src/modules/donaciones/donaciones.service';
 import { PdfService } from '../../src/modules/reportes/pdf/pdf.service';
 import { ADMIN, arrancarEntorno, type Entorno } from '../auth/helpers';
@@ -347,44 +355,6 @@ describe('V15 — estadísticas y reportes: cifras exactas, filtros, PDF y lectu
     }
   }
 
-  describe('con el seed demo (sin solicitudes ni donaciones)', () => {
-    it('todo en 0 con todas las categorías presentes', async () => {
-      const config = {
-        adminEmail: ADMIN.email,
-        adminPassword: ADMIN.clave,
-        adminTelefono: '3000000000',
-        demo: true,
-        demoPassword: 'ClaveDemo12345',
-      };
-      await e.ds.transaction(async (m) => {
-        await sembrarBase(m, config);
-        await sembrarDemo(m, config);
-      });
-      const [{ id: demo }] = await q<{ id: number }>(
-        `SELECT id FROM fundacion WHERE nit = '900000000-1'`,
-      );
-      const res = await con(e.get(`/admin/estadisticas?fundacionId=${demo}`), admin).expect(200);
-      expect(res.body).toEqual({
-        filtros: { fundacionId: demo, desde: null, hasta: null },
-        adopciones: { total: 0, porMes: [], porEspecie: [] },
-        solicitudes: {
-          total: 0,
-          porEstado: { pendiente: 0, aprobada: 0, rechazada: 0, cancelada: 0 },
-        },
-        seguimientos: {
-          total: 0,
-          porEstado: { programado: 0, realizado: 0, vencido: 0, cancelado: 0 },
-          porBienestar: { bueno: 0, regular: 0, malo: 0 },
-        },
-        donaciones: {
-          total: 0,
-          porMes: [],
-          porTipo: { economica: { cantidad: 0, monto: '0.00' }, especie: { cantidad: 0 } },
-        },
-      });
-    });
-  });
-
   describe('con un conjunto conocido de datos', () => {
     beforeAll(cargarDatos);
 
@@ -616,6 +586,118 @@ describe('V15 — estadísticas y reportes: cifras exactas, filtros, PDF y lectu
       // La prueba solo vale si realmente hubo escrituras entre lecturas.
       expect(lecturas).toBeGreaterThan(5);
       expect(totalesVistos.size).toBeGreaterThan(1);
+    });
+  });
+
+  // Va al final: siembra datos que alterarían las cifras globales de los bloques anteriores.
+  describe('con el seed demo ampliado', () => {
+    const CLAVE_DEMO = 'ClaveDemo12345';
+
+    /** Mes `YYYY-MM` (hora de Bogotá) de un desfase, con la misma expresión que usa el seed. */
+    const mesDe = async (d: Desfase): Promise<string> =>
+      (
+        await q<{ mes: string }>(
+          `SELECT to_char((now() - make_interval(months => $1, days => $2)) AT TIME ZONE 'America/Bogota', 'YYYY-MM') AS mes`,
+          [d.meses, d.dias],
+        )
+      )[0].mes;
+    const agrupar = <T>(items: T[], clave: (t: T) => string): [string, T[]][] => {
+      const m = new Map<string, T[]>();
+      for (const i of items) m.set(clave(i), [...(m.get(clave(i)) ?? []), i]);
+      return [...m.entries()].sort(([x], [y]) => x.localeCompare(y));
+    };
+    const cuenta = <K extends string>(claves: readonly K[], valores: K[]) =>
+      Object.fromEntries(claves.map((c) => [c, valores.filter((v) => v === c).length]));
+
+    async function esperadoDemo() {
+      const especieDe = (nombre: string): string =>
+        MASCOTAS_ADOPTADAS_DEMO.find((m) => m.nombre === nombre)!.especie;
+      const mascotaDe = (clave: string): string =>
+        SOLICITUDES_DEMO.find((s) => s.clave === clave)!.mascota;
+      const entregas = await Promise.all(
+        ADOPCIONES_DEMO.map(async (a) => ({
+          mes: await mesDe(a.entrega),
+          especie: especieDe(mascotaDe(a.solicitud)),
+        })),
+      );
+      const donaciones = await Promise.all(
+        DONACIONES_DEMO.map(async (d) => ({ ...d, mes: await mesDe(d.fecha) })),
+      );
+      const economicas = donaciones.filter((d) => d.tipo === 'economica');
+      const suma = (ds: typeof donaciones): bigint =>
+        ds.reduce((t, d) => t + centimos(d.monto!), 0n);
+      return {
+        adopciones: {
+          total: ADOPCIONES_DEMO.length,
+          porMes: agrupar(entregas, (x) => x.mes).map(([mes, l]) => ({ mes, cantidad: l.length })),
+          porEspecie: agrupar(entregas, (x) => x.especie)
+            .map(([especie, l]) => ({ especie, cantidad: l.length }))
+            .sort((x, y) => y.cantidad - x.cantidad || x.especie.localeCompare(y.especie)),
+        },
+        solicitudes: {
+          total: SOLICITUDES_DEMO.length,
+          porEstado: cuenta(
+            ['pendiente', 'aprobada', 'rechazada', 'cancelada'] as const,
+            SOLICITUDES_DEMO.map((s) => s.estado),
+          ),
+        },
+        seguimientos: {
+          total: SEGUIMIENTOS_DEMO.length,
+          porEstado: cuenta(
+            ['programado', 'realizado', 'vencido', 'cancelado'] as const,
+            SEGUIMIENTOS_DEMO.map((s) => s.estado),
+          ),
+          porBienestar: cuenta(
+            ['bueno', 'regular', 'malo'] as const,
+            SEGUIMIENTOS_DEMO.flatMap((s) => (s.bienestar ? [s.bienestar] : [])),
+          ),
+        },
+        donaciones: {
+          total: donaciones.length,
+          porMes: agrupar(donaciones, (d) => d.mes).map(([mes, l]) => ({
+            mes,
+            cantidad: l.length,
+            monto: dinero(suma(l.filter((d) => d.tipo === 'economica'))),
+          })),
+          porTipo: {
+            economica: { cantidad: economicas.length, monto: dinero(suma(economicas)) },
+            especie: { cantidad: donaciones.length - economicas.length },
+          },
+        },
+      };
+    }
+
+    it('las estadísticas de la fundación demo coinciden con lo sembrado y ya no son cero', async () => {
+      const config = {
+        adminEmail: ADMIN.email,
+        adminPassword: ADMIN.clave,
+        adminTelefono: '3000000000',
+        demo: true,
+        demoPassword: CLAVE_DEMO,
+      };
+      await e.ds.transaction(async (m) => {
+        await sembrarBase(m, config);
+        await sembrarDemo(m, config);
+      });
+      const [{ id: demo }] = await q<{ id: number }>(
+        `SELECT id FROM fundacion WHERE nit = '900000000-1'`,
+      );
+      const esperada = await esperadoDemo();
+      expect(esperada.solicitudes.total).toBeGreaterThan(0);
+      expect(esperada.donaciones.total).toBeGreaterThan(0);
+
+      const res = await con(e.get(`/admin/estadisticas?fundacionId=${demo}`), admin).expect(200);
+      expect(res.body).toEqual({
+        filtros: { fundacionId: demo, desde: null, hasta: null },
+        ...esperada,
+      });
+      expect(res.body.adopciones.porMes.length).toBeGreaterThan(1);
+      expect(res.body.donaciones.porMes.length).toBeGreaterThan(1);
+      expect(res.body.seguimientos.porBienestar.malo).toBeGreaterThan(0);
+
+      const sesionDemo = await e.sesion(DEMO_EMAIL, CLAVE_DEMO);
+      const propia = await con(e.get('/fundacion/estadisticas'), sesionDemo.access).expect(200);
+      expect(propia.body).toEqual(res.body);
     });
   });
 });

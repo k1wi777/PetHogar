@@ -1,12 +1,10 @@
 import 'reflect-metadata';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { type ChildProcess, spawn } from 'node:child_process';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
-import type { AddressInfo } from 'node:net';
-import { NestFactory } from '@nestjs/core';
-import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DataSource } from 'typeorm';
-import { configurarApp } from '../../src/app.setup';
 import { sembrarBase } from '../../src/database/seeds/seed';
 import {
   borrarBaseDePrueba,
@@ -19,12 +17,18 @@ import {
 /**
  * V16 — prueba de carga ligera del catálogo público: 200 usuarios simulados y concurrentes, cada uno con
  * varias consultas (listado con filtros y paginación, y ficha), sobre 30 000 mascotas. Falla (código ≠ 0)
- * si el promedio es de 2 s o más, o si alguna respuesta no es 200.
+ * si alguna respuesta no es 200, si faltan consultas o si el promedio es de 2 s o más. El p95 y el máximo
+ * se imprimen como información: no hacen fallar la prueba.
  *
- * Sin dependencias nuevas: `fetch` nativo de Node y la API real en proceso, en un puerto efímero (no usa
- * 3001). Crea la base `${DATABASE_NAME}_test`, la carga con `generate_series` y la borra al terminar.
- * Cada usuario envía un `X-Forwarded-For` distinto con `TRUST_PROXY=1`, de modo que el límite de peticiones
- * por IP se ejerce de forma realista sin desactivarlo.
+ * Mide el servidor COMPILADO (`node dist/main.js`, lo deja `nest build` en `test:carga`) lanzado como
+ * proceso hijo en un puerto libre. Antes la API corría con ts-node en el mismo proceso que los 200
+ * clientes y ambos competían por el bucle de eventos y por la compilación en frío, con falsos rojos
+ * entre corridas. Antes de medir se hace un calentamiento corto (fuera de las mediciones) para no
+ * incluir el arranque en frío del pool de conexiones y del planificador.
+ *
+ * Sin dependencias nuevas: `fetch` nativo de Node. Crea la base `${DATABASE_NAME}_test`, la carga con
+ * `generate_series` y la borra al terminar. Cada usuario envía un `X-Forwarded-For` distinto con
+ * `TRUST_PROXY=1`, de modo que el límite de peticiones por IP se ejerce de forma realista sin desactivarlo.
  *
  * Variables: `CARGA_USUARIOS` (200), `CARGA_UMBRAL_MS` (2000), `CARGA_MASCOTAS` (30000) y `DATABASE_*`.
  * Con `CARGA_URL=http://host:puerto/api` apunta a una API ya levantada (con `TRUST_PROXY=1`) y no crea nada.
@@ -100,11 +104,57 @@ async function usuario(base: string, numero: number, especies: number[]): Promis
   return mediciones;
 }
 
+/** Consultas previas, con una IP propia y fuera de las mediciones (ver el comentario del archivo). */
+async function calentar(base: string): Promise<void> {
+  const cabeceras = { 'X-Forwarded-For': '10.99.0.2' };
+  for (let i = 0; i < 12; i++) {
+    await fetch(`${base}/mascotas?page=${1 + i}&limit=12`, { headers: cabeceras });
+  }
+}
+
 const percentil = (ordenados: number[], p: number): number =>
   ordenados[Math.min(ordenados.length - 1, Math.floor((p / 100) * ordenados.length))];
 
+const SERVIDOR = path.join(__dirname, '..', '..', 'dist', 'main.js');
+
+async function puertoLibre(): Promise<number> {
+  return new Promise((resolver, rechazar) => {
+    const servidor = createServer();
+    servidor.once('error', rechazar);
+    servidor.listen(0, '127.0.0.1', () => {
+      const { port } = servidor.address() as { port: number };
+      servidor.close(() => resolver(port));
+    });
+  });
+}
+
+/** Espera (máx. 30 s) a que la API responda; falla antes si el proceso hijo termina. */
+async function esperarApi(base: string, hijo: ChildProcess): Promise<void> {
+  const limite = Date.now() + 30_000;
+  while (Date.now() < limite) {
+    if (hijo.exitCode !== null)
+      throw new Error(`La API terminó al arrancar (código ${hijo.exitCode})`);
+    try {
+      if ((await fetch(`${base}/especies`)).status === 200) return;
+    } catch {
+      // Aún no escucha.
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error('La API no respondió en 30 s');
+}
+
+async function detener(hijo: ChildProcess): Promise<void> {
+  if (hijo.exitCode !== null) return;
+  const termino = new Promise<void>((r) => hijo.once('exit', () => r()));
+  hijo.kill('SIGTERM');
+  const forzar = setTimeout(() => hijo.kill('SIGKILL'), 5_000);
+  await termino;
+  clearTimeout(forzar);
+}
+
 async function main(): Promise<number> {
-  let app: NestExpressApplication | undefined;
+  let hijo: ChildProcess | undefined;
   let uploads: string | undefined;
   let base = process.env.CARGA_URL;
   let ds: DataSource | undefined;
@@ -127,33 +177,37 @@ async function main(): Promise<number> {
       );
       await cargarDatos(ds);
 
+      if (!existsSync(SERVIDOR))
+        throw new Error('Falta dist/main.js: ejecuta `nest build` (pnpm test:carga lo hace)');
       uploads = mkdtempSync(path.join(tmpdir(), 'pethogar-carga-'));
-      Object.assign(process.env, {
-        PORT: '3999',
-        NODE_ENV: 'test',
-        DATABASE_HOST: conexion.host,
-        DATABASE_PORT: String(conexion.port),
-        DATABASE_USER: conexion.user,
-        DATABASE_PASSWORD: conexion.password,
-        DATABASE_NAME: NOMBRE_BD_PRUEBA,
-        JWT_ACCESS_SECRET: 'carga-access-secret-de-prueba-0123456789abcdef',
-        JWT_REFRESH_SECRET: 'carga-refresh-secret-de-prueba-0123456789abcdef',
-        SMTP_HOST: process.env.SMTP_HOST ?? 'localhost',
-        SMTP_PORT: process.env.SMTP_PORT ?? '1025',
-        SMTP_FROM: 'PetHogar <no-reply@pethogar.local>',
-        UPLOADS_DIR: uploads,
-        FRONTEND_URL: 'http://localhost:3000',
-        TRUST_PROXY: '1',
-        SEGUIMIENTOS_CRON_HABILITADO: 'false',
+      const puerto = await puertoLibre();
+      hijo = spawn(process.execPath, [SERVIDOR], {
+        env: {
+          ...process.env,
+          PORT: String(puerto),
+          NODE_ENV: 'test',
+          DATABASE_HOST: conexion.host,
+          DATABASE_PORT: String(conexion.port),
+          DATABASE_USER: conexion.user,
+          DATABASE_PASSWORD: conexion.password,
+          DATABASE_NAME: NOMBRE_BD_PRUEBA,
+          JWT_ACCESS_SECRET: 'carga-access-secret-de-prueba-0123456789abcdef',
+          JWT_REFRESH_SECRET: 'carga-refresh-secret-de-prueba-0123456789abcdef',
+          SMTP_HOST: process.env.SMTP_HOST ?? 'localhost',
+          SMTP_PORT: process.env.SMTP_PORT ?? '1025',
+          SMTP_FROM: 'PetHogar <no-reply@pethogar.local>',
+          UPLOADS_DIR: uploads,
+          FRONTEND_URL: 'http://localhost:3000',
+          TRUST_PROXY: '1',
+          SEGUIMIENTOS_CRON_HABILITADO: 'false',
+        },
+        stdio: ['ignore', 'ignore', 'inherit'],
       });
-      // La validación del entorno se ejecuta al cargar AppModule: se importa tras fijarlo.
-      const { AppModule } = await import('../../src/app.module');
-      app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['error'] });
-      configurarApp(app);
-      await app.listen(0, '127.0.0.1');
-      base = `http://127.0.0.1:${(app.getHttpServer().address() as AddressInfo).port}/api`;
+      base = `http://127.0.0.1:${puerto}/api`;
+      await esperarApi(base, hijo);
     }
 
+    await calentar(base as string);
     const especies = (await (
       await fetch(`${base}/especies`, { headers: { 'X-Forwarded-For': '10.99.0.1' } })
     ).json()) as { id: number }[];
@@ -206,7 +260,7 @@ async function main(): Promise<number> {
     }
     return 0;
   } finally {
-    await app?.close();
+    if (hijo) await detener(hijo);
     await ds?.destroy().catch(() => undefined);
     if (!externa) await borrarBaseDePrueba().catch(() => undefined);
     if (uploads) rmSync(uploads, { recursive: true, force: true });

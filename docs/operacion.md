@@ -39,3 +39,18 @@ Los scripts viven en `scripts/` y leen `DATABASE_*`, `UPLOADS_DIR` y `BACKUP_DIR
 - **Dependencias.** `pnpm audit --prod` informa de un `js-yaml` (moderado) y un `deepmerge` (bajo), ambos transitivos de herramientas de documentación y fuera de la ruta de ejecución de peticiones; se descartan. Revisar en cada actualización.
 - **Limitador en memoria.** El `ThrottlerGuard` guarda contadores en el proceso: con varias instancias cada una cuenta aparte. Para escalar horizontalmente habría que pasar a un almacén compartido (Redis).
 - **PDF en el proceso principal.** pdfmake renderiza de forma síncrona y bloquea el bucle de eventos (unos 1,6 s para 1000 filas, el máximo permitido). Los endpoints de PDF tienen un límite de 10 peticiones por minuto por IP. Mitigación futura: un worker.
+
+## 4. Datos de demostración
+
+Para una demostración local completa (no para producción: `seed:demo` no debe ejecutarse fuera del entorno local):
+
+1. `docker compose up -d` y `pnpm --filter api migration:run`.
+2. `SEED_DEMO_PASSWORD=<clave de al menos 10 caracteres> pnpm --filter api seed:demo` (además de las variables `SEED_ADMIN_*`, ver `apps/api/.env.example`).
+
+Crea la fundación «Patitas Felices» (`fundacion.demo@pethogar.local`) y un adoptante (`adoptante.demo@pethogar.local`), ambos con la contraseña de `SEED_DEMO_PASSWORD`. Contiene 7 mascotas (4 disponibles en el catálogo y 3 adoptadas), 8 solicitudes en los cuatro estados, 3 adopciones (2 activas y 1 finalizada), 11 seguimientos (programados, vencidos, realizados con distinto bienestar y uno cancelado), 8 donaciones y notificaciones de ejemplo, repartidos en los últimos 5 meses para que estadísticas y reportes no salgan en cero. Es re-ejecutable: no duplica ni modifica lo existente. Limitación: los archivos (`/uploads/demo/...`: fotos, formularios, actas y comprobantes) no existen en disco, así que descargarlos responde 404.
+
+**Muestras de PDF.** Con la API en marcha, `SEED_DEMO_PASSWORD=<la misma clave> pnpm --filter api demo:pdfs` descarga la ficha de una mascota y los reportes de solicitudes, seguimientos y donaciones a `muestras-pdf/` (ignorada por Git; se sobrescribe en cada ejecución). Sirve para revisar a mano acentos, tablas y totales. Opcionales: `DEMO_API_URL` y `DEMO_PDF_DIR`.
+
+## 5. Notas para el front
+
+- **Serializar el refresh.** El front debe lanzar una sola petición de refresh a la vez y hacer que las demás esperen su resultado. Un refresh concurrente con el mismo token se interpreta como reutilización de un token ya rotado y la API revoca todas las sesiones del usuario (comportamiento cubierto por V10).
