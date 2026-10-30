@@ -106,19 +106,24 @@ export function ShellPanel({
           </Dialog.Portal>
         </Dialog.Root>
 
-        <Link href="/" className="font-heading text-primary text-xl font-extrabold">
+        <Link href="/" className="font-heading text-primary shrink-0 text-xl font-extrabold">
           PetHogar
         </Link>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex min-w-0 items-center gap-2">
           {usuario && (
             <span className="hidden max-w-48 truncate text-sm font-medium sm:inline">
               {nombreVisible(usuario)}
             </span>
           )}
           {slotNotificaciones}
-          <Boton variante="contorno" onClick={() => setConfirmando(true)}>
+          {/* Bajo `sm` solo el icono (el texto sigue siendo su nombre accesible): con el texto la cabecera desbordaba a 360 px. */}
+          <Boton
+            variante="contorno"
+            className="max-sm:w-11 max-sm:px-0"
+            onClick={() => setConfirmando(true)}
+          >
             <LogOut className="size-4" aria-hidden="true" />
-            Cerrar sesión
+            <span className="max-sm:sr-only">Cerrar sesión</span>
           </Boton>
         </div>
       </header>

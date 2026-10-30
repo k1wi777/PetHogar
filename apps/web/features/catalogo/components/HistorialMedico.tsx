@@ -1,4 +1,5 @@
-import { etiquetaTipoHistorial, fechaLarga } from '../lib/formato';
+import { etiquetaTipoHistorial } from '@/shared/lib/formato-mascota';
+import { fechaLarga } from '../lib/formato';
 import type { EventoMedico } from '../types';
 
 export function HistorialMedico({ eventos }: { eventos: EventoMedico[] }) {

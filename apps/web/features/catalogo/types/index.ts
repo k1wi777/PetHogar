@@ -1,6 +1,6 @@
-export type Sexo = 'macho' | 'hembra';
-export type Tamano = 'pequeño' | 'mediano' | 'grande';
-export type TipoHistorial = 'vacuna' | 'desparasitacion' | 'cirugia' | 'consulta';
+import type { Sexo, Tamano, TipoHistorial } from '@/shared/lib/formato-mascota';
+
+export type { Sexo, Tamano, TipoHistorial };
 
 export interface MascotaCatalogo {
   id: number;

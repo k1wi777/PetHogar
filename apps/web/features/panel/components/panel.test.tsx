@@ -195,6 +195,22 @@ describe('ShellPanel', () => {
     expect(cerrarSesion).toHaveBeenCalledTimes(1);
   });
 
+  // jsdom no calcula el layout: se comprueba el contrato de clases que evita el desbordamiento a
+  // 360 px (la medición real se hace con Chromium, ver verification.md).
+  it.each(['adoptante', 'fundacion', 'administrador'] as const)(
+    'la cabecera de %s a 360 px conserva «Cerrar sesión» por nombre y oculta su texto bajo sm',
+    (rol) => {
+      poner('autenticado', usuario(rol));
+      render(<ShellPanel rol={rol}>x</ShellPanel>);
+      const boton = screen.getByRole('button', { name: 'Cerrar sesión' });
+      expect(boton).toHaveClass('max-sm:w-11');
+      expect(within(boton).getByText('Cerrar sesión')).toHaveClass('max-sm:sr-only');
+      const cabecera = screen.getByRole('banner');
+      expect(within(cabecera).getByRole('link', { name: 'PetHogar' })).toHaveClass('shrink-0');
+      expect(boton.parentElement).toHaveClass('min-w-0');
+    },
+  );
+
   it('si el cierre falla, el diálogo se cierra y la sesión sigue', async () => {
     const u = userEvent.setup();
     const cerrarSesion = vi.fn(async () => false);

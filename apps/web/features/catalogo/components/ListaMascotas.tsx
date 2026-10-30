@@ -1,6 +1,6 @@
 import { MapPin } from 'lucide-react';
 import { TarjetaMascota } from '@/shared/ui/TarjetaMascota';
-import { formatearEdad } from '../lib/formato';
+import { formatearEdad } from '@/shared/lib/formato-mascota';
 import type { MascotaCatalogo } from '../types';
 
 export function ListaMascotas({ mascotas }: { mascotas: MascotaCatalogo[] }) {

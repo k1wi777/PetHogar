@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { FichaMascota } from '../types';
-import { formatearEdad } from './formato';
+import { formatearEdad } from '@/shared/lib/formato-mascota';
 
 const LONGITUD_DESCRIPCION = 160;
 

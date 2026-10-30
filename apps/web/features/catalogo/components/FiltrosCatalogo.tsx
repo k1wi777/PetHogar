@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Boton } from '@/shared/ui/Boton';
 import { hayFiltros, TAMANOS } from '../lib/consulta';
-import { etiquetaTamano } from '../lib/formato';
+import { etiquetaTamano } from '@/shared/lib/formato-mascota';
 import type { Especie, FiltrosCatalogo as Filtros } from '../types';
 
 const CONTROL =

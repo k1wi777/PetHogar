@@ -1,4 +1,4 @@
-import { etiquetaSexo, etiquetaTamano, formatearEdad } from '../lib/formato';
+import { etiquetaSexo, etiquetaTamano, formatearEdad } from '@/shared/lib/formato-mascota';
 import type { FichaMascota } from '../types';
 
 const siNo = (v: boolean) => (v ? 'Sí' : 'No');
