@@ -5,7 +5,7 @@ import {
   mensajeDeProblema,
   normalizarMonto,
   problemaDeMonto,
-} from './monto';
+} from '@/shared/lib/monto';
 
 export const MAX_DESCRIPCION = 300;
 export const MENSAJE_DESCRIPCION = 'Describe lo que donas (entre 1 y 300 caracteres)';

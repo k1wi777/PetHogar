@@ -1,8 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fundacion } from '../prueba-datos';
+import { usuarioDe } from '@/shared/testing/prueba-utils';
 import { GuardaFundacionAprobada } from './GuardaFundacionAprobada';
+
+const fundacion = (
+  estadoValidacion: 'pendiente' | 'aprobada' | 'rechazada',
+  observacionValidacion: string | null = null,
+) => usuarioDe('fundacion', { id: 1, nombre: 'Patitas', estadoValidacion, observacionValidacion });
 
 const sesion = vi.hoisted(() => ({ valor: {} as Record<string, unknown> }));
 vi.mock('@/shared/auth/SesionProvider', () => ({ useSesion: () => sesion.valor }));

@@ -8,6 +8,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useSesion } from '@/shared/auth/SesionProvider';
+import { CLAVE_MASCOTAS_GESTION } from '@/shared/lib/claves-consulta';
 import { listarEspecies, listarRazas } from '../api/catalogos';
 import { eliminarFoto, marcarPrincipal, subirFoto } from '../api/fotos';
 import { listarHistorialPublico, registrarEvento } from '../api/historial';
@@ -31,12 +32,12 @@ import type {
 
 /** Claves con prefijo propio: ninguna otra feature las toca. */
 export const claves = {
-  lista: (c: ConsultaMascotas) => ['mascotas-gestion', 'lista', c] as const,
-  todasLasListas: ['mascotas-gestion', 'lista'] as const,
-  detalle: (id: number) => ['mascotas-gestion', 'detalle', id] as const,
-  historial: (id: number) => ['mascotas-gestion', 'historial', id] as const,
-  especies: ['mascotas-gestion', 'especies'] as const,
-  razas: (especieId: number) => ['mascotas-gestion', 'razas', especieId] as const,
+  lista: (c: ConsultaMascotas) => [CLAVE_MASCOTAS_GESTION, 'lista', c] as const,
+  todasLasListas: [CLAVE_MASCOTAS_GESTION, 'lista'] as const,
+  detalle: (id: number) => [CLAVE_MASCOTAS_GESTION, 'detalle', id] as const,
+  historial: (id: number) => [CLAVE_MASCOTAS_GESTION, 'historial', id] as const,
+  especies: [CLAVE_MASCOTAS_GESTION, 'especies'] as const,
+  razas: (especieId: number) => [CLAVE_MASCOTAS_GESTION, 'razas', especieId] as const,
 };
 
 const CATALOGO_STALE_MS = 10 * 60 * 1000;

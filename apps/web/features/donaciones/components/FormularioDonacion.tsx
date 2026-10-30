@@ -13,7 +13,7 @@ import { DialogoConfirmacion } from '@/shared/ui/DialogoConfirmacion';
 import { GrupoRadio } from '@/shared/ui/GrupoRadio';
 import { useCrearDonacion } from '../hooks/useDonaciones';
 import { MAX_DESCRIPCION, esquemaDonacion, type DatosDonacion } from '../schemas/donacion';
-import { formatearMonto } from '../schemas/monto';
+import { formatearMonto } from '@/shared/lib/monto';
 import type { DonacionRegistrada, FundacionDestino, TipoDonacion } from '../types';
 import { AvisoSinPagos } from './AvisoSinPagos';
 

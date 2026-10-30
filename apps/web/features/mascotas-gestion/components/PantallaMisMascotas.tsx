@@ -12,9 +12,9 @@ import { consultaAUrl, leerConsulta, RUTA_MASCOTAS } from '../lib/consulta';
 import { esFundacionNoAprobada } from '../lib/errores';
 import { mensajeDe } from '@/shared/api/errores';
 import type { EstadoMascota } from '../types';
-import { AvisoFundacionNoAprobada } from './AvisoFundacionNoAprobada';
+import { AvisoFundacionNoAprobada } from '@/shared/ui/AvisoFundacionNoAprobada';
 import { FiltroEstado } from './FiltroEstado';
-import { GuardaFundacionAprobada } from './GuardaFundacionAprobada';
+import { GuardaFundacionAprobada } from '@/shared/ui/GuardaFundacionAprobada';
 import { ListaMascotas } from './ListaMascotas';
 
 function Contenido() {

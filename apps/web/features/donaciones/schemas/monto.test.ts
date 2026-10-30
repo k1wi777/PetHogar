@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { esquemaDonacion } from './donacion';
-import { formatearMonto, problemaDeMonto } from './monto';
+import { formatearMonto, problemaDeMonto } from '@/shared/lib/monto';
 
 const montoEsc = (monto: string) => esquemaDonacion.safeParse({ tipo: 'economica', monto });
 const mensaje = (monto: string) => {

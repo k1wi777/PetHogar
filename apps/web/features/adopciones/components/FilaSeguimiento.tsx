@@ -4,7 +4,8 @@ import { formatearFecha } from '@/shared/lib/fechas';
 import { BadgeEstado } from '@/shared/ui/BadgeEstado';
 import { Boton } from '@/shared/ui/Boton';
 import { cn } from '@/shared/lib/utils';
-import { admiteReporte, esVencido, estadoVisible, rutaSeguimiento } from '../lib/seguimiento';
+import { esVencido, estadoVisible } from '@/shared/lib/seguimiento';
+import { admiteReporte, rutaSeguimiento } from '../lib/seguimiento';
 import type { ResumenSeguimiento } from '../types';
 
 /** Seguimiento: el vencido se destaca con texto, icono y borde grueso, nunca solo con color (R13). */

@@ -282,3 +282,61 @@ describe('ClienteHttp: 401 y renovación', () => {
     expect(nombres).toEqual(['pethogar-refresh']);
   });
 });
+
+describe('ClienteHttp: descargar', () => {
+  const pdf = () =>
+    new Response(new Uint8Array([37, 80, 68, 70]), {
+      status: 200,
+      headers: { 'Content-Type': 'application/pdf; charset=binary' },
+    });
+
+  it('entrega el blob con el tipo real, con bearer y Accept */*', async () => {
+    const fetchImpl = vi.fn(async () => pdf());
+    const tokens = crearAlmacenToken();
+    tokens.guardar('tok1');
+    const cliente = crearClienteHttp({ baseUrl: BASE, fetchImpl, tokens, cerrojos: null });
+    const archivo = await cliente.descargar('/fundacion/solicitudes/3/formulario');
+    expect(archivo.tipo).toBe('application/pdf');
+    expect(archivo.blob.size).toBe(4);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe(`${BASE}/fundacion/solicitudes/3/formulario`);
+    const headers = init.headers as Record<string, string>;
+    expect(headers.Authorization).toBe('Bearer tok1');
+    expect(headers.Accept).toBe('*/*');
+  });
+
+  it('un error de descarga conserva el mensaje JSON del backend', async () => {
+    const fetchImpl = vi.fn(async () => json({ message: 'No encontramos el archivo' }, 404));
+    const cliente = crearClienteHttp({ baseUrl: BASE, fetchImpl, cerrojos: null });
+    await expect(cliente.descargar('/x')).rejects.toMatchObject({
+      estado: 404,
+      mensaje: 'No encontramos el archivo',
+    });
+  });
+
+  it('REGLA CRÍTICA: descargas concurrentes con 401 producen una sola renovación', async () => {
+    let vigente = 'viejo';
+    let refreshes = 0;
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      const ruta = url.replace(BASE, '');
+      if (ruta === '/auth/refresh') {
+        refreshes++;
+        await new Promise((r) => setTimeout(r, 10));
+        vigente = `nuevo${refreshes}`;
+        return json(sesion(vigente));
+      }
+      const auth = (init?.headers as Record<string, string>).Authorization;
+      return auth === `Bearer ${vigente}` ? pdf() : json({ message: 'No autorizado' }, 401);
+    });
+    const tokens = crearAlmacenToken();
+    tokens.guardar('caducado');
+    const cliente = crearClienteHttp({ baseUrl: BASE, fetchImpl, tokens, cerrojos: null });
+    const todas = await Promise.all([
+      cliente.descargar('/a'),
+      cliente.descargar('/b'),
+      cliente.descargar('/c'),
+    ]);
+    expect(todas.every((a) => a.tipo === 'application/pdf')).toBe(true);
+    expect(refreshes).toBe(1);
+  });
+});

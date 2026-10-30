@@ -16,9 +16,9 @@ import { useMascotaGestion } from '../hooks/useMascotasGestion';
 import { leerConsulta, leerId, leerPestana, rutaLista, RUTA_MASCOTAS } from '../lib/consulta';
 import { esFundacionNoAprobada, esNoEncontrada } from '../lib/errores';
 import { AccionesEstado } from './AccionesEstado';
-import { AvisoFundacionNoAprobada } from './AvisoFundacionNoAprobada';
+import { AvisoFundacionNoAprobada } from '@/shared/ui/AvisoFundacionNoAprobada';
 import { GestorFotos } from './GestorFotos';
-import { GuardaFundacionAprobada } from './GuardaFundacionAprobada';
+import { GuardaFundacionAprobada } from '@/shared/ui/GuardaFundacionAprobada';
 import { PestanaDatos } from './PestanaDatos';
 import { PestanaHistorial } from './PestanaHistorial';
 

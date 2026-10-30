@@ -5,18 +5,13 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { esErrorApi } from '@/shared/api/errores';
 import { formatearFecha } from '@/shared/lib/fechas';
+import { esVencido, estadoVisible } from '@/shared/lib/seguimiento';
 import { BadgeEstado } from '@/shared/ui/BadgeEstado';
 import { Boton } from '@/shared/ui/Boton';
 import { EstadoError } from '@/shared/ui/EstadoError';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import { useSeguimiento } from '../hooks/useAdopciones';
-import {
-  RUTA_ADOPCIONES,
-  admiteReporte,
-  esVencido,
-  estadoVisible,
-  leerId,
-} from '../lib/seguimiento';
+import { RUTA_ADOPCIONES, admiteReporte, leerId } from '../lib/seguimiento';
 import type { DetalleSeguimiento } from '../types';
 import { FormularioReporte } from './FormularioReporte';
 

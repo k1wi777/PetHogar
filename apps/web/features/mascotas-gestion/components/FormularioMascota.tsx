@@ -29,7 +29,7 @@ import {
   type ValoresMascota,
 } from '../schemas/mascota';
 import type { MascotaGestionDetalle } from '../types';
-import { AvisoFundacionNoAprobada } from './AvisoFundacionNoAprobada';
+import { AvisoFundacionNoAprobada } from '@/shared/ui/AvisoFundacionNoAprobada';
 import { CampoEdad } from './CampoEdad';
 import { SelectorEspecieRaza } from './SelectorEspecieRaza';
 

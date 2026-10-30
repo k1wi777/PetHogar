@@ -10,6 +10,14 @@ export interface OpcionesSolicitud {
   /** Envía el access token (por defecto sí). */
   autenticada?: boolean;
   senal?: AbortSignal;
+  /** `blob` entrega el cuerpo como archivo; lo usa `descargar` (el resto es siempre JSON). */
+  modo?: 'json' | 'blob';
+}
+
+/** Archivo descargado con la sesión: el tipo sale del `Content-Type` real de la respuesta. */
+export interface ArchivoDescargado {
+  blob: Blob;
+  tipo: string;
 }
 
 /** Subconjunto de `navigator.locks` que usamos. */
@@ -127,6 +135,14 @@ export class ClienteHttp {
   }
 
   /**
+   * Descarga un archivo privado reutilizando `solicitar`: mismo bearer, misma renovación
+   * serializada tras un 401 y mismo `ErrorApi` (el cuerpo de un error sigue siendo JSON).
+   */
+  descargar(ruta: string, opciones: Omit<OpcionesSolicitud, 'modo' | 'cuerpo'> = {}) {
+    return this.solicitar<ArchivoDescargado>('GET', ruta, { ...opciones, modo: 'blob' });
+  }
+
+  /**
    * Renueva el access token con la cookie de refresh. REGLA CRÍTICA: nunca hay dos renovaciones
    * a la vez (una `Promise` compartida en esta pestaña y un cerrojo entre pestañas), porque el
    * servidor interpreta un refresh concurrente con el mismo token como reutilización y revoca
@@ -184,7 +200,8 @@ export class ClienteHttp {
     opciones: OpcionesSolicitud,
     autenticada: boolean,
   ): Promise<T> {
-    const headers: Record<string, string> = { Accept: 'application/json' };
+    const modoBlob = opciones.modo === 'blob';
+    const headers: Record<string, string> = { Accept: modoBlob ? '*/*' : 'application/json' };
     const token = this.tokens.obtener();
     if (autenticada && token) headers.Authorization = `Bearer ${token}`;
     let body: BodyInit | undefined;
@@ -231,6 +248,17 @@ export class ClienteHttp {
       });
     }
     if (respuesta.status === 204) return undefined as T;
+    if (modoBlob) {
+      try {
+        const blob = await respuesta.blob();
+        return {
+          blob,
+          tipo: respuesta.headers.get('Content-Type')?.split(';')[0]?.trim() || blob.type,
+        } as T;
+      } catch {
+        throw new ErrorApi({ tipo: 'red', mensaje: MENSAJES.red });
+      }
+    }
     try {
       return (await respuesta.json()) as T;
     } catch {

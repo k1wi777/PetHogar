@@ -88,3 +88,16 @@ export function montarPanel(ui: ReactNode, manejador: Manejador) {
     );
   return { ...resultado, fetchImpl, cliente, queryClient, llamadas };
 }
+
+/** Usuario de fundación con el estado de validación indicado (por defecto aprobada). */
+export function usuarioFundacion(
+  estadoValidacion: 'pendiente' | 'aprobada' | 'rechazada' = 'aprobada',
+  observacionValidacion: string | null = null,
+): Usuario {
+  return usuarioDe('fundacion', {
+    id: 1,
+    nombre: 'Patitas',
+    estadoValidacion,
+    observacionValidacion,
+  });
+}

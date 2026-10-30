@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { admiteReporte, esVencido, estadoVisible, leerId, rutaSeguimiento } from './seguimiento';
+import { esVencido, estadoVisible } from '@/shared/lib/seguimiento';
+import { admiteReporte, leerId, rutaSeguimiento } from './seguimiento';
 
 describe('seguimiento', () => {
   it('vencido por estado o por fecha aunque el estado siga programado', () => {

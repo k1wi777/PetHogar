@@ -1,6 +1,6 @@
 'use client';
 
-import { GuardaFundacionAprobada } from './GuardaFundacionAprobada';
+import { GuardaFundacionAprobada } from '@/shared/ui/GuardaFundacionAprobada';
 import { FormularioMascota } from './FormularioMascota';
 
 export function PantallaNuevaMascota() {
