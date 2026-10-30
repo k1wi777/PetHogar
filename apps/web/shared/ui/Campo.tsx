@@ -4,7 +4,7 @@ import {
   cloneElement,
   isValidElement,
   useId,
-  type InputHTMLAttributes,
+  type ComponentProps,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -69,16 +69,24 @@ export function Campo({ etiqueta, children, ayuda, error, requerido, className }
   );
 }
 
-export function Entrada({
-  className,
-  type = 'text',
-  ...props
-}: InputHTMLAttributes<HTMLInputElement>) {
+export function Entrada({ className, type = 'text', ...props }: ComponentProps<'input'>) {
   return (
     <input
       type={type}
       className={cn(
         'bg-card border-border placeholder:text-muted-foreground min-h-11 w-full rounded-md border px-3 py-2 text-base aria-invalid:border-destructive aria-invalid:border-2 disabled:opacity-60',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function AreaTexto({ className, ...props }: ComponentProps<'textarea'>) {
+  return (
+    <textarea
+      className={cn(
+        'bg-card border-border placeholder:text-muted-foreground min-h-24 w-full rounded-md border px-3 py-2 text-base aria-invalid:border-destructive aria-invalid:border-2 disabled:opacity-60',
         className,
       )}
       {...props}

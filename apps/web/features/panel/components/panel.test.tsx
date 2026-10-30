@@ -102,6 +102,14 @@ describe('GuardaRol', () => {
     expect(screen.queryByText('contenido-privado')).toBeNull();
     expect(replace).not.toHaveBeenCalled();
   });
+
+  it('sin conexión por límite (429) explica la espera y no culpa a la conexión', () => {
+    poner('sin-conexion', null, { motivoSinConexion: 'limite' });
+    render(<GuardaRol rol="fundacion">contenido-privado</GuardaRol>);
+    expect(screen.getByText('Hay demasiados intentos en este momento')).toBeInTheDocument();
+    expect(screen.getByText(/Espera un minuto/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
 });
 
 describe('ShellPanel', () => {
@@ -213,6 +221,14 @@ describe('CabeceraPublica', () => {
       'href',
       '/ingresar',
     );
+    expect(within(nav).getByRole('link', { name: 'Registrarme' })).toHaveAttribute(
+      'href',
+      '/registro',
+    );
+    expect(within(nav).getByRole('link', { name: 'Registrar fundación' })).toHaveAttribute(
+      'href',
+      '/registro-fundacion',
+    );
   });
 
   it('con sesión ofrece «Mi panel» hacia el panel del rol', () => {
@@ -220,5 +236,6 @@ describe('CabeceraPublica', () => {
     render(<CabeceraPublica />);
     expect(screen.getByRole('link', { name: 'Mi panel' })).toHaveAttribute('href', '/fundacion');
     expect(screen.queryByRole('link', { name: 'Ingresar' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Registrarme' })).toBeNull();
   });
 });

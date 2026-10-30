@@ -49,12 +49,27 @@ describe('proxy', () => {
     expect(destino(pedir('/ingresar', 'administrador'))).toBe('/administrador');
   });
 
-  it('el matcher cubre los tres paneles e /ingresar y no /_kit', () => {
+  it.each(['/registro', '/registro-fundacion', '/recuperar'])(
+    '%s con indicio lleva al panel del rol y sin indicio continúa',
+    (ruta) => {
+      expect(destino(pedir(ruta, 'fundacion'))).toBe('/fundacion');
+      expect(pedir(ruta).headers.get('location')).toBeNull();
+    },
+  );
+
+  it('/verificar-correo no está en el matcher (se abre desde el correo con o sin sesión)', () => {
+    expect(config.matcher).not.toContain('/verificar-correo');
+  });
+
+  it('el matcher cubre los tres paneles y las pantallas de autenticación, y no /_kit', () => {
     expect(config.matcher).toEqual([
       '/adoptante/:path*',
       '/fundacion/:path*',
       '/administrador/:path*',
       '/ingresar',
+      '/registro',
+      '/registro-fundacion',
+      '/recuperar',
     ]);
   });
 });

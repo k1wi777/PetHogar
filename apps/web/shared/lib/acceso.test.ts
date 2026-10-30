@@ -54,6 +54,23 @@ describe('resolverAcceso', () => {
     expect(resolverAcceso('/ingresar', 'raro')).toEqual({ tipo: 'permitir' });
   });
 
+  it.each(['/registro', '/registro-fundacion', '/recuperar'])(
+    '%s con sesión indicada va al panel del rol; sin ella, se permite',
+    (ruta) => {
+      expect(resolverAcceso(ruta, 'administrador')).toEqual({
+        tipo: 'redirigir',
+        destino: '/administrador',
+      });
+      expect(resolverAcceso(ruta, undefined)).toEqual({ tipo: 'permitir' });
+    },
+  );
+
+  it('/verificar-correo siempre se permite, incluso con sesión', () => {
+    expect(resolverAcceso('/verificar-correo', 'adoptante', '?token=abc')).toEqual({
+      tipo: 'permitir',
+    });
+  });
+
   it('las rutas públicas siempre se permiten', () => {
     expect(resolverAcceso('/', undefined)).toEqual({ tipo: 'permitir' });
     expect(resolverAcceso('/403', 'adoptante')).toEqual({ tipo: 'permitir' });

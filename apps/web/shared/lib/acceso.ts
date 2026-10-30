@@ -71,6 +71,13 @@ export const MENU_POR_ROL: Readonly<Record<Rol, readonly OpcionMenu[]>> = {
 
 export const RUTA_INGRESAR = '/ingresar';
 export const RUTA_SIN_PERMISO = '/403';
+/** Pantallas de autenticación: quien ya tiene sesión va a su panel. `/verificar-correo` queda libre. */
+export const RUTAS_SOLO_ANONIMO: readonly string[] = [
+  RUTA_INGRESAR,
+  '/registro',
+  '/registro-fundacion',
+  '/recuperar',
+];
 
 const ROLES = Object.keys(PANEL_POR_ROL) as Rol[];
 
@@ -106,7 +113,7 @@ export function resolverAcceso(
   consulta = '',
 ): DecisionAcceso {
   const rol = esRolConocido(indicio) ? indicio : null;
-  if (pathname === RUTA_INGRESAR) {
+  if (RUTAS_SOLO_ANONIMO.includes(pathname)) {
     return rol ? { tipo: 'redirigir', destino: PANEL_POR_ROL[rol] } : { tipo: 'permitir' };
   }
   const dueno = rolDelPanel(pathname);

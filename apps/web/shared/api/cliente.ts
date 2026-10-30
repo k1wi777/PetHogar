@@ -48,11 +48,17 @@ function mensajeDeCuerpo(cuerpo: unknown, estado: number): string {
 }
 
 function erroresDeCuerpo(cuerpo: unknown): ErrorCampo[] | undefined {
-  if (cuerpo && typeof cuerpo === 'object' && 'errores' in cuerpo) {
-    const e = (cuerpo as { errores: unknown }).errores;
-    if (Array.isArray(e)) return e as ErrorCampo[];
+  if (!cuerpo || typeof cuerpo !== 'object' || !('errores' in cuerpo)) return undefined;
+  const e = (cuerpo as { errores: unknown }).errores;
+  if (!Array.isArray(e)) return undefined;
+  const validos: ErrorCampo[] = [];
+  for (const item of e) {
+    if (!item || typeof item !== 'object') continue;
+    const { campo, mensajes } = item as { campo?: unknown; mensajes?: unknown };
+    if (typeof campo !== 'string' || !Array.isArray(mensajes)) continue;
+    validos.push({ campo, mensajes: mensajes.filter((m): m is string => typeof m === 'string') });
   }
-  return undefined;
+  return validos;
 }
 
 export class ClienteHttp {

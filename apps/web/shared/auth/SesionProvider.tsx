@@ -19,11 +19,15 @@ import type { RespuestaSesion, Usuario } from '@/shared/api/tipos';
 import { aviso } from '@/shared/ui/Toaster';
 import { borrarIndicio, escribirIndicio, leerIndicio } from './indicio';
 
+export type MotivoSinConexion = 'red' | 'limite';
+
 export type EstadoSesion = 'cargando' | 'anonimo' | 'autenticado' | 'sin-conexion';
 
 export interface ContextoSesion {
   estado: EstadoSesion;
   usuario: Usuario | null;
+  /** Por qué no se pudo restaurar la sesión: `limite` es un 429 (espera), `red` cualquier otro fallo. */
+  motivoSinConexion: MotivoSinConexion | null;
   iniciarSesion(email: string, contrasena: string): Promise<Usuario>;
   /** Pide al servidor revocar la sesión; si no responde, la sesión se mantiene. Devuelve si se cerró. */
   cerrarSesion(): Promise<boolean>;
@@ -44,6 +48,7 @@ export function useSesion(): ContextoSesion {
 interface Estado {
   estado: EstadoSesion;
   usuario: Usuario | null;
+  motivoSinConexion: MotivoSinConexion | null;
 }
 
 export function SesionProvider({
@@ -56,7 +61,11 @@ export function SesionProvider({
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const [actual, setActual] = useState<Estado>({ estado: 'cargando', usuario: null });
+  const [actual, setActual] = useState<Estado>({
+    estado: 'cargando',
+    usuario: null,
+    motivoSinConexion: null,
+  });
   const [intento, setIntento] = useState(0);
   const autenticadoRef = useRef(false);
   const pathRef = useRef(pathname);
@@ -68,7 +77,7 @@ export function SesionProvider({
 
   const fijarUsuario = useCallback((usuario: Usuario) => {
     escribirIndicio(usuario.rol);
-    setActual({ estado: 'autenticado', usuario });
+    setActual({ estado: 'autenticado', usuario, motivoSinConexion: null });
   }, []);
 
   // Renovación rechazada (401): una sola notificación y un solo borrado del indicio (R11).
@@ -77,7 +86,7 @@ export function SesionProvider({
       const habiaSesion = autenticadoRef.current || leerIndicio() !== null;
       borrarIndicio();
       queryClient.clear();
-      setActual({ estado: 'anonimo', usuario: null });
+      setActual({ estado: 'anonimo', usuario: null, motivoSinConexion: null });
       if (!habiaSesion) return;
       aviso.info('Tu sesión venció. Ingresa de nuevo para continuar.');
       const ruta = pathRef.current;
@@ -88,10 +97,16 @@ export function SesionProvider({
     });
   }, [cliente, queryClient, router]);
 
-  // Restaurar la sesión al cargar: renovar el token y consultar el perfil (R10).
+  // Restaurar la sesión al cargar: renovar el token y consultar el perfil (R10). Sin el indicio
+  // `ph_rol` no hay sesión que restaurar: se queda anónimo sin llamar a la API, porque cada visita
+  // anónima gastaría el límite de 20 refresh por minuto y provocaría un 401 inútil (R18).
   useEffect(() => {
     let cancelado = false;
     (async () => {
+      if (leerIndicio() === null) {
+        setActual({ estado: 'anonimo', usuario: null, motivoSinConexion: null });
+        return;
+      }
       try {
         await cliente.renovar();
         const usuario = await cliente.get<Usuario>('/auth/me');
@@ -99,10 +114,15 @@ export function SesionProvider({
       } catch (error) {
         if (cancelado) return;
         if (esErrorApi(error) && error.tipo === 'sesion-vencida') {
-          setActual({ estado: 'anonimo', usuario: null });
+          setActual({ estado: 'anonimo', usuario: null, motivoSinConexion: null });
         } else {
-          // Sin conexión u otro fallo: no se cierra la sesión ni se borra el indicio (R7).
-          setActual({ estado: 'sin-conexion', usuario: null });
+          // Sin conexión, 429 u otro fallo: no se cierra la sesión ni se borra el indicio (R7, R19).
+          const limite = esErrorApi(error) && error.estado === 429;
+          setActual({
+            estado: 'sin-conexion',
+            usuario: null,
+            motivoSinConexion: limite ? 'limite' : 'red',
+          });
         }
       }
     })();
@@ -134,7 +154,7 @@ export function SesionProvider({
     cliente.tokens.limpiar();
     borrarIndicio();
     queryClient.clear();
-    setActual({ estado: 'anonimo', usuario: null });
+    setActual({ estado: 'anonimo', usuario: null, motivoSinConexion: null });
     router.replace('/');
     return true;
   }, [cliente, queryClient, router]);
@@ -144,7 +164,7 @@ export function SesionProvider({
   }, [cliente, fijarUsuario]);
 
   const reintentar = useCallback(() => {
-    setActual({ estado: 'cargando', usuario: null });
+    setActual({ estado: 'cargando', usuario: null, motivoSinConexion: null });
     setIntento((n) => n + 1);
   }, []);
 

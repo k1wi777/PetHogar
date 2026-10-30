@@ -72,6 +72,7 @@ describe('SesionProvider', () => {
   afterEach(() => borrarIndicio());
 
   it('restaura la sesión con refresh + /auth/me y escribe el indicio', async () => {
+    escribirIndicio('fundacion');
     const { cliente } = montar((r) =>
       r === '/auth/refresh' ? sesionOk() : r === '/auth/me' ? json(usuario()) : json({}, 404),
     );
@@ -81,9 +82,10 @@ describe('SesionProvider', () => {
     expect(cliente.tokens.obtener()).toBe('tok');
   });
 
-  it('sin cookie de refresh (401) queda anónimo sin avisos ni redirección', async () => {
-    montar(() => json({ message: 'Sesión no válida' }, 401));
+  it('sin el indicio ph_rol queda anónimo sin ninguna petición, avisos ni redirección (R18)', async () => {
+    const { fetchImpl } = montar(() => json({ message: 'Sesión no válida' }, 401));
     await screen.findByText('estado:anonimo');
+    expect(fetchImpl).not.toHaveBeenCalled();
     expect(aviso.info).not.toHaveBeenCalled();
     expect(replace).not.toHaveBeenCalled();
   });
@@ -108,7 +110,28 @@ describe('SesionProvider', () => {
     expect(replace).toHaveBeenCalledWith('/ingresar?siguiente=%2Ffundacion%2Fmascotas');
   });
 
+  it('con indicio y refresh en 429 queda sin-conexion por límite, sin borrar indicio ni token (R19)', async () => {
+    escribirIndicio('fundacion');
+    const { sesion, cliente } = montar(() => json({ message: 'Demasiadas solicitudes' }, 429));
+    await screen.findByText('estado:sin-conexion');
+    expect(sesion().motivoSinConexion).toBe('limite');
+    expect(leerIndicio()).toBe('fundacion');
+    expect(replace).not.toHaveBeenCalled();
+    expect(aviso.info).not.toHaveBeenCalled();
+    expect(cliente.tokens.obtener()).toBeNull();
+  });
+
+  it('una caída de red es sin-conexion por red', async () => {
+    escribirIndicio('fundacion');
+    const { sesion } = montar(() => {
+      throw new TypeError('Failed to fetch');
+    });
+    await screen.findByText('estado:sin-conexion');
+    expect(sesion().motivoSinConexion).toBe('red');
+  });
+
   it('reintentar vuelve a restaurar tras «sin conexión»', async () => {
+    escribirIndicio('fundacion');
     let caida = true;
     const { sesion } = montar((r) => {
       if (caida) throw new TypeError('Failed to fetch');
@@ -139,6 +162,7 @@ describe('SesionProvider', () => {
   });
 
   it('cerrarSesion revoca en el servidor, borra token, indicio y caché, y va al inicio', async () => {
+    escribirIndicio('fundacion');
     let revocada = false;
     const { sesion, cliente, clearSpy } = montar((r) => {
       if (r === '/auth/logout') {
@@ -162,6 +186,7 @@ describe('SesionProvider', () => {
   });
 
   it('si el servidor no responde al cerrar sesión, la sesión se mantiene y se muestra un error', async () => {
+    escribirIndicio('fundacion');
     let apagada = false;
     const { sesion, cliente } = montar((r) => {
       if (apagada) throw new TypeError('Failed to fetch');

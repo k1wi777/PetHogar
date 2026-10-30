@@ -16,7 +16,7 @@ import { Skeleton } from '@/shared/ui/Skeleton';
  * es autoridad) y no renderiza el contenido si no corresponde (R15).
  */
 export function GuardaRol({ rol, children }: { rol: Rol; children: ReactNode }) {
-  const { estado, usuario, reintentar } = useSesion();
+  const { estado, usuario, motivoSinConexion, reintentar } = useSesion();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -35,8 +35,16 @@ export function GuardaRol({ rol, children }: { rol: Rol; children: ReactNode }) 
       <div className="mx-auto max-w-xl px-6 py-16">
         <EstadoVacio
           icono={WifiOff}
-          titulo="No pudimos conectar con el servidor"
-          descripcion="Revisa tu conexión o inténtalo en unos minutos. Tu sesión sigue guardada."
+          titulo={
+            motivoSinConexion === 'limite'
+              ? 'Hay demasiados intentos en este momento'
+              : 'No pudimos conectar con el servidor'
+          }
+          descripcion={
+            motivoSinConexion === 'limite'
+              ? 'Espera un minuto y vuelve a intentarlo. Tu sesión sigue guardada.'
+              : 'Revisa tu conexión o inténtalo en unos minutos. Tu sesión sigue guardada.'
+          }
           accion={<Boton onClick={reintentar}>Reintentar</Boton>}
         />
       </div>

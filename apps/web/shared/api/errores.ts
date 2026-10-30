@@ -2,8 +2,8 @@ export type TipoErrorApi = 'http' | 'red' | 'sesion-vencida' | 'respuesta-invali
 
 export interface ErrorCampo {
   campo: string;
-  mensaje?: string;
-  [clave: string]: unknown;
+  /** El filtro global de la API entrega uno o varios mensajes por campo. */
+  mensajes: string[];
 }
 
 /** Textos para el usuario, en un único lugar (R6, R7). */

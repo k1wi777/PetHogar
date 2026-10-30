@@ -41,6 +41,20 @@ export function CabeceraPublica() {
                   </Boton>
                 )}
               </li>
+              {!(estado === 'autenticado' && usuario) && (
+                <>
+                  <li>
+                    <Link href="/registro" className={ENLACE}>
+                      Registrarme
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/registro-fundacion" className={ENLACE}>
+                      Registrar fundación
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
           </nav>
         </div>

@@ -68,7 +68,7 @@ describe('ClienteHttp: peticiones y errores', () => {
         {
           statusCode: 400,
           message: 'Datos inválidos',
-          errores: [{ campo: 'email', mensaje: 'Obligatorio' }],
+          errores: [{ campo: 'email', mensajes: ['Obligatorio'] }],
         },
         400,
       ),
@@ -78,7 +78,7 @@ describe('ClienteHttp: peticiones y errores', () => {
       tipo: 'http',
       estado: 400,
       mensaje: 'Datos inválidos',
-      errores: [{ campo: 'email', mensaje: 'Obligatorio' }],
+      errores: [{ campo: 'email', mensajes: ['Obligatorio'] }],
     });
   });
 
