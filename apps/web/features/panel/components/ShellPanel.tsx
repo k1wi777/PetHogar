@@ -135,7 +135,7 @@ export function ShellPanel({
           </p>
           <MenuLateral rol={rol} />
         </aside>
-        <main id="contenido" className="flex-1 p-4 md:p-8">
+        <main id="contenido" className="min-w-0 flex-1 p-4 md:p-8">
           {fundacion && fundacion.estadoValidacion !== 'aprobada' && (
             <div role="status" className="bg-warning text-warning-foreground mb-6 rounded-md p-4">
               {fundacion.estadoValidacion === 'pendiente'

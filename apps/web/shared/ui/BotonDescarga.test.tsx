@@ -80,4 +80,37 @@ describe('BotonDescarga', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Descargar' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Demasiadas descargas');
   });
+
+  it('envía la consulta como parámetros y no relaja la regla de la ruta', async () => {
+    const { llamadas } = montarPanel(
+      <BotonDescarga
+        url="/api/fundacion/reportes/donaciones.pdf"
+        nombreBase="reporte-donaciones"
+        etiqueta="Descargar PDF"
+        consulta={{ desde: '2026-10-01', hasta: '2026-10-31', vacio: undefined }}
+      />,
+      () => png(),
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Descargar PDF' }));
+    await screen.findByText(/reporte-donaciones\./);
+    const [url] = llamadas('/fundacion/reportes/donaciones.pdf')[0]!;
+    expect(url).toContain('desde=2026-10-01');
+    expect(url).toContain('hasta=2026-10-31');
+    expect(url).not.toContain('vacio');
+  });
+
+  it('una URL con «?» sigue rechazándose aunque haya consulta', async () => {
+    const { fetchImpl } = montarPanel(
+      <BotonDescarga
+        url="/api/fundacion/reportes/donaciones.pdf?desde=2026-10-01"
+        nombreBase="a"
+        etiqueta="Descargar"
+        consulta={{ desde: '2026-10-01' }}
+      />,
+      () => png(),
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Descargar' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/enlace recibido no es válido/);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
 });

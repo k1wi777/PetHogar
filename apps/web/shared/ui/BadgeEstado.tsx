@@ -32,6 +32,8 @@ export const ESTADOS: Readonly<Record<string, { texto: string; tono: TonoBadge }
   vencido: { texto: 'Vencido', tono: 'peligro' },
   realizado: { texto: 'Realizado', tono: 'exito' },
   cancelado: { texto: 'Cancelado', tono: 'neutro' },
+  // cuenta de usuario (la activa reutiliza «Activa»)
+  desactivada: { texto: 'Desactivada', tono: 'neutro' },
   // adopción
   activa: { texto: 'Activa', tono: 'exito' },
   finalizada: { texto: 'Finalizada', tono: 'neutro' },

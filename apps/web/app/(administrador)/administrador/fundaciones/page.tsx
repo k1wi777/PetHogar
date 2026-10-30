@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
-import { PaginaPlaceholder } from '@/features/panel/components/PaginaPlaceholder';
+import { Suspense } from 'react';
+import { PantallaFundaciones } from '@/features/admin-fundaciones/components/PantallaFundaciones';
+import { Skeleton } from '@/shared/ui/Skeleton';
 
 export const metadata: Metadata = { title: 'Fundaciones por validar | PetHogar' };
 
 export default function Pagina() {
   return (
-    <PaginaPlaceholder
-      titulo="Fundaciones por validar"
-      descripcion="Aquí validarás las fundaciones registradas."
-    />
+    <Suspense fallback={<Skeleton className="h-48 max-w-4xl" etiqueta="Cargando" />}>
+      <PantallaFundaciones />
+    </Suspense>
   );
 }

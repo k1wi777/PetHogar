@@ -3,7 +3,7 @@
 import { Download } from 'lucide-react';
 import { useState } from 'react';
 import { esErrorApi, mensajeDe } from '@/shared/api/errores';
-import { descargarArchivo } from '@/shared/lib/descarga';
+import { descargarArchivo, type ConsultaDescarga } from '@/shared/lib/descarga';
 import { Boton } from './Boton';
 
 type Resultado = { tipo: 'ok'; nombre: string } | { tipo: 'error'; mensaje: string } | null;
@@ -17,6 +17,7 @@ export function BotonDescarga({
   nombreBase,
   etiqueta,
   className,
+  consulta,
 }: {
   /** Ruta que entregó la API (`/api/…`). */
   url: string;
@@ -24,6 +25,8 @@ export function BotonDescarga({
   nombreBase: string;
   etiqueta: string;
   className?: string;
+  /** Parámetros de la petición (p. ej. el rango de un PDF). */
+  consulta?: ConsultaDescarga;
 }) {
   const [cargando, setCargando] = useState(false);
   const [resultado, setResultado] = useState<Resultado>(null);
@@ -33,7 +36,7 @@ export function BotonDescarga({
     setCargando(true);
     setResultado(null);
     try {
-      const nombre = await descargarArchivo(url, nombreBase);
+      const nombre = await descargarArchivo(url, nombreBase, consulta);
       setResultado({ tipo: 'ok', nombre });
     } catch (error) {
       setResultado({
