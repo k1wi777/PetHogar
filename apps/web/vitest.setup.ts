@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
+
+// waitFor/findBy* esperan hasta 5 s (defecto 1 s) para tolerar CPU saturada; ver verification.md.
+configure({ asyncUtilTimeout: 5000 });
 
 afterEach(() => {
   cleanup();

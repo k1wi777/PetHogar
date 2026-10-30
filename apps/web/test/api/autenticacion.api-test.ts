@@ -38,8 +38,6 @@ function nuevoCliente() {
   return crearClienteHttp({ baseUrl: API!, fetchImpl: jar.fetchImpl, cerrojos: null });
 }
 
-const esperar = (ms: number) => new Promise((resolver) => setTimeout(resolver, ms));
-
 async function fallo(accion: () => Promise<unknown>) {
   try {
     await accion();

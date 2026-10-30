@@ -10,5 +10,8 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     include: ['**/*.test.{ts,tsx}'],
     exclude: ['node_modules/**', '.next/**', 'e2e/**'],
+    // Holgura para el arranque en frío bajo carga de CPU (ver verification.md, V3).
+    testTimeout: 15_000,
+    hookTimeout: 15_000,
   },
 });
