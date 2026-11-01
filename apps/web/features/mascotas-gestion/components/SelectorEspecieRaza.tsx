@@ -27,6 +27,7 @@ export function SelectorEspecieRaza({
   if (especies.isError) {
     return (
       <EstadoError
+        error={especies.error}
         titulo="No pudimos cargar las especies"
         alReintentar={() => void especies.refetch()}
         reintentando={especies.isFetching}

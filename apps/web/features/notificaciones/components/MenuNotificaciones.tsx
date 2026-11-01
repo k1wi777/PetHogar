@@ -42,6 +42,7 @@ export function MenuNotificaciones({
         <Skeleton className="h-24" etiqueta="Cargando las notificaciones" />
       ) : recientes.isError ? (
         <EstadoError
+          error={recientes.error}
           titulo="No pudimos cargar tus notificaciones"
           alReintentar={() => void recientes.refetch()}
           reintentando={recientes.isFetching}

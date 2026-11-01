@@ -39,6 +39,7 @@ Los scripts viven en `scripts/` y leen `DATABASE_*`, `UPLOADS_DIR` y `BACKUP_DIR
 - **Dependencias.** `pnpm audit --prod` informa de un `js-yaml` (moderado) y un `deepmerge` (bajo), ambos transitivos de herramientas de documentación y fuera de la ruta de ejecución de peticiones; se descartan. Revisar en cada actualización.
 - **Limitador en memoria.** El `ThrottlerGuard` guarda contadores en el proceso: con varias instancias cada una cuenta aparte. Para escalar horizontalmente habría que pasar a un almacén compartido (Redis).
 - **PDF en el proceso principal.** pdfmake renderiza de forma síncrona y bloquea el bucle de eventos (unos 1,6 s para 1000 filas, el máximo permitido). Los endpoints de PDF tienen un límite de 10 peticiones por minuto por IP. Mitigación futura: un worker.
+- **Renovación de sesión abortada.** Si el navegador aborta la respuesta de `POST /auth/refresh` (recarga o navegación muy rápida mientras se restaura la sesión), la cookie rotada no llega, la siguiente carga envía el token anterior y la API lo trata como reutilización y revoca las sesiones del usuario, que debe ingresar de nuevo. Es poco frecuente. Mitigación futura: ventana de gracia de unos segundos en el refresh de la API. El e2e lo evita con `esperarSesion`.
 
 ## 4. Datos de demostración
 

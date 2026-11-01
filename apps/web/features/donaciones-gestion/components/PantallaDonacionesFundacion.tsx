@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
-import { esErrorApi, mensajeDe } from '@/shared/api/errores';
+import { esErrorApi } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { AvisoFundacionNoAprobada } from '@/shared/ui/AvisoFundacionNoAprobada';
 import { Boton } from '@/shared/ui/Boton';
 import { EstadoError } from '@/shared/ui/EstadoError';
@@ -79,6 +80,7 @@ function Contenido() {
           <Skeleton className="h-48" etiqueta="Cargando las donaciones" />
         ) : donaciones.isError ? (
           <EstadoError
+            error={donaciones.error}
             alReintentar={() => void donaciones.refetch()}
             reintentando={donaciones.isFetching}
           />

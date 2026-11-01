@@ -63,6 +63,38 @@ describe('paleta de las gráficas', () => {
     expect(razones.every((r) => r < 3)).toBe(true);
   });
 
+  // Auditoría de F-26 (R8): se miden los pares REALMENTE adyacentes de cada dona (2 a 5
+  // categorías, asignadas en orden, incluida la última con la primera), no todos los pares.
+  describe('auditoría de contraste por dona (rebanada–rebanada)', () => {
+    const adyacentes = (n: number) =>
+      Array.from({ length: n }, (_, i) => [i, (i + 1) % n] as const).filter(
+        ([i, j], k) => !(n === 2 && k === 1 && i === 1 && j === 0),
+      );
+
+    it.each([2, 3, 4, 5])('dona de %i categorías: pares adyacentes y separador', (n) => {
+      const razones = adyacentes(n).map(([i, j]) =>
+        razonContraste(PALETA_GRAFICA[i]!.color, PALETA_GRAFICA[j]!.color),
+      );
+      // Cifras medidas: ningún par adyacente real llega a 3:1 y el peor es 1.05:1 (azul con verde).
+      expect(razones.every((r) => r < 3)).toBe(true);
+      expect(Math.min(...razones)).toBeGreaterThanOrEqual(1.05);
+      expect(Math.max(...razones)).toBeLessThanOrEqual(1.63);
+      // El argumento solo se sostiene si el separador contrasta ≥ 3:1 con AMBOS lados de cada par.
+      for (const [i, j] of adyacentes(n)) {
+        for (const k of [i, j]) {
+          const separador = razonContraste(PALETA_GRAFICA[k]!.color, COLOR_FONDO_GRAFICA);
+          expect(separador, `separador con ${PALETA_GRAFICA[k]!.color}`).toBeGreaterThanOrEqual(3);
+        }
+      }
+    });
+
+    it('el separador contrasta entre 4.8:1 y 10.4:1 con las cinco rebanadas', () => {
+      const razones = PALETA_GRAFICA.map((e) => razonContraste(e.color, COLOR_FONDO_GRAFICA));
+      expect(Math.min(...razones)).toBeCloseTo(4.8, 1);
+      expect(Math.max(...razones)).toBeCloseTo(10.35, 1);
+    });
+  });
+
   it('las rebanadas contiguas se separan con el color de fondo y al menos 2 px', () => {
     expect(SEPARACION_REBANADAS_PX).toBeGreaterThanOrEqual(2);
     expect(COLOR_FONDO_GRAFICA).toBe(TOKENS_COLOR.card);

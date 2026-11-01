@@ -7,6 +7,7 @@ const config = [
   ...base,
   ...nextVitals,
   ...nextTs,
+  { ignores: ['e2e/.resultados/**'] },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
 ];
 

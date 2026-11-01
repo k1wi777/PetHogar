@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { Boton } from '@/shared/ui/Boton';
 import { CampoControlado } from '@/shared/ui/CampoControlado';
 import { reenviarVerificacion, verificarCorreo } from '../api/autenticacion';

@@ -102,6 +102,8 @@ describe('FormularioSolicitud', () => {
     expect(
       await screen.findByRole('heading', { name: 'Enviamos tu solicitud' }),
     ).toBeInTheDocument();
+    // El formulario desaparece: el foco pasa al título (no se pierde en <body>).
+    expect(screen.getByRole('heading', { name: 'Enviamos tu solicitud' })).toHaveFocus();
     expect(screen.getByRole('link', { name: 'Ir a mis solicitudes' })).toHaveAttribute(
       'href',
       '/adoptante/solicitudes',

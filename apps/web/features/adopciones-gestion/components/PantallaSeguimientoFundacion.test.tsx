@@ -291,8 +291,8 @@ describe('PantallaSeguimientoFundacion', () => {
       api({ lectura: () => detalleSeguimiento({ estado: 'cancelado' }) }),
     );
     expect(
-      await screen.findByText('Este seguimiento se canceló al cerrarse la adopción.'),
-    ).toBeInTheDocument();
+      await screen.findByText(/Este seguimiento se canceló al cerrarse la adopción\./),
+    ).toHaveTextContent(/solo de lectura: no hay acciones disponibles/);
     expect(screen.queryByRole('button', { name: 'Registrar resultado' })).toBeNull();
   });
 

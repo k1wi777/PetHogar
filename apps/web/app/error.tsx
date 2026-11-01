@@ -1,7 +1,6 @@
 'use client';
 
-import { Boton } from '@/shared/ui/Boton';
-import { PaginaMensaje } from '@/shared/ui/PaginaMensaje';
+import { PaginaError } from '@/shared/ui/PaginaError';
 
 export default function ErrorInesperado({
   reset,
@@ -11,9 +10,7 @@ export default function ErrorInesperado({
 }) {
   return (
     <main id="contenido">
-      <PaginaMensaje titulo="Algo salió mal" accion={<Boton onClick={reset}>Reintentar</Boton>}>
-        Tuvimos un problema inesperado. Inténtalo de nuevo; si continúa, vuelve más tarde.
-      </PaginaMensaje>
+      <PaginaError reset={reset} />
     </main>
   );
 }

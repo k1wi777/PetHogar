@@ -96,6 +96,7 @@ export function PantallaNotificaciones() {
           <Skeleton className="h-48" etiqueta="Cargando las notificaciones" />
         ) : lista.isError ? (
           <EstadoError
+            error={lista.error}
             titulo="No pudimos cargar tus notificaciones"
             alReintentar={() => void lista.refetch()}
             reintentando={lista.isFetching}

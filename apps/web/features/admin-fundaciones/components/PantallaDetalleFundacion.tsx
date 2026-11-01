@@ -82,6 +82,7 @@ export function PantallaDetalleFundacion({ idTexto }: { idTexto: string }) {
     }
     return (
       <EstadoError
+        error={fundacion.error}
         alReintentar={() => void fundacion.refetch()}
         reintentando={fundacion.isFetching}
       />

@@ -96,7 +96,9 @@ describe('GuardaRol', () => {
     const reintentar = vi.fn();
     poner('sin-conexion', null, { reintentar });
     render(<GuardaRol rol="fundacion">contenido-privado</GuardaRol>);
-    expect(screen.getByText('No pudimos conectar con el servidor')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'No pudimos conectar con el servidor' }),
+    ).toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole('button', { name: 'Reintentar' }));
     expect(reintentar).toHaveBeenCalledTimes(1);
     expect(screen.queryByText('contenido-privado')).toBeNull();

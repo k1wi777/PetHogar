@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { AvisoFundacionNoAprobada } from '@/shared/ui/AvisoFundacionNoAprobada';
 import { Campo } from '@/shared/ui/Campo';
 import { EstadoError } from '@/shared/ui/EstadoError';
@@ -101,6 +101,7 @@ function Contenido() {
           <Skeleton className="h-48" etiqueta="Cargando las solicitudes" />
         ) : solicitudes.isError ? (
           <EstadoError
+            error={solicitudes.error}
             alReintentar={() => void solicitudes.refetch()}
             reintentando={solicitudes.isFetching}
           />

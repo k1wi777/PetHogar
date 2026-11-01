@@ -35,6 +35,7 @@ export function GuardaRol({ rol, children }: { rol: Rol; children: ReactNode }) 
       <div className="mx-auto max-w-xl px-6 py-16">
         <EstadoVacio
           icono={WifiOff}
+          encabezado="h1"
           titulo={
             motivoSinConexion === 'limite'
               ? 'Hay demasiados intentos en este momento'

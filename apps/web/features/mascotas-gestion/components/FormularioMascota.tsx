@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Controller, useForm, useWatch, type Control } from 'react-hook-form';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { aplicarError } from '@/shared/lib/errores-formulario';
 import { AvisoAlerta } from '@/shared/ui/AvisoAlerta';
 import { Boton } from '@/shared/ui/Boton';

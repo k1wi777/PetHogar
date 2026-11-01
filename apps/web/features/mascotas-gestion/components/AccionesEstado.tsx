@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { Boton } from '@/shared/ui/Boton';
 import { DialogoConfirmacion } from '@/shared/ui/DialogoConfirmacion';
 import { useDarDeBaja } from '../hooks/useMascotasGestion';

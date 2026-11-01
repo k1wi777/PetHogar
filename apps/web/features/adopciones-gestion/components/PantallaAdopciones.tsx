@@ -3,7 +3,7 @@
 import { Heart } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { AvisoFundacionNoAprobada } from '@/shared/ui/AvisoFundacionNoAprobada';
 import { ESTADOS } from '@/shared/ui/BadgeEstado';
 import { Boton } from '@/shared/ui/Boton';
@@ -95,6 +95,7 @@ function Contenido() {
           <Skeleton className="h-48" etiqueta="Cargando las adopciones" />
         ) : adopciones.isError ? (
           <EstadoError
+            error={adopciones.error}
             alReintentar={() => void adopciones.refetch()}
             reintentando={adopciones.isFetching}
           />

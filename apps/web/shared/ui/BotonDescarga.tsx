@@ -2,7 +2,8 @@
 
 import { Download } from 'lucide-react';
 import { useState } from 'react';
-import { esErrorApi, mensajeDe } from '@/shared/api/errores';
+import { esErrorApi } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { descargarArchivo, type ConsultaDescarga } from '@/shared/lib/descarga';
 import { Boton } from './Boton';
 

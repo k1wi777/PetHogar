@@ -13,7 +13,8 @@ import {
   type ReactNode,
 } from 'react';
 import type { ClienteHttp } from '@/shared/api/cliente';
-import { esErrorApi, mensajeDe } from '@/shared/api/errores';
+import { esErrorApi } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { http as clientePorDefecto } from '@/shared/api/http';
 import type { RespuestaSesion, Usuario } from '@/shared/api/tipos';
 import { aviso } from '@/shared/ui/Toaster';

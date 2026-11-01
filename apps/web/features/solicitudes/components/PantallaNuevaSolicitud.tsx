@@ -39,7 +39,11 @@ export function PantallaNuevaSolicitud() {
   }
   if (mascota.isError) {
     return (
-      <EstadoError alReintentar={() => void mascota.refetch()} reintentando={mascota.isFetching} />
+      <EstadoError
+        error={mascota.error}
+        alReintentar={() => void mascota.refetch()}
+        reintentando={mascota.isFetching}
+      />
     );
   }
   if (mascota.data === null) return <NoDisponible />;

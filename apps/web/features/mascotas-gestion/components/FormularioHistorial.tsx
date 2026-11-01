@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { aplicarError } from '@/shared/lib/errores-formulario';
 import { etiquetaTipoHistorial } from '@/shared/lib/formato-mascota';
 import { AvisoAlerta } from '@/shared/ui/AvisoAlerta';

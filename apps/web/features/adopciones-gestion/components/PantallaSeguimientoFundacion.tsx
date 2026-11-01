@@ -3,7 +3,7 @@
 import { AlertTriangle, ArrowLeft, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { formatearFecha } from '@/shared/lib/fechas';
 import { esVencido, estadoVisible } from '@/shared/lib/seguimiento';
 import { AvisoAlerta } from '@/shared/ui/AvisoAlerta';
@@ -60,6 +60,7 @@ function Contenido({ idTexto }: { idTexto: string }) {
     }
     return (
       <EstadoError
+        error={seguimiento.error}
         alReintentar={() => void seguimiento.refetch()}
         reintentando={seguimiento.isFetching}
       />
@@ -76,7 +77,10 @@ function Contenido({ idTexto }: { idTexto: string }) {
     cuerpo = (
       <p className="border-border-suave bg-card flex items-start gap-2 rounded-lg border p-4">
         <Info className="text-info-foreground mt-0.5 size-5 shrink-0" aria-hidden="true" />
-        <span>Este seguimiento se canceló al cerrarse la adopción.</span>
+        <span>
+          Este seguimiento se canceló al cerrarse la adopción. Es solo de lectura: no hay acciones
+          disponibles sobre él.
+        </span>
       </p>
     );
   } else if (pendiente && esperaReporte) {

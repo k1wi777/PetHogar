@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ErrorApi } from '@/shared/api/errores';
+import { ErrorApi, MENSAJES } from '@/shared/api/errores';
 import {
   MAX_FOTOS,
   MENSAJE_CUPO,
@@ -95,14 +95,14 @@ describe('procesarCola', () => {
     const subir = vi
       .fn()
       .mockResolvedValueOnce(undefined)
-      .mockRejectedValueOnce(new ErrorApi({ tipo: 'red', mensaje: 'Sin red' }))
+      .mockRejectedValueOnce(new ErrorApi({ tipo: 'red', mensaje: MENSAJES.red }))
       .mockResolvedValueOnce(undefined);
     const cambios: Record<number, { estado?: string; mensaje?: string }> = {};
     const resumen = await procesarCola(cola(3), subir, (id, c) => {
       cambios[id] = { ...cambios[id], ...c };
     });
     expect(resumen).toEqual({ subidas: 2, fallidas: 1, parada: null });
-    expect(cambios[2]).toMatchObject({ estado: 'error', mensaje: 'Sin red' });
+    expect(cambios[2]).toMatchObject({ estado: 'error', mensaje: MENSAJES.red });
     expect(cambios[3]!.estado).toBe('listo');
   });
 

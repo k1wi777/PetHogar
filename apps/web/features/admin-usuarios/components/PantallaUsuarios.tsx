@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { useSesion } from '@/shared/auth/SesionProvider';
 import { AvisoAlerta } from '@/shared/ui/AvisoAlerta';
 import { DialogoConfirmacion } from '@/shared/ui/DialogoConfirmacion';
@@ -82,6 +82,7 @@ export function PantallaUsuarios() {
           <Skeleton className="h-48" etiqueta="Cargando los usuarios" />
         ) : usuarios.isError ? (
           <EstadoError
+            error={usuarios.error}
             alReintentar={() => void usuarios.refetch()}
             reintentando={usuarios.isFetching}
           />

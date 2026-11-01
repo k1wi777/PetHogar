@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MENSAJES, esErrorApi } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { MENSAJE_LIMITE } from '../lib/errores-servidor';
 
 /** Espera local entre reenvíos: protege el límite de 3 por minuto del servidor. */
@@ -50,7 +51,7 @@ export function useReenvio(
         : esErrorApi(error) && error.tipo === 'red'
           ? MENSAJES.red
           : esErrorApi(error)
-            ? error.mensaje
+            ? mensajeDe(error)
             : MENSAJES.generico;
       setEstado((e) => ({ ...e, enviando: false, error: texto, restante: limite ? espera : 0 }));
     } finally {

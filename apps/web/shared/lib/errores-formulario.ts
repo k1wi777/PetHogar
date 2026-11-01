@@ -1,7 +1,7 @@
 import { MENSAJES, esErrorApi } from '@/shared/api/errores';
+import { MENSAJE_LIMITE, mensajeDe } from './errores-usuario';
 
-export const MENSAJE_LIMITE =
-  'Hiciste demasiados intentos en poco tiempo. Espera un minuto e inténtalo de nuevo.';
+export { MENSAJE_LIMITE };
 
 export type SalidaError =
   | { tipo: 'campos'; campos: Array<{ campo: string; mensaje: string }>; aviso?: string }
@@ -45,7 +45,7 @@ export function traducirError(
       return { tipo: 'campos', campos: [{ campo, mensaje: error.mensaje }] };
     }
   }
-  return { tipo: 'aviso', mensaje: error.mensaje };
+  return { tipo: 'aviso', mensaje: mensajeDe(error) };
 }
 
 interface Destinos {

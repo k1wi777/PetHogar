@@ -54,6 +54,7 @@ export function PantallaFundaciones() {
           <Skeleton className="h-48" etiqueta="Cargando las fundaciones" />
         ) : fundaciones.isError ? (
           <EstadoError
+            error={fundaciones.error}
             alReintentar={() => void fundaciones.refetch()}
             reintentando={fundaciones.isFetching}
           />

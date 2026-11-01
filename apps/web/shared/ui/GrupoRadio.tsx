@@ -46,6 +46,7 @@ export function GrupoRadio<T extends FieldValues>({
           undefined;
         return (
           <fieldset
+            role="radiogroup"
             className="flex flex-col gap-2"
             aria-describedby={descritoPor}
             aria-required={requerido || undefined}

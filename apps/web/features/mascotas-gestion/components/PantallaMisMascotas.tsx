@@ -10,7 +10,7 @@ import { MASCOTAS_POR_PAGINA } from '../api/mascotas';
 import { useMisMascotas } from '../hooks/useMascotasGestion';
 import { consultaAUrl, leerConsulta, RUTA_MASCOTAS } from '../lib/consulta';
 import { esFundacionNoAprobada } from '../lib/errores';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import type { EstadoMascota } from '../types';
 import { AvisoFundacionNoAprobada } from '@/shared/ui/AvisoFundacionNoAprobada';
 import { FiltroEstado } from './FiltroEstado';
@@ -51,6 +51,7 @@ function Contenido() {
           <Skeleton className="h-48" etiqueta="Cargando tus mascotas" />
         ) : mascotas.isError ? (
           <EstadoError
+            error={mascotas.error}
             alReintentar={() => void mascotas.refetch()}
             reintentando={mascotas.isFetching}
           />

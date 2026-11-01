@@ -3,7 +3,8 @@
 import { BarChart3 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useRef } from 'react';
-import { esErrorApi, mensajeDe } from '@/shared/api/errores';
+import { esErrorApi } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { formatearFecha } from '@/shared/lib/fechas';
 import { AvisoFundacionNoAprobada } from '@/shared/ui/AvisoFundacionNoAprobada';
 import { Boton } from '@/shared/ui/Boton';
@@ -107,8 +108,8 @@ function Contenido({ ambito }: { ambito: Ambito }) {
             />
           ) : (
             <EstadoError
+              error={error}
               titulo="No pudimos cargar los reportes"
-              mensaje={esErrorApi(error) && error.estado > 0 ? mensajeDe(error) : undefined}
               alReintentar={() => void estadisticas.refetch()}
               reintentando={estadisticas.isFetching}
             />

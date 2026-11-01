@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { formatearTamano } from '@/shared/lib/archivo';
 import { AvisoAlerta } from '@/shared/ui/AvisoAlerta';
 import { Boton } from '@/shared/ui/Boton';

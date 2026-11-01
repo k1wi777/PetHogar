@@ -93,6 +93,7 @@ export function PantallaSeguimiento({ idTexto }: { idTexto: string }) {
     }
     return (
       <EstadoError
+        error={seguimiento.error}
         alReintentar={() => void seguimiento.refetch()}
         reintentando={seguimiento.isFetching}
       />

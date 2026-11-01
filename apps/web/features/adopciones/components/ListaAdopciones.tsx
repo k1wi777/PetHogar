@@ -88,6 +88,7 @@ export function ListaAdopciones() {
           <Skeleton className="h-48" etiqueta="Cargando tus adopciones" />
         ) : adopciones.isError ? (
           <EstadoError
+            error={adopciones.error}
             alReintentar={() => void adopciones.refetch()}
             reintentando={adopciones.isFetching}
           />

@@ -12,7 +12,7 @@ import { Boton } from '@/shared/ui/Boton';
 import { EstadoError } from '@/shared/ui/EstadoError';
 import { GuardaFundacionAprobada } from '@/shared/ui/GuardaFundacionAprobada';
 import { Skeleton } from '@/shared/ui/Skeleton';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { useSolicitudRecibida } from '../hooks/useSolicitudesGestion';
 import { RUTA_ADOPCIONES, leerConsulta, leerId, rutaLista } from '../lib/consulta';
 import { esFundacionNoAprobada, esNoEncontrada } from '../lib/errores';
@@ -92,6 +92,7 @@ function Contenido({ idTexto }: { idTexto: string }) {
     }
     return (
       <EstadoError
+        error={solicitud.error}
         alReintentar={() => void solicitud.refetch()}
         reintentando={solicitud.isFetching}
       />

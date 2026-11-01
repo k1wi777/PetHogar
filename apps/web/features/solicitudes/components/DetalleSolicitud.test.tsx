@@ -5,6 +5,9 @@ import { errorApi, montarPanel, respuestaJson } from '@/shared/testing/prueba-ut
 import { detalle } from '../prueba-datos';
 import { DetalleSolicitud } from './DetalleSolicitud';
 
+const toasts = vi.hoisted(() => ({ exito: vi.fn(), error: vi.fn(), info: vi.fn() }));
+vi.mock('@/shared/ui/Toaster', () => ({ aviso: toasts, Toaster: () => null }));
+
 let consulta = '';
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(consulta),
@@ -102,6 +105,7 @@ describe('DetalleSolicitud', () => {
     expect(screen.queryByRole('button', { name: 'Cancelar solicitud' })).toBeNull();
     expect(screen.queryByText('Pendiente')).toBeNull();
     expect(llamadas('/solicitudes/1/cancelar', 'PATCH')).toHaveLength(1);
+    expect(toasts.exito).toHaveBeenCalledWith('Solicitud cancelada.');
   });
 
   it('si la fundación se adelantó (409) avisa y muestra el estado vigente', async () => {

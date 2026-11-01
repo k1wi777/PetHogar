@@ -74,6 +74,7 @@ export function PestanaHistorial({
           <Skeleton className="h-32" etiqueta="Cargando el historial" />
         ) : disponible && historial.isError ? (
           <EstadoError
+            error={historial.error}
             titulo="No pudimos cargar el historial"
             alReintentar={() => void historial.refetch()}
             reintentando={historial.isFetching}

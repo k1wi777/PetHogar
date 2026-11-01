@@ -61,6 +61,7 @@ export function ListaSolicitudes() {
           <Skeleton className="h-48" etiqueta="Cargando tus solicitudes" />
         ) : solicitudes.isError ? (
           <EstadoError
+            error={solicitudes.error}
             alReintentar={() => void solicitudes.refetch()}
             reintentando={solicitudes.isFetching}
           />

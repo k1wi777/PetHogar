@@ -48,8 +48,3 @@ export class ErrorApi extends Error {
 export function esErrorApi(valor: unknown): valor is ErrorApi {
   return valor instanceof ErrorApi;
 }
-
-/** Mensaje presentable de cualquier error capturado. */
-export function mensajeDe(error: unknown): string {
-  return esErrorApi(error) ? error.mensaje : MENSAJES.generico;
-}

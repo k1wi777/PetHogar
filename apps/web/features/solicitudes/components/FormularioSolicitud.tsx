@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, Download, Info } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { aplicarError } from '@/shared/lib/errores-formulario';
 import { Boton } from '@/shared/ui/Boton';
@@ -32,6 +32,25 @@ export function EnlaceMisSolicitudes({ children }: { children: string }) {
     <Boton comoHijo>
       <Link href="/adoptante/solicitudes">{children}</Link>
     </Boton>
+  );
+}
+
+/** Confirmación del envío: el formulario desaparece, así que el foco pasa al título. */
+function SolicitudEnviada({ mascota }: { mascota: MascotaParaSolicitar }) {
+  const titulo = useRef<HTMLHeadingElement>(null);
+  useEffect(() => titulo.current?.focus(), []);
+  return (
+    <div className="flex max-w-xl flex-col items-start gap-4">
+      <CheckCircle2 className="text-success size-12" aria-hidden="true" />
+      <h1 ref={titulo} tabIndex={-1} className="text-3xl focus:outline-none">
+        Enviamos tu solicitud
+      </h1>
+      <p role="status">
+        La fundación {mascota.fundacion.nombre} revisará tu solicitud para adoptar a{' '}
+        {mascota.nombre}. Te avisaremos cuando responda.
+      </p>
+      <EnlaceMisSolicitudes>Ir a mis solicitudes</EnlaceMisSolicitudes>
+    </div>
   );
 }
 
@@ -87,19 +106,7 @@ export function FormularioSolicitud({ mascota }: { mascota: MascotaParaSolicitar
     );
   }
 
-  if (fase === 'enviada') {
-    return (
-      <div className="flex max-w-xl flex-col items-start gap-4">
-        <CheckCircle2 className="text-success size-12" aria-hidden="true" />
-        <h1 className="text-3xl">Enviamos tu solicitud</h1>
-        <p role="status">
-          La fundación {mascota.fundacion.nombre} revisará tu solicitud para adoptar a{' '}
-          {mascota.nombre}. Te avisaremos cuando responda.
-        </p>
-        <EnlaceMisSolicitudes>Ir a mis solicitudes</EnlaceMisSolicitudes>
-      </div>
-    );
-  }
+  if (fase === 'enviada') return <SolicitudEnviada mascota={mascota} />;
   if (fase === 'duplicada') {
     return (
       <MensajeAviso

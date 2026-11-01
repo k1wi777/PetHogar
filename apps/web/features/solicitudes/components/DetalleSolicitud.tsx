@@ -4,7 +4,9 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { esErrorApi, mensajeDe } from '@/shared/api/errores';
+import { esErrorApi } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
+import { aviso as avisoGlobal } from '@/shared/ui/Toaster';
 import { formatearFecha } from '@/shared/lib/fechas';
 import { AvisoAlerta } from '@/shared/ui/AvisoAlerta';
 import { BadgeEstado } from '@/shared/ui/BadgeEstado';
@@ -76,6 +78,7 @@ export function DetalleSolicitud({ idTexto }: { idTexto: string }) {
     }
     return (
       <EstadoError
+        error={solicitud.error}
         alReintentar={() => void solicitud.refetch()}
         reintentando={solicitud.isFetching}
       />
@@ -87,7 +90,10 @@ export function DetalleSolicitud({ idTexto }: { idTexto: string }) {
   function confirmar() {
     setAviso(null);
     cancelar.mutate(undefined, {
-      onSuccess: () => setAbierto(false),
+      onSuccess: () => {
+        setAbierto(false);
+        avisoGlobal.exito('Solicitud cancelada.');
+      },
       onError: (error) => {
         setAbierto(false);
         if (esErrorApi(error) && error.estado === 404) {

@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { mensajeDe } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { AvisoAlerta } from '@/shared/ui/AvisoAlerta';
 import { BadgeEstado } from '@/shared/ui/BadgeEstado';
 import { Boton } from '@/shared/ui/Boton';
@@ -82,7 +82,11 @@ function Contenido({ idTexto }: { idTexto: string }) {
       return <AvisoFundacionNoAprobada mensajeServidor={mensajeDe(mascota.error)} />;
     }
     return (
-      <EstadoError alReintentar={() => void mascota.refetch()} reintentando={mascota.isFetching} />
+      <EstadoError
+        error={mascota.error}
+        alReintentar={() => void mascota.refetch()}
+        reintentando={mascota.isFetching}
+      />
     );
   }
 

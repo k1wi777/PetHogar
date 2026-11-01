@@ -1,4 +1,5 @@
-import { esErrorApi, mensajeDe } from '@/shared/api/errores';
+import { esErrorApi } from '@/shared/api/errores';
+import { mensajeDe } from '@/shared/lib/errores-usuario';
 import { SOLO_IMAGENES, validarDocumento } from '@/shared/lib/archivo';
 
 export const MAX_FOTOS = 6;
