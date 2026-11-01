@@ -1,221 +1,119 @@
 # PetHogar
 
-**Plataforma web de adopción y seguimiento de mascotas en fundaciones y refugios de animales.**
+**Plataforma web de adopción y seguimiento de mascotas en fundaciones y refugios.**
 
-> **Estado:** el backend (API REST) está completo y el front cubre autenticación, catálogo público y los paneles de adoptante, fundación y administrador (mascotas, solicitudes, adopciones y seguimientos, donaciones, reportes con gráficas, notificaciones y cierre de adopciones). Quedan por pulir mensajes y estados vacíos, accesibilidad y pruebas e2e.
+Centraliza en un solo lugar lo que hoy se reparte entre redes sociales, WhatsApp, papel y hojas de cálculo: publicación de mascotas con su historial médico, solicitudes de adopción, seguimiento posterior a la entrega con alertas, registro de donaciones (sin pasarela de pago) y reportes en PDF y gráficas. Tiene tres perfiles: adoptantes, fundaciones y administrador de la plataforma.
 
----
+Proyecto académico — Universidad de Córdoba, Facultad de Ingeniería (Montería, 2026).
 
-## Qué es
-
-Muchas fundaciones y refugios gestionan la adopción de forma manual: publicaciones en redes sociales, conversaciones por WhatsApp, formularios en papel y hojas de cálculo. La información se dispersa, no se sabe con certeza qué animales están disponibles, las respuestas a los interesados se demoran y no existe un seguimiento sistemático después de la entrega del animal. Las donaciones también se registran de manera informal.
-
-PetHogar centraliza en una sola plataforma web:
-
-- la **publicación de mascotas** con fotografías, historial médico y estado de salud;
-- la **gestión de solicitudes de adopción** con criterios uniformes y registro de cada decisión;
-- el **seguimiento post-adopción** (visitas o reportes periódicos) con alertas de vencimiento y de riesgo;
-- el **registro de donaciones** económicas o en especie;
-- la **generación de reportes y estadísticas** en PDF y gráficas.
-
-**Objetivo general:** desarrollar una plataforma web que permita gestionar el proceso de adopción de mascotas en fundaciones y refugios, desde la publicación de los animales disponibles hasta el seguimiento post-adopción, incluyendo el registro de donaciones y la generación de reportes.
-
-Proyecto académico — Universidad de Córdoba, Facultad de Ingeniería, Departamento de Ingeniería de Sistemas (Montería, 2026). Autor del documento de requisitos: Josué David Contreras Lara.
-
-## Usuarios
-
-| Rol | Descripción | Funciones principales |
-|-----|-------------|-----------------------|
-| **Adoptante** | Persona natural sin conocimientos técnicos que busca adoptar. | Buscar y filtrar mascotas, enviar y consultar solicitudes, enviar reportes de seguimiento, registrar donaciones, consultar notificaciones. |
-| **Fundación / Refugio** | Organización que publica mascotas. Uso frecuente. Debe ser validada por el administrador. | Gestionar fichas e historial médico, evaluar solicitudes, programar y registrar seguimientos, registrar donaciones recibidas, generar reportes propios. |
-| **Administrador** | Supervisa la plataforma. | Validar fundaciones, gestionar cuentas de usuario, generar reportes y estadísticas globales. |
-
-## Módulos
-
-1. **Gestión de usuarios** — registro, autenticación y roles.
-2. **Gestión de mascotas** — fichas con fotos, historial médico y estado de salud.
-3. **Solicitudes de adopción** — postulación con formulario adjunto; aprobación o rechazo por la fundación.
-4. **Seguimiento post-adopción** — visitas o reportes periódicos para verificar el bienestar del animal.
-5. **Donaciones** — registro de aportes económicos o en especie (sin pasarela de pago).
-6. **Reportes y estadísticas** — fichas y listados en PDF, reportes de seguimiento y donaciones, gráficas de adopción.
-
-Además, un sistema de **notificaciones** (en la plataforma y por correo) atraviesa todos los módulos.
-
-## Requisitos funcionales
-
-| ID | Requisito | Prioridad |
-|----|-----------|-----------|
-| RF1 | Registro de adoptantes y fundaciones con validación de datos y asignación de rol. | Alta |
-| RF2 | Inicio de sesión con control de acceso por rol y bloqueo temporal tras intentos fallidos. | Alta |
-| RF3 | Recuperación de contraseña mediante código temporal enviado al correo. | Media |
-| RF4 | Validación de fundaciones por el administrador (aprobar o rechazar). | Alta |
-| RF5 | Gestión de usuarios: consultar, activar y desactivar cuentas. | Media |
-| RF6 | Publicar, editar y dar de baja fichas de mascotas con fotos. | Alta |
-| RF7 | Historial médico de cada mascota (vacunas, desparasitaciones, cirugías, consultas). | Media |
-| RF8 | Búsqueda y filtrado por especie, tamaño, edad y ubicación. | Alta |
-| RF9 | Solicitudes de adopción con formulario y documentos adjuntos. | Alta |
-| RF10 | Evaluación de solicitudes; al aprobar se registra la adopción y la mascota pasa a *adoptada*. | Alta |
-| RF11 | Programación de seguimientos post-adopción (visitas o reportes). | Alta |
-| RF12 | Registro del resultado de los seguimientos y de los reportes del adoptante con evidencias. | Media |
-| RF13 | Registro de donaciones económicas o en especie. | Media |
-| RF14 | Notificaciones automáticas (solicitudes, validación de fundaciones, seguimientos programados o vencidos). | Media |
-| RF15 | Reportes y estadísticas: ficha PDF, listado de solicitudes, seguimientos, donaciones y gráficas. | Alta |
-
-## Requisitos no funcionales
-
-- **Rendimiento:** respuesta promedio ≤ 2 s; 200 usuarios concurrentes; catálogo paginado con imágenes optimizadas.
-- **Seguridad:** contraseñas con bcrypt, HTTPS, autenticación JWT con control de acceso por rol, tratamiento de datos conforme a la **Ley 1581 de 2012** (Colombia).
-- **Disponibilidad:** 99 % excluyendo mantenimientos; copias de seguridad diarias de la base de datos y de las imágenes.
-- **Usabilidad:** interfaz pensada para usuarios sin conocimientos técnicos; mensajes de confirmación y error claros, en español.
-- **Compatibilidad:** Chrome, Firefox, Edge y Safari; diseño responsivo.
-- **Escalabilidad:** arquitectura cliente-servidor con API REST.
-- **Mantenibilidad:** código organizado por módulos y documentado; pruebas unitarias automáticas.
-- **Almacenamiento:** imágenes JPG o PNG de máximo 5 MB, hasta 6 fotos por mascota.
-- **Accesibilidad:** WCAG 2.1 (contraste, textos alternativos, navegación por teclado).
-- **Integración:** correo vía SMTP; servicios expuestos como API REST.
-
-## Stack técnico (acordado)
-
-| Tema | Decisión |
-|------|----------|
-| Monorepo | pnpm workspaces: `apps/api`, `apps/web`, `packages/shared` (Turborepo opcional) |
-| Backend | NestJS + TypeScript, monolito modular, patrón repository por módulo, eventos con `@nestjs/event-emitter`, cron con `@nestjs/schedule` |
-| Base de datos | PostgreSQL 16 con TypeORM y migraciones (`synchronize` desactivado), enums nativos, IDs `GENERATED ALWAYS AS IDENTITY` |
-| Frontend | Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, estructura feature-first; catálogo y ficha con SSR, paneles con TanStack Query; formularios con React Hook Form + Zod; gráficas con Recharts |
-| Autenticación | JWT de acceso (15 min, en memoria) + refresh token (7 días, cookie `httpOnly`, rotado y guardado con hash) |
-| Archivos | Disco local (`uploads/`) detrás de una interfaz de almacenamiento, sustituible por S3 o Cloudinary |
-| Correo | Nodemailer (SMTP) con Mailpit en local |
-| PDF | pdfmake en el backend |
-| Pruebas | Jest (api), Vitest + Testing Library (web), Playwright (e2e) |
-| Entorno local | Docker Compose con PostgreSQL y Mailpit; el navegador llama directamente a la API (`NEXT_PUBLIC_API_URL`, con CORS y cookies con credenciales) |
+> **Estado:** API y web funcionales de punta a punta en local. No incluye despliegue a producción.
 
 ## Estructura del monorepo
 
-Monorepo gestionado con **pnpm workspaces** (`pnpm-workspace.yaml`). Cada paquete tiene su propio `package.json`; los comandos de la raíz delegan en ellos con `pnpm -r` o `pnpm --filter <paquete>`.
+Monorepo con **pnpm workspaces**; los comandos de la raíz delegan en cada paquete.
 
 ```
-apps/
-  api/          # API REST en NestJS (puerto 3001)
-  web/          # Web en Next.js, App Router (puerto 3000)
-packages/
-  shared/       # Tipos y esquemas compartidos (opcional; hoy vacío)
-docs/           # Operación: HTTPS, respaldos, riesgos aceptados, datos de demostración
-scripts/        # Respaldo y restauración de base de datos y archivos
-docker-compose.yml   # PostgreSQL 16 + Mailpit para desarrollo local
-eslint.config.mjs    # ESLint compartido (api y web lo extienden)
-tsconfig.base.json   # Configuración base de TypeScript
-.rei/                # REI Harness: specs, progreso y documentación del proyecto
+apps/api/         API REST en NestJS (puerto 3001; Swagger en /api/docs)
+apps/web/         Web en Next.js, App Router (puerto 3000)
+packages/shared/  Tipos compartidos (opcional; hoy vacío)
+docs/             Operación: HTTPS, respaldos, riesgos aceptados y datos de demostración
+scripts/          Respaldo y restauración de la base y de los archivos
+docker-compose.yml  PostgreSQL 16 + Mailpit para desarrollo local
 ```
 
-| Paquete | Qué contiene | Detalle |
-|---------|--------------|---------|
-| `apps/api` | Un módulo por dominio en `src/modules/`: `auth`, `usuarios`, `fundaciones`, `admin`, `catalogos`, `mascotas`, `solicitudes`, `adopciones`, `seguimientos`, `donaciones`, `notificaciones`, `avisos`, `reportes`, `mail`, `storage`, `health`. Además `database/` (migraciones y seeds) y `common/`. | Swagger en `/api/docs`. |
-| `apps/web` | Estructura *feature-first*: `app/` (rutas por grupo: `(publico)`, `(adoptante)`, `(fundacion)`, `(administrador)`), `features/` (una carpeta por funcionalidad; no se importan entre sí) y `shared/` (cliente HTTP, componentes y utilidades comunes). | `/_kit` muestra el sistema de diseño (solo en desarrollo). |
+| Paquete | Qué contiene |
+|---------|--------------|
+| `apps/api` | Un módulo por dominio en `src/modules/`, más `database/` (migraciones y seeds). |
+| `apps/web` | Estructura por funcionalidades (`features/`), rutas en `app/` y utilidades comunes en `shared/`. |
 
-Reglas de dependencia: `apps/web` nunca importa código de `apps/api` (se comunican solo por la API REST); lo que ambos necesiten compartir va en `packages/shared`.
+`apps/web` nunca importa código de `apps/api`: se comunican solo por la API REST.
 
-## Puesta en marcha
-
-### Requisitos
+## Requisitos
 
 - **Node.js 24 o superior** y **pnpm 11** (`corepack enable` lo activa).
-- **Docker** con Docker Compose (para PostgreSQL 16 y Mailpit).
+- **Docker** con Docker Compose (PostgreSQL y Mailpit).
 - Git.
 
-### Pasos
+## Inicio rápido
 
-1. Clona el repositorio y entra en la carpeta.
-2. Copia los archivos de entorno (los valores de ejemplo sirven para trabajar en local):
+Antes de empezar, `apps/api/.env` necesita `SEED_ADMIN_PASSWORD` y `SEED_DEMO_PASSWORD` (mínimo 10 caracteres). Los valores de `.env.example` (`cambiar-esta-clave-admin` y `cambiar-clave-demo`) ya cumplen la validación, así que funcionan tal cual en local; cámbialos si compartes la máquina o la base.
 
-   ```bash
-   cp .env.example .env
-   cp apps/api/.env.example apps/api/.env
-   cp apps/web/.env.example apps/web/.env.local
-   ```
+```bash
+cp .env.example .env
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
+pnpm install
+pnpm db:up                           # PostgreSQL + Mailpit
+pnpm --filter api migration:run      # crea las tablas
+pnpm seed                            # roles, especies, razas y administrador
+pnpm --filter api seed:demo          # fundación, adoptante, 7 mascotas con fotos y PDF de ejemplo
+pnpm dev                             # API (3001) y web (3000)
+```
 
-3. Instala las dependencias: `pnpm install`.
-4. Levanta PostgreSQL y Mailpit: `pnpm db:up` (equivale a `docker compose up -d --wait`).
-5. Crea las tablas: `pnpm --filter api migration:run`.
-6. Carga los datos base (roles, especies, razas y el administrador): `pnpm seed`. Para añadir además una fundación, un adoptante y mascotas de ejemplo: `pnpm --filter api seed:demo`.
-7. Arranca la API y la web a la vez: `pnpm dev`.
-
-`pnpm dev` **no** levanta Docker ni la base de datos: se hace aparte (paso 4) para que puedas apagar la API o la base y comprobar cómo responde la web (muestra «No pudimos conectar con el servidor» con un botón para reintentar).
-
-### Direcciones
+`pnpm dev` no levanta Docker: la base se enciende aparte (`pnpm db:up`), así puedes apagarla y ver cómo responde la web sin conexión. `seed:demo` guarda las fotos y los PDF de ejemplo en `UPLOADS_DIR` (`apps/api/uploads` por defecto) y es repetible: no duplica nada.
 
 | Servicio | URL |
 |----------|-----|
 | Web | http://localhost:3000 |
 | API | http://localhost:3001/api |
-| Swagger (documentación de la API) | http://localhost:3001/api/docs |
+| Swagger | http://localhost:3001/api/docs |
 | Mailpit (correos de prueba) | http://localhost:8025 |
 
-En desarrollo, http://localhost:3000/_kit muestra todos los componentes del sistema de diseño (en producción responde 404).
+## Perfiles de prueba
 
-### Usuarios de prueba
+Los crea el seed. Se entra en http://localhost:3000/ingresar y cada rol aterriza en su panel.
 
-Los crea el seed; las contraseñas son las que definas en `apps/api/.env` (no se publican aquí).
+| Perfil | Correo | Contraseña | Panel |
+|--------|--------|------------|-------|
+| Administrador | `admin@pethogar.local` | `SEED_ADMIN_PASSWORD` | `/administrador` |
+| Fundación demo | `fundacion.demo@pethogar.local` | `SEED_DEMO_PASSWORD` | `/fundacion` |
+| Adoptante demo | `adoptante.demo@pethogar.local` | `SEED_DEMO_PASSWORD` | `/adoptante` |
 
-| Rol | Correo | Contraseña |
-|-----|--------|-----------|
-| Administrador | `admin@pethogar.local` | `SEED_ADMIN_PASSWORD` |
-| Fundación (seed demo) | `fundacion.demo@pethogar.local` | `SEED_DEMO_PASSWORD` |
-| Adoptante (seed demo) | `adoptante.demo@pethogar.local` | `SEED_DEMO_PASSWORD` |
+La contraseña es la que haya en `apps/api/.env` **al sembrar**: el seed no modifica cuentas ya creadas. Con el `.env` copiado de `.env.example` son `cambiar-esta-clave-admin` y `cambiar-clave-demo`. Son solo credenciales de desarrollo.
 
-Inicia sesión en http://localhost:3000/ingresar; cada rol aterriza en su panel (`/adoptante`, `/fundacion`, `/administrador`).
+## Verificaciones
 
-### Comandos útiles
-
-**Desde la raíz** (afectan a todo el monorepo):
-
-| Comando | Qué hace |
-|---------|----------|
-| `pnpm dev` | API (3001) y web (3000) con recarga automática. |
-| `pnpm db:up` | Levanta PostgreSQL y Mailpit y espera a que estén listos. |
-| `pnpm db:reset` | **Destructivo:** borra la base de datos, la recrea, aplica las migraciones y carga el seed base. |
-| `pnpm seed` | Carga los datos base (idempotente). |
-| `pnpm lint` | ESLint de todos los paquetes y comprobación de formato con Prettier. |
-| `pnpm typecheck` | Comprobación de tipos de api y web. |
-| `pnpm test` | Pruebas rápidas de api y web (una tras otra). |
+| Comando | Qué comprueba |
+|---------|---------------|
+| `pnpm lint` | ESLint de todos los paquetes y formato con Prettier. |
+| `pnpm typecheck` | Tipos de api y web. |
+| `pnpm test` | Pruebas rápidas de api y web (Jest y Vitest). |
 | `pnpm build` | Build de api y web. |
-| `pnpm format` | Aplica Prettier a todo el repositorio. |
+| `pnpm --filter api test:db` (también `test:infra`, `test:auth`, `test:mascotas`, `test:adopciones`, `test:seguimientos`, `test:notificaciones`, `test:e2e`, `test:calidad`) | Pruebas lentas contra PostgreSQL, Mailpit y disco reales; necesitan `pnpm db:up`. |
+| `pnpm --filter web test:api` | Sesión del front contra la API real. Requiere la API en marcha con `seed:demo` y las variables `TEST_API_URL`, `TEST_ADMIN_PASSWORD` y `TEST_DEMO_PASSWORD` (más `TEST_MAILPIT_URL` en los archivos de registro); tarda varios minutos. |
+| `pnpm --filter web e2e` | Playwright con Chrome del sistema. No levanta nada: exige el stack en marcha (PostgreSQL, Mailpit, API con `seed:demo` y `next start`) y las variables `E2E_BASE_URL`, `E2E_API_URL`, `E2E_MAILPIT_URL`, `E2E_DEMO_PASSWORD` y `E2E_ADMIN_PASSWORD`. |
 
-**Por paquete** (`pnpm --filter <api|web> <script>`):
+## Otros comandos útiles
 
 | Comando | Qué hace |
 |---------|----------|
-| `--filter api migration:run` / `migration:generate` / `migration:revert` | Gestión de migraciones. |
-| `--filter api seed:demo` | Seed base más una fundación, un adoptante y mascotas de ejemplo. |
-| `--filter api test:db`, `test:infra`, `test:auth`, `test:mascotas`, `test:adopciones`, `test:seguimientos`, `test:notificaciones`, `test:e2e`, `test:calidad` | Pruebas lentas contra PostgreSQL, Mailpit y disco reales (requieren `pnpm db:up`). |
-| `--filter api demo:pdfs` | Genera PDF de ejemplo para revisarlos a mano. |
-| `--filter web test:api` | Pruebas del front contra la API real (arranca API, base y Mailpit; tarda varios minutos). |
-| `--filter web exec next dev --port 3010` | Web en otro puerto. |
+| `pnpm db:reset` | **Destructivo:** borra la base y su volumen, la recrea, migra y carga el seed base. |
+| `pnpm format` | Aplica Prettier a todo el repositorio. |
+| `pnpm --filter api migration:generate` / `migration:revert` | Gestión de migraciones. |
+| `pnpm --filter api demo:pdfs` | Descarga PDF de ejemplo de la API en marcha para revisarlos a mano. |
+| `scripts/respaldo.sh` y `scripts/restaurar.sh` | Respaldo y restauración de la base y de los archivos (ver `docs/operacion.md`). |
 
-Respaldo y restauración de la base y de los archivos subidos: `scripts/respaldo.sh` y `scripts/restaurar.sh` (ver `docs/operacion.md`).
+## Problemas comunes
 
-### Problemas comunes
-
-- **Un puerto está ocupado** (3000, 3001, 5432, 1025 u 8025). Cambia el puerto y avisa a las demás piezas:
-  - PostgreSQL: `POSTGRES_PORT` en `.env` de la raíz y el mismo valor en `DATABASE_PORT` de `apps/api/.env`.
-  - Mailpit: `MAILPIT_SMTP_PORT` y `MAILPIT_UI_PORT` en `.env`; `SMTP_PORT` de `apps/api/.env` debe coincidir con el primero.
-  - API: `PORT` en `apps/api/.env` y `NEXT_PUBLIC_API_URL` en `apps/web/.env.local` (por ejemplo `http://localhost:3002/api`).
-  - Web: arranca con `pnpm --filter web exec next dev --port 3010` y pon esa URL en `FRONTEND_URL` de `apps/api/.env`.
-- **Docker no está encendido** (`Cannot connect to the Docker daemon`): inicia Docker Desktop o el servicio y repite `pnpm db:up`.
-- **La web dice «No pudimos conectar con el servidor»:** la API no está en marcha o `NEXT_PUBLIC_API_URL` apunta a otra dirección. Revisa la terminal de `pnpm dev` y recarga la web.
-- **Error de CORS en la consola del navegador:** `FRONTEND_URL` de `apps/api/.env` debe ser exactamente el origen de la web (por ejemplo `http://localhost:3000`). Reinicia la API tras cambiarlo.
-- **Quiero empezar de cero:** `pnpm db:reset` (borra todos los datos locales) y, si quieres los datos de ejemplo, `pnpm --filter api seed:demo`.
+- **Un puerto está ocupado** (3000, 3001, 5432, 1025 u 8025). Cambia `POSTGRES_PORT`, `MAILPIT_SMTP_PORT` o `MAILPIT_UI_PORT` en `.env` y los valores equivalentes en `apps/api/.env` (`DATABASE_PORT`, `SMTP_PORT`). Si cambias `PORT` de la API, actualiza `NEXT_PUBLIC_API_URL` en `apps/web/.env.local`; si cambias el puerto de la web, actualiza `FRONTEND_URL` en `apps/api/.env`.
+- **Docker no está encendido** (`Cannot connect to the Docker daemon`): inicia Docker y repite `pnpm db:up`.
+- **Tras reiniciar Docker, la API da `ECONNREFUSED` a la base** aunque el contenedor figure «Up»: el contenedor de PostgreSQL pudo quedar sin el puerto publicado (`docker compose ps` no muestra `0.0.0.0:5432->5432`). Recréalo; los datos persisten en el volumen: `docker compose up -d --force-recreate postgres`.
+- **La web dice «No pudimos conectar con el servidor»:** la API no está en marcha o `NEXT_PUBLIC_API_URL` apunta a otra dirección. Revisa la terminal de `pnpm dev` y recarga.
+- **Error de CORS en el navegador:** `FRONTEND_URL` de `apps/api/.env` debe ser exactamente el origen de la web (`http://localhost:3000`). Reinicia la API tras cambiarlo.
 - **Las migraciones fallan por conexión:** comprueba que PostgreSQL esté «healthy» (`docker compose ps`) y que `DATABASE_PORT` coincida con `POSTGRES_PORT`.
+- **Las mascotas demo salen sin foto o los PDF dan 404** en una base sembrada hace tiempo: vuelve a ejecutar `pnpm --filter api seed:demo`; repara las rutas antiguas y escribe los archivos que falten.
+- **Quiero empezar de cero:** `pnpm db:reset` (borra todos los datos locales) y después `pnpm --filter api seed:demo` si quieres los datos de ejemplo. Los archivos de `UPLOADS_DIR` no se borran con el reset.
 
 ## Documentación
 
 | Documento | Contenido |
 |-----------|-----------|
-| `ERSOFT_PetHogar.docx` | Especificación de requisitos: problema, objetivos, roles, RF/RNF, casos de uso, modelo entidad-relación, diagramas de secuencia y diccionario de datos. |
-| `PetHogar — Plan de tareas (monorepo).md` | Plan de tareas propuesto (backend, frontend e integración), ajustes al modelo de datos, hitos y decisiones abiertas. Referencia histórica; el avance real se registra en `.rei/`. |
-| `docs/operacion.md` | Operación del backend: lista de verificación para HTTPS, respaldo y restauración, riesgos aceptados, datos de demostración y notas para el front. |
-| `AGENTS.md` y `.rei/` | REI Harness: workflow, roles de agentes, specs y progreso del desarrollo asistido por IA. |
+| `docs/operacion.md` | HTTPS, respaldo y restauración, riesgos aceptados, datos de demostración y notas para el front. |
+| Swagger (`/api/docs`) | Contrato de la API, siempre al día con el código. |
+| `ERSOFT_PetHogar.docx`, `PetHogar — Plan de tareas (monorepo).md` | Especificación de requisitos y plan de tareas del proyecto. No se versionan en Git: los guarda el equipo. |
+| `AGENTS.md` y `.rei/` | Guía y registro del desarrollo asistido por IA (REI Harness). Tampoco se versionan: son locales de quien trabaja con el arnés. |
 
 ## Fuera del alcance
 
 - Pasarela de pagos: las donaciones solo se registran con su comprobante.
-- Contenerización de las apps y despliegue a producción en la primera etapa (solo funcionamiento en local).
+- Contenerización de las apps y despliegue a producción en esta etapa.

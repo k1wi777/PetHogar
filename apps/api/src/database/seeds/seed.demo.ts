@@ -12,6 +12,17 @@ import {
   solicitudRecibida,
   type Aviso,
 } from '../../modules/avisos/textos-aviso';
+import {
+  claveActa,
+  claveComprobante,
+  claveDocumentoFundacion,
+  claveFoto,
+  claveFormulario,
+  crearEscritorDisco,
+  fotosDemo,
+  pdfDemo,
+  type ArchivosDemo,
+} from './archivos-demo';
 import { COSTE_BCRYPT, type SeedConfig } from './seed.config';
 import {
   ADOPCIONES_DEMO,
@@ -79,15 +90,112 @@ export const MASCOTAS_DEMO: MascotaDemo[] = [
   },
 ];
 
-/** Fundación aprobada con 4 mascotas y foto principal. Idempotente. Solo con `--demo`. */
+/** Todas las mascotas del demo, disponibles y adoptadas. */
+const todasLasMascotas = (): MascotaDemo[] => [
+  ...MASCOTAS_DEMO,
+  ...MASCOTAS_ADOPTADAS_DEMO.map((m) => ({ ...m, estado: 'adoptada' as const })),
+];
+
+const comprobantesDemo = () =>
+  DONACIONES_DEMO.flatMap((d, i) => (d.tipo === 'economica' ? [{ d, numero: i + 1 }] : []));
+
+/**
+ * Deja en el almacenamiento todos los archivos que referencian las filas del demo (fotos de las
+ * mascotas y PDF). Se ejecuta siempre: los nombres son deterministas y el escritor no pisa lo existente.
+ */
+async function asegurarArchivos(archivos: ArchivosDemo): Promise<void> {
+  for (const m of todasLasMascotas()) {
+    const { grande, catalogo } = await fotosDemo(m.nombre);
+    await archivos.escribir(claveFoto(m.nombre, 'grande'), grande);
+    await archivos.escribir(claveFoto(m.nombre, 'catalogo'), catalogo);
+  }
+  await archivos.escribir(
+    claveDocumentoFundacion(),
+    await pdfDemo('Documento de la fundación', ['Fundación: Patitas Felices', `NIT: ${NIT_DEMO}`]),
+  );
+  for (const s of SOLICITUDES_DEMO) {
+    await archivos.escribir(
+      claveFormulario(s.clave),
+      await pdfDemo('Formulario de adopción', [`Mascota: ${s.mascota}`, `Solicitud: ${s.clave}`]),
+    );
+  }
+  for (const ad of ADOPCIONES_DEMO) {
+    const mascota = SOLICITUDES_DEMO.find((s) => s.clave === ad.solicitud)?.mascota;
+    await archivos.escribir(
+      claveActa(ad.solicitud),
+      await pdfDemo('Acta de entrega', [`Mascota: ${mascota}`, `Solicitud: ${ad.solicitud}`]),
+    );
+  }
+  for (const { d, numero } of comprobantesDemo()) {
+    await archivos.escribir(
+      claveComprobante(numero),
+      await pdfDemo('Comprobante de donación', [`Donación n.º ${numero}`, `Monto: ${d.monto}`]),
+    );
+  }
+}
+
+/**
+ * Las bases sembradas antes de guardar archivos reales tienen rutas `/uploads/demo/…` que no existen.
+ * Cada UPDATE se acota por igualdad exacta con la ruta vieja (exclusiva del seed) y es idempotente.
+ */
+async function repararRutasHeredadas(manager: EntityManager): Promise<void> {
+  const demo = (nombre: string) => `/uploads/demo/${nombre}`;
+  for (const m of todasLasMascotas()) {
+    await manager.query(
+      'UPDATE "foto_mascota" SET "url" = $2, "url_catalogo" = $3 WHERE "url" = $1',
+      [
+        demo(`${m.nombre.toLowerCase()}.jpg`),
+        claveFoto(m.nombre, 'grande'),
+        claveFoto(m.nombre, 'catalogo'),
+      ],
+    );
+  }
+  const actualizar = (tabla: string, columna: string, vieja: string, nueva: string) =>
+    manager.query(`UPDATE "${tabla}" SET "${columna}" = $2 WHERE "${columna}" = $1`, [
+      vieja,
+      nueva,
+    ]);
+  await actualizar('fundacion', 'documento_url', demo('documento.pdf'), claveDocumentoFundacion());
+  for (const s of SOLICITUDES_DEMO) {
+    await actualizar(
+      'solicitud_adopcion',
+      'formulario_url',
+      demo(`formulario-${s.clave}.pdf`),
+      claveFormulario(s.clave),
+    );
+  }
+  for (const ad of ADOPCIONES_DEMO) {
+    await actualizar(
+      'adopcion',
+      'acta_url',
+      demo(`acta-${ad.solicitud}.pdf`),
+      claveActa(ad.solicitud),
+    );
+  }
+  for (const { numero } of comprobantesDemo()) {
+    await actualizar(
+      'donacion',
+      'comprobante_url',
+      demo(`comprobante-${numero}.pdf`),
+      claveComprobante(numero),
+    );
+  }
+}
+
+/**
+ * Fundación aprobada con 7 mascotas, su foto principal y su actividad. Idempotente. Solo con `--demo`.
+ * Escribe fotos y PDF reales en `archivos` (por defecto `UPLOADS_DIR`).
+ */
 export async function sembrarDemo(
   manager: EntityManager,
   config: SeedConfig,
   log: (mensaje: string) => void = () => undefined,
+  archivos: ArchivosDemo = crearEscritorDisco(process.env.UPLOADS_DIR ?? './uploads'),
 ): Promise<void> {
   if (!config.demoPassword) {
     throw new Error('SEED_DEMO_PASSWORD es obligatoria con --demo');
   }
+  await asegurarArchivos(archivos);
   let usuarios: { id: number }[] = await manager.query(
     'SELECT "id" FROM "usuario" WHERE "email" = $1',
     [DEMO_EMAIL],
@@ -106,20 +214,16 @@ export async function sembrarDemo(
     `INSERT INTO "fundacion" ("usuario_id", "nombre", "nit", "direccion", "ciudad", "descripcion",
        "documento_url", "estado_validacion", "fecha_validacion")
      VALUES ($1, 'Patitas Felices', $2, 'Calle 1 # 2-3', 'Bogotá',
-       'Fundación de ejemplo para la demostración.', '/uploads/demo/documento.pdf', 'aprobada', now())
+       'Fundación de ejemplo para la demostración.', $3, 'aprobada', now())
      ON CONFLICT ("nit") DO NOTHING`,
-    [usuarios[0].id, NIT_DEMO],
+    [usuarios[0].id, NIT_DEMO, claveDocumentoFundacion()],
   );
   const [fundacion]: { id: number }[] = await manager.query(
     'SELECT "id" FROM "fundacion" WHERE "nit" = $1',
     [NIT_DEMO],
   );
 
-  const mascotas: MascotaDemo[] = [
-    ...MASCOTAS_DEMO,
-    ...MASCOTAS_ADOPTADAS_DEMO.map((m) => ({ ...m, estado: 'adoptada' as const })),
-  ];
-  for (const m of mascotas) {
+  for (const m of todasLasMascotas()) {
     const existe: unknown[] = await manager.query(
       'SELECT 1 FROM "mascota" WHERE "fundacion_id" = $1 AND "nombre" = $2',
       [fundacion.id, m.nombre],
@@ -146,12 +250,13 @@ export async function sembrarDemo(
     );
     await manager.query(
       `INSERT INTO "foto_mascota" ("mascota_id", "url", "url_catalogo", "es_principal")
-       VALUES ($1, $2, $2, true)`,
-      [mascota.id, `/uploads/demo/${m.nombre.toLowerCase()}.jpg`],
+       VALUES ($1, $2, $3, true)`,
+      [mascota.id, claveFoto(m.nombre, 'grande'), claveFoto(m.nombre, 'catalogo')],
     );
   }
   await sembrarActividad(manager, config.demoPassword, usuarios[0].id, fundacion.id);
-  log('Datos demo listos (fundación «Patitas Felices», 7 mascotas y su actividad).');
+  await repararRutasHeredadas(manager);
+  log('Datos demo listos (fundación «Patitas Felices», 7 mascotas con foto, PDF y su actividad).');
 }
 
 interface Instante {
@@ -255,7 +360,7 @@ async function sembrarActividad(
           adoptanteId,
           mascotaId(s.mascota),
           fecha.ts,
-          `/uploads/demo/formulario-${s.clave}.pdf`,
+          claveFormulario(s.clave),
           s.estado,
           s.observacion ?? null,
           respuesta?.ts ?? null,
@@ -278,7 +383,7 @@ async function sembrarActividad(
         [
           solicitudes.get(ad.solicitud),
           entrega.dia,
-          `/uploads/demo/acta-${ad.solicitud}.pdf`,
+          claveActa(ad.solicitud),
           ad.estado,
           ad.motivoCierre ?? null,
           cierre?.ts ?? null,
@@ -328,7 +433,7 @@ async function sembrarActividad(
           d.tipo,
           d.monto ?? null,
           d.descripcionEspecie ?? null,
-          d.tipo === 'economica' ? `/uploads/demo/comprobante-${donaciones.length + 1}.pdf` : null,
+          d.tipo === 'economica' ? claveComprobante(donaciones.length + 1) : null,
           fecha.ts,
         ],
       ),

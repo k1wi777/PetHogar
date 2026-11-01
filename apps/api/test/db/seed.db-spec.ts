@@ -1,5 +1,9 @@
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import * as bcrypt from 'bcryptjs';
 import type { DataSource } from 'typeorm';
+import { crearEscritorDisco } from '../../src/database/seeds/archivos-demo';
 import { RAZAS_POR_ESPECIE } from '../../src/database/seeds/catalogos.data';
 import { sembrarBase } from '../../src/database/seeds/seed';
 import type { SeedConfig } from '../../src/database/seeds/seed.config';
@@ -22,14 +26,16 @@ const CONFIG: SeedConfig = {
 
 describe('seed (V8)', () => {
   let ds: DataSource;
+  let uploads: string;
 
   const ejecutar = (demo: boolean, config: SeedConfig = CONFIG) =>
     ds.transaction(async (manager) => {
       await sembrarBase(manager, config);
-      if (demo) await sembrarDemo(manager, config);
+      if (demo) await sembrarDemo(manager, config, undefined, crearEscritorDisco(uploads));
     });
 
   beforeAll(async () => {
+    uploads = await mkdtemp(join(tmpdir(), 'pethogar-seed-'));
     await recrearBaseDePrueba();
     ds = await crearDataSource();
     await ds.runMigrations();
@@ -38,6 +44,7 @@ describe('seed (V8)', () => {
   afterAll(async () => {
     await ds.destroy();
     await borrarBaseDePrueba();
+    await rm(uploads, { recursive: true, force: true });
   });
 
   it('es idempotente y guarda el administrador con hash bcrypt', async () => {
@@ -98,6 +105,36 @@ describe('seed (V8)', () => {
     expect(await contar(ds, `SELECT count(*) AS n FROM mascota WHERE estado = 'disponible'`)).toBe(
       4,
     );
+  });
+
+  it('las fotos y PDF del demo usan claves reales, también tras reparar rutas heredadas', async () => {
+    // Simula una base sembrada antes: rutas viejas inexistentes.
+    await ds.query(
+      `UPDATE foto_mascota SET url = '/uploads/demo/luna.jpg', url_catalogo = '/uploads/demo/luna.jpg'
+        WHERE mascota_id = (SELECT id FROM mascota WHERE nombre = 'Luna')`,
+    );
+    await ds.query(`UPDATE fundacion SET documento_url = '/uploads/demo/documento.pdf'`);
+    await ejecutar(true);
+    await ejecutar(true);
+    expect(await contar(ds, 'SELECT count(*) AS n FROM foto_mascota')).toBe(7);
+    for (const [tabla, columna] of [
+      ['foto_mascota', 'url'],
+      ['foto_mascota', 'url_catalogo'],
+      ['fundacion', 'documento_url'],
+      ['solicitud_adopcion', 'formulario_url'],
+      ['adopcion', 'acta_url'],
+      ['donacion', 'comprobante_url'],
+    ]) {
+      expect(
+        await contar(ds, `SELECT count(*) AS n FROM ${tabla} WHERE ${columna} LIKE '/uploads/%'`),
+      ).toBe(0);
+    }
+    expect(
+      await contar(ds, `SELECT count(*) AS n FROM foto_mascota WHERE url !~ '^publico/mascotas/'`),
+    ).toBe(0);
+    expect(
+      await contar(ds, 'SELECT count(*) AS n FROM foto_mascota WHERE url = url_catalogo'),
+    ).toBe(0);
   });
 
   it('el demo respeta las máquinas de estado (aprobada ⇔ adopción ⇔ mascota adoptada)', async () => {

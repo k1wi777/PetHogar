@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import * as bcrypt from 'bcryptjs';
 import { DataSource, type EntityManager } from 'typeorm';
 import { validate } from '../../config/env.validation';
+import { crearEscritorDisco } from './archivos-demo';
 import { crearOpcionesTypeOrm } from '../typeorm.options';
 import { RAZAS_POR_ESPECIE, ROLES } from './catalogos.data';
 import { COSTE_BCRYPT, leerSeedConfig, type SeedConfig } from './seed.config';
@@ -64,13 +65,14 @@ async function main(): Promise<void> {
   }
   // Valida antes de abrir la base: si falta algo no se escribe nada.
   const config = leerSeedConfig(process.env, process.argv.slice(2));
-  const dataSource = new DataSource(crearOpcionesTypeOrm(validate(process.env)));
+  const entorno = validate(process.env);
+  const dataSource = new DataSource(crearOpcionesTypeOrm(entorno));
   await dataSource.initialize();
   try {
     await dataSource.transaction(async (manager) => {
       await sembrarBase(manager, config, console.log);
       if (config.demo) {
-        await sembrarDemo(manager, config, console.log);
+        await sembrarDemo(manager, config, console.log, crearEscritorDisco(entorno.UPLOADS_DIR));
       }
     });
   } finally {
