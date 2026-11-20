@@ -17,55 +17,33 @@ export interface OpcionMenu {
   /** Ruta completa. */
   href: string;
   etiqueta: string;
-  /** Texto de la página placeholder. */
-  descripcion: string;
 }
 
-const op = (href: string, etiqueta: string, descripcion: string): OpcionMenu => ({
-  href,
-  etiqueta,
-  descripcion,
-});
+const op = (href: string, etiqueta: string): OpcionMenu => ({ href, etiqueta });
 
 export const MENU_POR_ROL: Readonly<Record<Rol, readonly OpcionMenu[]>> = {
   adoptante: [
-    op('/adoptante', 'Inicio', 'Tu resumen de solicitudes y adopciones.'),
-    op(
-      '/adoptante/solicitudes',
-      'Mis solicitudes',
-      'Aquí verás el estado de tus solicitudes de adopción.',
-    ),
-    op('/adoptante/adopciones', 'Mis adopciones', 'Aquí verás tus adopciones y sus seguimientos.'),
-    op('/adoptante/donar', 'Donar', 'Aquí podrás registrar una donación a una fundación.'),
-    op('/adoptante/notificaciones', 'Notificaciones', 'Aquí verás tus avisos.'),
+    op('/adoptante', 'Inicio'),
+    op('/adoptante/solicitudes', 'Mis solicitudes'),
+    op('/adoptante/adopciones', 'Mis adopciones'),
+    op('/adoptante/donar', 'Donar'),
+    op('/adoptante/notificaciones', 'Notificaciones'),
   ],
   fundacion: [
-    op('/fundacion', 'Resumen', 'El resumen de tu fundación.'),
-    op('/fundacion/mascotas', 'Mis mascotas', 'Aquí gestionarás las mascotas de tu fundación.'),
-    op(
-      '/fundacion/solicitudes',
-      'Solicitudes recibidas',
-      'Aquí evaluarás las solicitudes de adopción.',
-    ),
-    op(
-      '/fundacion/adopciones',
-      'Adopciones y seguimientos',
-      'Aquí darás seguimiento a las adopciones.',
-    ),
-    op('/fundacion/donaciones', 'Donaciones', 'Aquí verás y registrarás las donaciones.'),
-    op('/fundacion/reportes', 'Reportes', 'Aquí generarás tus reportes y estadísticas.'),
-    op('/fundacion/notificaciones', 'Notificaciones', 'Aquí verás tus avisos.'),
+    op('/fundacion', 'Resumen'),
+    op('/fundacion/mascotas', 'Mis mascotas'),
+    op('/fundacion/solicitudes', 'Solicitudes recibidas'),
+    op('/fundacion/adopciones', 'Adopciones y seguimientos'),
+    op('/fundacion/donaciones', 'Donaciones'),
+    op('/fundacion/reportes', 'Reportes'),
+    op('/fundacion/notificaciones', 'Notificaciones'),
   ],
   administrador: [
-    op('/administrador', 'Resumen', 'Las estadísticas globales de la plataforma.'),
-    op(
-      '/administrador/fundaciones',
-      'Fundaciones por validar',
-      'Aquí validarás las fundaciones registradas.',
-    ),
-    op('/administrador/usuarios', 'Usuarios', 'Aquí gestionarás las cuentas de usuario.'),
-    op('/administrador/reportes', 'Reportes', 'Aquí consultarás los reportes de la plataforma.'),
-    op('/administrador/notificaciones', 'Notificaciones', 'Aquí verás tus avisos.'),
+    op('/administrador', 'Resumen'),
+    op('/administrador/fundaciones', 'Fundaciones por validar'),
+    op('/administrador/usuarios', 'Usuarios'),
+    op('/administrador/reportes', 'Reportes'),
+    op('/administrador/notificaciones', 'Notificaciones'),
   ],
 };
 

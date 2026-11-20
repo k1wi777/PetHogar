@@ -95,4 +95,10 @@ describe('MENU_POR_ROL', () => {
       for (const o of menu) expect(rolDelPanel(o.href)).toBe(rol);
     }
   });
+
+  it('cada opción solo declara ruta y etiqueta (el inicio ya no usa textos provisionales)', () => {
+    for (const menu of Object.values(MENU_POR_ROL)) {
+      for (const o of menu) expect(Object.keys(o).sort()).toEqual(['etiqueta', 'href']);
+    }
+  });
 });

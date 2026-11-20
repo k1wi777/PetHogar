@@ -132,6 +132,7 @@ describe('ShellPanel', () => {
       expect(etiquetas).toEqual(MENU_POR_ROL[rol].map((o) => o.etiqueta));
       expect(within(menu).getAllByRole('link')[0]).toHaveAttribute('aria-current', 'page');
       expect(screen.getByText('hijo')).toBeInTheDocument();
+      expect(document.body.textContent).not.toMatch(/próximamente/i);
     },
   );
 
