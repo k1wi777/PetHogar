@@ -40,7 +40,7 @@ const FOTOS = [
 export default function InicioPage() {
   return (
     <>
-      <div className="bg-acento text-acento-foreground">
+      <div data-sin-patron className="bg-acento text-acento-foreground">
         <div className="mx-auto grid max-w-6xl items-center gap-6 px-4 py-6 sm:py-10 lg:grid-cols-[5fr_6fr] lg:gap-12 lg:py-16">
           <section>
             <h1 className="text-portada">PetHogar</h1>

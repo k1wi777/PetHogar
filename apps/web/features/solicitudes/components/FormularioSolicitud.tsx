@@ -160,7 +160,7 @@ export function FormularioSolicitud({ mascota }: { mascota: MascotaParaSolicitar
         hidden={fase !== 'edicion'}
         noValidate
         onSubmit={handleSubmit(() => setFase('resumen'))}
-        className="flex flex-col gap-5"
+        className="bg-card border-border-suave flex flex-col gap-5 rounded-lg border p-4"
       >
         <AreaControlada
           control={control}

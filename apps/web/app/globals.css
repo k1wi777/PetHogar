@@ -86,10 +86,15 @@
   }
   body {
     background: var(--background);
+    background-image: url('/fondo/patron-huellitas.svg');
     color: var(--foreground);
     font-family: var(--font-sans);
     font-size: 1rem;
     line-height: 1.6;
+  }
+  /* La página de inicio se marca con `data-sin-patron` y se queda sin mosaico. */
+  body:has([data-sin-patron]) {
+    background-image: none;
   }
   h1,
   h2,
@@ -135,6 +140,13 @@
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
+  }
+}
+
+/* Mismo mosaico del `body` para los campos de color que lo taparían (pantallas de acceso). */
+@layer components {
+  .fondo-patron {
+    background-image: url('/fondo/patron-huellitas.svg');
   }
 }
 

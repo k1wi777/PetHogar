@@ -26,7 +26,7 @@ export function BloqueSerie({ serie }: { serie: Serie }) {
       <p className="text-muted-foreground">{serie.descripcion}</p>
 
       {serie.total === 0 ? (
-        <p className="border-border-suave rounded-lg border border-dashed p-6 text-center">
+        <p className="border-border-suave bg-card rounded-lg border border-dashed p-6 text-center">
           No hay datos para mostrar en este rango. Prueba con otro rango de fechas.
         </p>
       ) : (
@@ -41,7 +41,7 @@ export function BloqueSerie({ serie }: { serie: Serie }) {
               <Grafica serie={serie} />
             </div>
           ) : (
-            <p className="border-border-suave rounded-lg border border-dashed p-4 text-center">
+            <p className="border-border-suave bg-card rounded-lg border border-dashed p-4 text-center">
               No hay montos que graficar; los aportes de este rango están en la tabla.
             </p>
           )}

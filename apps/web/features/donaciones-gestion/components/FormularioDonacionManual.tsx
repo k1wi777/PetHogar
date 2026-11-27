@@ -81,7 +81,7 @@ export function FormularioDonacionManual() {
       noValidate
       onSubmit={handleSubmit((d) => enviar(d as unknown as DatosDonacionManualValidados))}
       aria-busy={registrar.isPending || undefined}
-      className="flex max-w-2xl flex-col gap-5"
+      className="bg-card border-border-suave flex max-w-2xl flex-col gap-5 rounded-lg border p-4"
     >
       {fallo && <AvisoAlerta>{fallo}</AvisoAlerta>}
       <CampoControlado

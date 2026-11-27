@@ -21,7 +21,10 @@ export function MarcoAcceso({
 }) {
   return (
     <div
-      className={cn('bg-secondary min-h-[calc(100dvh-5rem)]', conFoto && 'lg:grid lg:grid-cols-2')}
+      className={cn(
+        'bg-secondary fondo-patron min-h-[calc(100dvh-5rem)]',
+        conFoto && 'lg:grid lg:grid-cols-2',
+      )}
     >
       <div className="flex items-start justify-center px-3 py-6 sm:px-6 sm:py-12">
         <div

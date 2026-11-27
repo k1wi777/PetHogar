@@ -133,7 +133,7 @@ export function FormularioDonacion({ fundacion }: { fundacion: FundacionDestino 
         key={intento}
         noValidate
         onSubmit={handleSubmit((datos) => setPendiente(datos as unknown as DatosDonacion))}
-        className="flex flex-col gap-5"
+        className="bg-card border-border-suave flex flex-col gap-5 rounded-lg border p-4"
       >
         {fallo && <AvisoAlerta>{fallo}</AvisoAlerta>}
         <GrupoRadio

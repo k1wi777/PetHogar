@@ -47,7 +47,7 @@ export function ImagenPrivada({
     return (
       <div
         role="alert"
-        className="border-border-suave flex min-h-32 min-w-0 flex-col items-center justify-center gap-2 rounded-lg border p-3 text-center text-sm"
+        className="border-border-suave bg-card flex min-h-32 min-w-0 flex-col items-center justify-center gap-2 rounded-lg border p-3 text-center text-sm"
       >
         <ImageOff className="text-muted-foreground size-6" aria-hidden="true" />
         <p>No pudimos cargar la foto.</p>

@@ -162,6 +162,9 @@ Ciruela como voz, mango como campo y blanco cálido como fondo.
 **La regla del mango.** `acento` es fondo de campos; nunca es color de texto sobre claro ni sustituye
 a `warning`.
 
+**El patrón de huellitas.** `public/fondo/patron-huellitas.svg` (trazo ciruela, opacidad máxima 6 %)
+cubre el fondo de todas las páginas salvo la de inicio; tarjetas, formularios y recuadros van opacos.
+
 **La regla de los pares.** Todo par texto/fondo nuevo se añade a `PARES_TEXTO` (4.5:1) y todo borde,
 foco o serie nuevos cumplen 3:1 contra la superficie que los rodea (`PARES_NO_TEXTO`). Sobre `acento`,
 el borde de control es `primary`: `border` solo alcanza 2,64:1.

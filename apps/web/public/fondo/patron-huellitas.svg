@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="360" height="360" viewBox="0 0 360 360">
+  <!-- Mosaico del fondo. Ninguna figura cruza el borde, así la repetición no deja cortes. -->
+  <defs>
+    <g id="huella">
+      <path d="M0 0C7 0 15 9 13 15C11 20 5 16 0 16S-11 20-13 15C-15 9-7 0 0 0Z"/>
+      <ellipse cx="-16" cy="-3" rx="4.5" ry="6" transform="rotate(-30 -16 -3)"/>
+      <ellipse cx="-6" cy="-12" rx="4.5" ry="6.5" transform="rotate(-8 -6 -12)"/>
+      <ellipse cx="6" cy="-12" rx="4.5" ry="6.5" transform="rotate(8 6 -12)"/>
+      <ellipse cx="16" cy="-3" rx="4.5" ry="6" transform="rotate(30 16 -3)"/>
+    </g>
+    <g id="perro">
+      <path d="M-12-15C-5-19 5-19 12-15C15-9 16-1 16 5C16 15 8 20 0 20S-16 15-16 5C-16-1-15-9-12-15Z"/>
+      <path d="M-12-15C-20-18-24-9-23 2C-22 8-17 8-15 2M12-15C20-18 24-9 23 2C22 8 17 8 15 2"/>
+      <path d="M-7-3v1M7-3v1M-4 6C-2 4 2 4 4 6L0 10ZM0 10v3M-5 13Q0 17 5 13"/>
+    </g>
+    <g id="gato">
+      <path d="M-17-2L-16-20L-6-12Q0-14 6-12L16-20L17-2C20 10 11 18 0 18S-20 10-17-2Z"/>
+      <path d="M-7 0v1M7 0v1M-2 6H2L0 8.500ZM0 8.500Q-2 12-5 10M0 8.500Q2 12 5 10"/>
+      <path d="M-12 6L-24 4M-12 10L-23 13M12 6L24 4M12 10L23 13"/>
+    </g>
+    <g id="conejo">
+      <path d="M-7-1C-14-10-17-25-10-26S-2-13-2-3M7-1C14-10 17-25 10-26S2-13 2-3"/>
+      <ellipse cx="0" cy="11" rx="15" ry="14"/>
+      <path d="M-6 8v1M6 8v1M-2 14H2L0 16.500ZM0 16.500v2M-3 20Q0 17 3 20"/>
+    </g>
+    <path id="hueso" d="M-12-5H12C12-13 23-12 21-4Q25 0 21 4C23 12 12 13 12 5H-12C-12 13-23 12-21 4Q-25 0-21-4C-23-12-12-13-12-5Z"/>
+    <path id="corazon" d="M0 14C-8 8-16 2-16-5C-16-14-4-16 0-7C4-16 16-14 16-5C16 2 8 8 0 14Z"/>
+  </defs>
+  <g fill="none" stroke="#86246a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.06">
+    <use xlink:href="#perro" transform="translate(42 44) rotate(-14)"/>
+    <use xlink:href="#huella" transform="translate(132 34) rotate(24) scale(.8)"/>
+    <use xlink:href="#hueso" transform="translate(222 50) rotate(-32)"/>
+    <use xlink:href="#gato" transform="translate(314 38) rotate(16)"/>
+
+    <use xlink:href="#corazon" transform="translate(40 130) rotate(18) scale(.75)"/>
+    <use xlink:href="#conejo" transform="translate(116 118) rotate(15)"/>
+    <use xlink:href="#huella" transform="translate(206 136) rotate(-26)"/>
+    <use xlink:href="#corazon" transform="translate(296 120) rotate(-20) scale(.65)"/>
+
+    <use xlink:href="#huella" transform="translate(48 220) rotate(-38)"/>
+    <use xlink:href="#gato" transform="translate(138 214) rotate(-18) scale(.9)"/>
+    <use xlink:href="#hueso" transform="translate(226 224) rotate(38) scale(.85)"/>
+    <use xlink:href="#perro" transform="translate(316 206) rotate(20) scale(.9)"/>
+
+    <use xlink:href="#hueso" transform="translate(36 316) rotate(24) scale(.8)"/>
+    <use xlink:href="#corazon" transform="translate(126 308) rotate(-12) scale(.8)"/>
+    <use xlink:href="#conejo" transform="translate(212 312) rotate(-17) scale(.9)"/>
+    <use xlink:href="#huella" transform="translate(308 310) rotate(42) scale(.85)"/>
+  </g>
+</svg>

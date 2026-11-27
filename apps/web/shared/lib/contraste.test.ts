@@ -28,3 +28,31 @@ describe('tokens de color (R1)', () => {
     }
   });
 });
+
+describe('patrón de fondo (R2, R5)', () => {
+  const svg = readFileSync(join(process.cwd(), 'public/fondo/patron-huellitas.svg'), 'utf8');
+  const opacidad = Number(/\sopacity="([\d.]+)"/.exec(svg)?.[1]);
+  // Color que resulta donde el trazo `primary` cae sobre `background`.
+  const mezcla = `#${[1, 3, 5]
+    .map((i) => {
+      const trazo = parseInt(TOKENS_COLOR.primary.slice(i, i + 2), 16);
+      const fondo = parseInt(TOKENS_COLOR.background.slice(i, i + 2), 16);
+      return Math.round(fondo + (trazo - fondo) * opacidad)
+        .toString(16)
+        .padStart(2, '0');
+    })
+    .join('')}`;
+
+  it('usa el trazo ciruela con una opacidad entre 4 % y 6 %', () => {
+    expect(svg).toContain(`stroke="${TOKENS_COLOR.primary}"`);
+    expect(opacidad).toBeGreaterThanOrEqual(0.04);
+    expect(opacidad).toBeLessThanOrEqual(0.06);
+  });
+
+  it.each(['foreground', 'muted-foreground', 'primary', 'destructive'] as const)(
+    'texto %s sobre el trazo cumple 4.5:1',
+    (texto) => {
+      expect(razonContraste(TOKENS_COLOR[texto], mezcla)).toBeGreaterThanOrEqual(4.5);
+    },
+  );
+});

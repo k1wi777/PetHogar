@@ -44,7 +44,7 @@ export function ZonaCarga({
       onDrop={alSoltar}
       className={cn(
         'flex flex-col items-center gap-3 rounded-lg border-2 border-dashed p-6 text-center',
-        arrastrando ? 'border-primary bg-secondary' : 'border-border',
+        arrastrando ? 'border-primary bg-secondary' : 'border-border bg-card',
       )}
     >
       <ImagePlus className="text-muted-foreground size-10" aria-hidden="true" />

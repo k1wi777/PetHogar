@@ -70,7 +70,11 @@ export function FormularioHistorial({
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit(enviar)} className="flex max-w-2xl flex-col gap-5">
+    <form
+      noValidate
+      onSubmit={handleSubmit(enviar)}
+      className="bg-card border-border-suave flex max-w-2xl flex-col gap-5 rounded-lg border p-4"
+    >
       <h3 className="text-xl">Registrar un evento</h3>
       <p className="text-muted-foreground text-sm">Los campos con * son obligatorios.</p>
       {fallo && <AvisoAlerta>{fallo}</AvisoAlerta>}

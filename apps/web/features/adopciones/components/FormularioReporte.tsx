@@ -70,7 +70,7 @@ export function FormularioReporte({ seguimientoId }: { seguimientoId: number }) 
       noValidate
       onSubmit={handleSubmit(alEnviar)}
       aria-busy={enviar.isPending || undefined}
-      className="flex max-w-2xl flex-col gap-5"
+      className="bg-card border-border-suave flex max-w-2xl flex-col gap-5 rounded-lg border p-4"
     >
       {fallo && <AvisoAlerta>{fallo}</AvisoAlerta>}
       <AreaControlada
