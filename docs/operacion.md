@@ -1,8 +1,12 @@
 # Operación de PetHogar
 
-Guía de operación para quien lleve PetHogar más allá del entorno local. Hoy el proyecto solo se despliega en local (Docker Compose); esta guía deja listo lo que habría que hacer para publicarlo.
+Guía de operación para quien lleve PetHogar más allá del entorno local. El proyecto no tiene despliegue a producción (se ejecuta en local con Docker Compose); esta guía deja listo lo que habría que hacer para publicarlo.
+
+La única excepción es la **demo** en Railway y Vercel (`docs/despliegue-demo.md`), que no es producción: lo que aquí se exige o se prohíbe se refiere a producción.
 
 ## 1. Lista de verificación para HTTPS
+
+Para un despliegue a producción (la demo no cumple, entre otros, los puntos de SMTP real ni el de `seed:demo`).
 
 - [ ] Terminar TLS en un proxy inverso (Nginx, Caddy o el balanceador del proveedor); la API y la web escuchan solo en la red interna.
 - [ ] Redirigir todo el tráfico del puerto 80 al 443.
@@ -43,7 +47,7 @@ Los scripts viven en `scripts/` y leen `DATABASE_*`, `UPLOADS_DIR` y `BACKUP_DIR
 
 ## 4. Datos de demostración
 
-Para una demostración local completa (no para producción: `seed:demo` no debe ejecutarse fuera del entorno local):
+Para una demostración local completa. `seed:demo` no debe ejecutarse en producción; fuera del entorno local solo se usa en la demo, con claves propias y dentro del contenedor de la API (`docs/despliegue-demo.md`):
 
 1. `docker compose up -d` y `pnpm --filter api migration:run`.
 2. `SEED_DEMO_PASSWORD=<clave de al menos 10 caracteres> pnpm --filter api seed:demo` (además de las variables `SEED_ADMIN_*`, ver `apps/api/.env.example`).

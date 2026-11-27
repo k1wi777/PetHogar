@@ -61,6 +61,34 @@ describe('FormularioRegistroAdoptante', () => {
     });
   });
 
+  it('con verificación requerida muestra «Revisa tu correo»', async () => {
+    montar(<FormularioRegistroAdoptante />, () =>
+      respuestaJson({ mensaje: 'Revisa tu correo.', verificacionRequerida: true }, 201),
+    );
+    await llenar();
+    await enviar();
+    expect(await screen.findByRole('heading', { name: 'Revisa tu correo' })).toBeInTheDocument();
+  });
+
+  it('sin verificación requerida informa que la cuenta está activa y ofrece ingresar', async () => {
+    const mensaje = 'Registro exitoso. Tu cuenta ya está activa: puedes ingresar.';
+    montar(<FormularioRegistroAdoptante />, () =>
+      respuestaJson({ mensaje, verificacionRequerida: false }, 201),
+    );
+    await llenar();
+    await enviar();
+    expect(
+      await screen.findByRole('heading', { name: 'Tu cuenta está activa' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(mensaje);
+    expect(screen.getByRole('link', { name: 'Ir a ingresar' })).toHaveAttribute(
+      'href',
+      '/ingresar',
+    );
+    expect(screen.queryByText(/enlace|revisa tu correo/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Reenviar/ })).not.toBeInTheDocument();
+  });
+
   it('la vista «revisa tu correo» permite reenviar el enlace', async () => {
     const { llamadas } = montar(<FormularioRegistroAdoptante />, (ruta) =>
       ruta === '/auth/verify-email/resend'

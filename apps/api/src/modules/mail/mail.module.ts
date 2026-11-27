@@ -1,13 +1,36 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createTransport } from 'nodemailer';
-import { esVerdadero, type EnvironmentVariables } from '../../config/env.validation';
-import { MAIL_SERVICE } from './mail.interface';
+import {
+  correoHabilitado,
+  esVerdadero,
+  type EnvironmentVariables,
+} from '../../config/env.validation';
+import { MailDeshabilitadoService } from './mail-deshabilitado.service';
+import { MAIL_SERVICE, type IMailService } from './mail.interface';
 import { SmtpMailService, type MailTransport } from './smtp-mail.service';
 
 export const MAIL_TRANSPORT = Symbol('MAIL_TRANSPORT');
 
 const TIEMPO_LIMITE_MS = 5000;
+
+export const ADVERTENCIA_SIN_VERIFICACION =
+  'El correo está deshabilitado y la verificación automática no está activada: los adoptantes ' +
+  'nuevos no podrán verificar su cuenta (define VERIFICACION_AUTOMATICA=true).';
+
+/** Elige la implementación según `CORREO_HABILITADO`; la factoría se ejecuta una sola vez. */
+export function crearServicioCorreo(
+  transporte: MailTransport,
+  config: ConfigService<EnvironmentVariables, true>,
+): IMailService {
+  if (correoHabilitado(config.get('CORREO_HABILITADO', { infer: true }))) {
+    return new SmtpMailService(transporte, config.get('SMTP_FROM', { infer: true }));
+  }
+  if (!esVerdadero(config.get('VERIFICACION_AUTOMATICA', { infer: true }))) {
+    new Logger(MailModule.name).warn(ADVERTENCIA_SIN_VERIFICACION);
+  }
+  return new MailDeshabilitadoService();
+}
 
 /** Para cambiar de proveedor basta otra clase en MAIL_SERVICE; el dominio solo usa la interfaz. */
 @Module({
@@ -33,8 +56,7 @@ const TIEMPO_LIMITE_MS = 5000;
     {
       provide: MAIL_SERVICE,
       inject: [MAIL_TRANSPORT, ConfigService],
-      useFactory: (transporte: MailTransport, config: ConfigService<EnvironmentVariables, true>) =>
-        new SmtpMailService(transporte, config.get('SMTP_FROM', { infer: true })),
+      useFactory: crearServicioCorreo,
     },
   ],
   exports: [MAIL_SERVICE],

@@ -6,7 +6,7 @@ Centraliza en un solo lugar lo que hoy se reparte entre redes sociales, WhatsApp
 
 Proyecto académico — Universidad de Córdoba, Facultad de Ingeniería (Montería, 2026).
 
-> **Estado:** API y web funcionales de punta a punta en local. No incluye despliegue a producción.
+> **Estado:** API y web funcionales de punta a punta en local. No incluye despliegue a producción; se puede publicar una demo con limitaciones (Railway y Vercel) siguiendo [`docs/despliegue-demo.md`](docs/despliegue-demo.md).
 
 ## Estructura del monorepo
 
@@ -16,7 +16,7 @@ Monorepo con **pnpm workspaces**; los comandos de la raíz delegan en cada paque
 apps/api/         API REST en NestJS (puerto 3001; Swagger en /api/docs)
 apps/web/         Web en Next.js, App Router (puerto 3000)
 packages/shared/  Tipos compartidos (opcional; hoy vacío)
-docs/             Operación: HTTPS, respaldos, riesgos aceptados y datos de demostración
+docs/             Operación (HTTPS, respaldos, riesgos, datos de demostración) y despliegue de la demo
 scripts/          Respaldo y restauración de la base y de los archivos
 docker-compose.yml  PostgreSQL 16 + Mailpit para desarrollo local
 ```
@@ -109,6 +109,7 @@ La contraseña es la que haya en `apps/api/.env` **al sembrar**: el seed no modi
 | Documento | Contenido |
 |-----------|-----------|
 | `docs/operacion.md` | HTTPS, respaldo y restauración, riesgos aceptados, datos de demostración y notas para el front. |
+| `docs/despliegue-demo.md` | Despliegue de la demo en Railway y Vercel: variables, pasos, comprobaciones y limitaciones. |
 | Swagger (`/api/docs`) | Contrato de la API, siempre al día con el código. |
 | `ERSOFT_PetHogar.docx`, `PetHogar — Plan de tareas (monorepo).md` | Especificación de requisitos y plan de tareas del proyecto. No se versionan en Git: los guarda el equipo. |
 | `AGENTS.md` y `.rei/` | Guía y registro del desarrollo asistido por IA (REI Harness). Tampoco se versionan: son locales de quien trabaja con el arnés. |
@@ -116,4 +117,4 @@ La contraseña es la que haya en `apps/api/.env` **al sembrar**: el seed no modi
 ## Fuera del alcance
 
 - Pasarela de pagos: las donaciones solo se registran con su comprobante.
-- Contenerización de las apps y despliegue a producción en esta etapa.
+- Contenerización de las apps y despliegue a producción en esta etapa. La demo de `docs/despliegue-demo.md` no es un entorno de producción: no envía correos ni verifica las cuentas nuevas.

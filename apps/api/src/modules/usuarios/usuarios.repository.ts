@@ -101,7 +101,7 @@ export class UsuariosRepository {
 
   async crearAdoptante(datos: DatosNuevoAdoptante, manager?: EntityManager): Promise<Usuario> {
     const usuario = await this.insertarUsuario('adoptante', datos, manager, {
-      emailVerificado: false,
+      emailVerificado: datos.emailVerificado ?? false,
       tokenVerificacionHash: datos.tokenVerificacionHash,
       tokenVerificacionExpira: datos.tokenVerificacionExpira,
     });

@@ -14,6 +14,7 @@ import {
   Min,
   validateSync,
   ValidateBy,
+  ValidateIf,
 } from 'class-validator';
 
 const MENSAJE_TEXTO = 'debe ser un texto no vacío';
@@ -42,6 +43,10 @@ const EsExpresionCron = (): PropertyDecorator =>
     name: 'esExpresionCron',
     validator: { validate: esExpresionCron, defaultMessage: () => MENSAJE_CRON },
   });
+/** SMTP solo es opcional cuando el correo se deshabilita de forma explícita. */
+const SiHayCorreo = (): PropertyDecorator =>
+  ValidateIf((env: { CORREO_HABILITADO?: string }) => env.CORREO_HABILITADO !== 'false');
+
 /** Fragmento común de los secretos de ejemplo de `.env.example`. */
 const MARCA_SECRETO_EJEMPLO = 'cambiar-en-produccion';
 
@@ -80,15 +85,28 @@ export class EnvironmentVariables {
   @MinLength(LONGITUD_MINIMA_SECRETO, { message: MENSAJE_SECRETO })
   JWT_REFRESH_SECRET!: string;
 
+  /** Con `false` no se envía ningún correo y las variables `SMTP_*` dejan de exigirse. */
+  @IsOptional()
+  @IsIn(['true', 'false'], { message: MENSAJE_BOOLEANO })
+  CORREO_HABILITADO?: string;
+
+  /** Con `true` los adoptantes nuevos nacen verificados y no se les envía el enlace. */
+  @IsOptional()
+  @IsIn(['true', 'false'], { message: MENSAJE_BOOLEANO })
+  VERIFICACION_AUTOMATICA?: string;
+
+  @SiHayCorreo()
   @IsString({ message: MENSAJE_TEXTO })
   @IsNotEmpty({ message: MENSAJE_TEXTO })
   SMTP_HOST!: string;
 
+  @SiHayCorreo()
   @IsInt({ message: MENSAJE_PUERTO })
   @Min(1, { message: MENSAJE_PUERTO })
   @Max(65535, { message: MENSAJE_PUERTO })
   SMTP_PORT!: number;
 
+  @SiHayCorreo()
   @IsString({ message: MENSAJE_TEXTO })
   @IsNotEmpty({ message: MENSAJE_TEXTO })
   SMTP_FROM!: string;
@@ -198,6 +216,11 @@ export function cookieSegura(
   return env.COOKIE_SECURE === undefined
     ? env.NODE_ENV === 'production'
     : esVerdadero(env.COOKIE_SECURE);
+}
+
+/** El correo está habilitado salvo que se deshabilite de forma explícita. */
+export function correoHabilitado(valor: string | undefined): boolean {
+  return valor !== 'false';
 }
 
 /**

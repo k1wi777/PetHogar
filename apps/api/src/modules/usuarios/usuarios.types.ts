@@ -46,8 +46,11 @@ export interface DatosNuevoAdoptante extends DatosCuenta {
   fechaNacimiento: string;
   direccion: string;
   ciudad: string;
-  tokenVerificacionHash: string;
-  tokenVerificacionExpira: Date;
+  /** Solo con verificación automática; sin indicarlo, la cuenta nace sin verificar. */
+  emailVerificado?: boolean;
+  /** Nulos cuando la cuenta nace verificada: no queda ningún token pendiente. */
+  tokenVerificacionHash: string | null;
+  tokenVerificacionExpira: Date | null;
 }
 
 /** El usuario de una fundación nace verificado: su filtro es la validación del administrador. */

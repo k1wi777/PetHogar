@@ -7,6 +7,11 @@ export interface RespuestaMensaje {
   mensaje: string;
 }
 
+export interface RespuestaRegistroAdoptante extends RespuestaMensaje {
+  /** Ausente en una API anterior: se asume que sí hay que verificar el correo. */
+  verificacionRequerida?: boolean;
+}
+
 /** Quita los opcionales vacíos: el backend espera que no vengan en lugar de llegar como texto vacío. */
 function sinVacios<T extends object>(datos: T): Partial<T> {
   return Object.fromEntries(
@@ -17,8 +22,8 @@ function sinVacios<T extends object>(datos: T): Partial<T> {
 export function registrarAdoptante(
   datos: DatosAdoptante,
   cliente: ClienteHttp = http,
-): Promise<RespuestaMensaje> {
-  return cliente.post<RespuestaMensaje>('/auth/register/adoptante', {
+): Promise<RespuestaRegistroAdoptante> {
+  return cliente.post<RespuestaRegistroAdoptante>('/auth/register/adoptante', {
     cuerpo: sinVacios(datos),
     autenticada: false,
   });

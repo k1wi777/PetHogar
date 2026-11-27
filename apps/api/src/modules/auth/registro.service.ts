@@ -1,8 +1,10 @@
 import { BadRequestException, ConflictException, Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DataSource } from 'typeorm';
 import { FoundationRegistered } from '../../common/events';
 import { emitirSeguro } from '../../common/events/emitir-seguro';
+import { esVerdadero, type EnvironmentVariables } from '../../config/env.validation';
 import { IMailService, MAIL_SERVICE } from '../mail/mail.interface';
 import { EstadoValidacion } from '../fundaciones/entities/fundacion.enum';
 import { FundacionesService } from '../fundaciones/fundaciones.service';
@@ -11,13 +13,18 @@ import { UsuariosService } from '../usuarios/usuarios.service';
 import { hashearContrasena } from './contrasena';
 import type { RegistroAdoptanteDto } from './dto/registro-adoptante.dto';
 import type { RegistroFundacionDto } from './dto/registro-fundacion.dto';
-import type { RegistroFundacionRespuestaDto } from './dto/respuestas.dto';
+import type {
+  RegistroAdoptanteRespuestaDto,
+  RegistroFundacionRespuestaDto,
+} from './dto/respuestas.dto';
 import { traducirErrorUnico } from './errores-unicos';
 import { esMayorDeEdad } from './mayoria-edad';
 import { VerificacionService } from './verificacion.service';
 
 export const MENSAJE_REGISTRO_ADOPTANTE =
   'Registro exitoso. Revisa tu correo y confirma tu cuenta con el enlace que te enviamos.';
+export const MENSAJE_REGISTRO_ADOPTANTE_ACTIVO =
+  'Registro exitoso. Tu cuenta ya está activa: puedes ingresar.';
 export const MENSAJE_REGISTRO_FUNDACION =
   'Recibimos el registro de tu fundación. Un administrador revisará tu documento y te avisaremos cuando sea aprobada.';
 
@@ -37,9 +44,10 @@ export class RegistroService {
     @Inject(STORAGE_SERVICE) private readonly storage: IStorageService,
     @Inject(MAIL_SERVICE) private readonly mail: IMailService,
     private readonly eventos: EventEmitter2,
+    private readonly config: ConfigService<EnvironmentVariables, true>,
   ) {}
 
-  async registrarAdoptante(dto: RegistroAdoptanteDto): Promise<{ mensaje: string }> {
+  async registrarAdoptante(dto: RegistroAdoptanteDto): Promise<RegistroAdoptanteRespuestaDto> {
     const ahora = new Date();
     if (!esMayorDeEdad(dto.fechaNacimiento, ahora)) {
       throw new BadRequestException('Debes ser mayor de 18 años para registrarte');
@@ -52,7 +60,8 @@ export class RegistroService {
     }
 
     const contrasenaHash = await hashearContrasena(dto.contrasena);
-    const token = this.verificacion.generarToken(ahora);
+    const automatica = esVerdadero(this.config.get('VERIFICACION_AUTOMATICA', { infer: true }));
+    const token = automatica ? null : this.verificacion.generarToken(ahora);
     try {
       await this.dataSource.transaction((manager) =>
         this.usuarios.crearAdoptante(
@@ -71,8 +80,9 @@ export class RegistroService {
             fechaNacimiento: dto.fechaNacimiento,
             direccion: dto.direccion,
             ciudad: dto.ciudad,
-            tokenVerificacionHash: token.hash,
-            tokenVerificacionExpira: token.expira,
+            emailVerificado: automatica,
+            tokenVerificacionHash: token?.hash ?? null,
+            tokenVerificacionExpira: token?.expira ?? null,
           },
           manager,
         ),
@@ -81,9 +91,12 @@ export class RegistroService {
       throw traducirErrorUnico(error);
     }
 
+    if (!token) {
+      return { mensaje: MENSAJE_REGISTRO_ADOPTANTE_ACTIVO, verificacionRequerida: false };
+    }
     // Después del commit: un fallo de correo no deshace el registro (puede pedir reenvío).
     await this.verificacion.enviarCorreo(dto.email, dto.primerNombre, token.token);
-    return { mensaje: MENSAJE_REGISTRO_ADOPTANTE };
+    return { mensaje: MENSAJE_REGISTRO_ADOPTANTE, verificacionRequerida: true };
   }
 
   async registrarFundacion(

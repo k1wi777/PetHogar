@@ -20,10 +20,32 @@ describe('cliente de servidor', () => {
 
   it('prefiere API_URL y cae a NEXT_PUBLIC_API_URL', () => {
     vi.stubEnv('API_URL', '');
+    vi.stubEnv('API_PROXY_DESTINO', '');
     vi.stubEnv('NEXT_PUBLIC_API_URL', 'http://publica/api');
     expect(urlApiServidor()).toBe('http://publica/api');
     vi.stubEnv('API_URL', 'http://interna:3001/api');
     expect(urlApiServidor()).toBe('http://interna:3001/api');
     expect(urlApiPublica()).toBe('http://publica/api');
+  });
+
+  it('con proxy usa su destino absoluto y no la URL pública relativa', () => {
+    vi.stubEnv('API_URL', '');
+    vi.stubEnv('API_PROXY_DESTINO', 'https://api.example.com/api');
+    vi.stubEnv('NEXT_PUBLIC_API_URL', '/api');
+    expect(urlApiServidor()).toBe('https://api.example.com/api');
+    expect(urlApiPublica()).toBe('/api');
+  });
+
+  it('con proxy, API_URL tiene prioridad', () => {
+    vi.stubEnv('API_URL', 'http://interna:3001/api');
+    vi.stubEnv('API_PROXY_DESTINO', 'https://api.example.com/api');
+    expect(urlApiServidor()).toBe('http://interna:3001/api');
+  });
+
+  it('sin ninguna variable usa la URL por defecto', () => {
+    vi.stubEnv('API_URL', '');
+    vi.stubEnv('API_PROXY_DESTINO', '');
+    vi.stubEnv('NEXT_PUBLIC_API_URL', '');
+    expect(urlApiServidor()).toBe('http://localhost:3001/api');
   });
 });

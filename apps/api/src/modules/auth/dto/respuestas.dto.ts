@@ -7,6 +7,11 @@ export class MensajeDto {
   mensaje!: string;
 }
 
+export class RegistroAdoptanteRespuestaDto extends MensajeDto {
+  @ApiProperty({ description: 'Indica si falta confirmar el correo antes de ingresar' })
+  verificacionRequerida!: boolean;
+}
+
 export class RegistroFundacionRespuestaDto extends MensajeDto {
   @ApiProperty({ enum: EstadoValidacion })
   estadoValidacion!: EstadoValidacion;

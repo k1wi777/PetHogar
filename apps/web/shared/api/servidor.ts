@@ -6,9 +6,17 @@ const URL_POR_DEFECTO = 'http://localhost:3001/api';
 export const REVALIDAR_SEGUNDOS = 60;
 const TIEMPO_ESPERA_MS = 8_000;
 
-/** URL interna de la API para Server Components: `API_URL` (solo servidor) o, si no existe, la pública. */
+/**
+ * URL interna de la API para Server Components: `API_URL` (solo servidor) o, si no existe, el
+ * destino del proxy (con él la pública es relativa) y por último la pública.
+ */
 export function urlApiServidor(): string {
-  return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || URL_POR_DEFECTO;
+  return (
+    process.env.API_URL ||
+    process.env.API_PROXY_DESTINO ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    URL_POR_DEFECTO
+  );
 }
 
 /** URL de la API que usa el navegador (enlaces de descarga). */

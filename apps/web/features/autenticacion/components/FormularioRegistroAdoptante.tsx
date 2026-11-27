@@ -6,12 +6,13 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Boton } from '@/shared/ui/Boton';
 import { CampoControlado, SelectorControlado } from '@/shared/ui/CampoControlado';
-import { registrarAdoptante } from '../api/autenticacion';
+import { registrarAdoptante, type RespuestaRegistroAdoptante } from '../api/autenticacion';
 import { aplicarError } from '../lib/errores-servidor';
 import { esquemaAdoptante, fechaMaximaNacimiento, type DatosAdoptante } from '../schemas/adoptante';
 import { AvisoFormulario } from './AvisoFormulario';
 import { CampoAceptacion } from './CampoAceptacion';
 import { CampoContrasena } from './CampoContrasena';
+import { CuentaActivada } from './CuentaActivada';
 import { RevisaTuCorreo } from './RevisaTuCorreo';
 
 const CAMPOS: ReadonlyArray<keyof DatosAdoptante> = [
@@ -37,7 +38,9 @@ const TIPOS = [
 ];
 
 export function FormularioRegistroAdoptante() {
-  const [registrado, setRegistrado] = useState<string | null>(null);
+  const [registrado, setRegistrado] = useState<
+    (RespuestaRegistroAdoptante & { email: string }) | null
+  >(null);
   const [fallo, setFallo] = useState<string | null>(null);
   const { control, handleSubmit, setError, formState } = useForm<DatosAdoptante>({
     resolver: zodResolver(esquemaAdoptante),
@@ -63,8 +66,8 @@ export function FormularioRegistroAdoptante() {
     if (formState.isSubmitting) return;
     setFallo(null);
     try {
-      await registrarAdoptante(datos);
-      setRegistrado(datos.email);
+      const respuesta = await registrarAdoptante(datos);
+      setRegistrado({ ...respuesta, email: datos.email });
     } catch (error) {
       aplicarError(error, CAMPOS, {
         marcarCampo: (campo, mensaje, enfocar) =>
@@ -74,7 +77,13 @@ export function FormularioRegistroAdoptante() {
     }
   }
 
-  if (registrado) return <RevisaTuCorreo email={registrado} />;
+  if (registrado) {
+    return registrado.verificacionRequerida === false ? (
+      <CuentaActivada mensaje={registrado.mensaje} />
+    ) : (
+      <RevisaTuCorreo email={registrado.email} />
+    );
+  }
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-12">

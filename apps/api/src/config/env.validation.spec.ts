@@ -1,4 +1,10 @@
-import { cookieSegura, esVerdadero, trustProxy, validate } from './env.validation';
+import {
+  cookieSegura,
+  correoHabilitado,
+  esVerdadero,
+  trustProxy,
+  validate,
+} from './env.validation';
 
 const ENV_VALIDO = {
   PORT: '3001',
@@ -192,4 +198,54 @@ describe('TRUST_PROXY', () => {
   it.each(['true', '0', '-1', '1.5', 'abc', '100'])('rechaza %s', (valor) => {
     expect(() => validate({ ...ENV_VALIDO, TRUST_PROXY: valor })).toThrow('TRUST_PROXY');
   });
+});
+
+describe('correo y verificación automática', () => {
+  const sinSmtp: Record<string, string> = { ...ENV_VALIDO };
+  delete sinSmtp.SMTP_HOST;
+  delete sinSmtp.SMTP_PORT;
+  delete sinSmtp.SMTP_FROM;
+
+  it('por defecto el correo está habilitado y la verificación automática desactivada', () => {
+    const env = validate(ENV_VALIDO);
+    expect(correoHabilitado(env.CORREO_HABILITADO)).toBe(true);
+    expect(esVerdadero(env.VERIFICACION_AUTOMATICA)).toBe(false);
+  });
+
+  it.each([undefined, 'true'])('con CORREO_HABILITADO=%s exige las variables SMTP', (valor) => {
+    const entrada = valor === undefined ? sinSmtp : { ...sinSmtp, CORREO_HABILITADO: valor };
+    for (const nombre of ['SMTP_HOST', 'SMTP_PORT', 'SMTP_FROM']) {
+      expect(() => validate(entrada)).toThrow(`${nombre}: es obligatoria`);
+    }
+  });
+
+  it('deshabilitado no exige ninguna variable SMTP', () => {
+    const env = validate({ ...sinSmtp, CORREO_HABILITADO: 'false' });
+    expect(correoHabilitado(env.CORREO_HABILITADO)).toBe(false);
+  });
+
+  it('admite la verificación automática, también en producción', () => {
+    const env = validate({ ...ENV_VALIDO, VERIFICACION_AUTOMATICA: 'true' });
+    expect(esVerdadero(env.VERIFICACION_AUTOMATICA)).toBe(true);
+    expect(() =>
+      validate({
+        ...ENV_VALIDO,
+        JWT_ACCESS_SECRET: 'x'.repeat(32),
+        JWT_REFRESH_SECRET: 'y'.repeat(32),
+        NODE_ENV: 'production',
+        VERIFICACION_AUTOMATICA: 'true',
+      }),
+    ).not.toThrow();
+  });
+
+  it.each(['CORREO_HABILITADO', 'VERIFICACION_AUTOMATICA'])(
+    "%s solo admite 'true' o 'false'",
+    (nombre) => {
+      for (const valor of ['si', '1', 'FALSE', '']) {
+        expect(() => validate({ ...ENV_VALIDO, [nombre]: valor })).toThrow(
+          `${nombre}: debe ser 'true' o 'false'`,
+        );
+      }
+    },
+  );
 });

@@ -43,6 +43,7 @@ import { RegistroAdoptanteDto } from './dto/registro-adoptante.dto';
 import { RegistroFundacionDto, RegistroFundacionMultipartDto } from './dto/registro-fundacion.dto';
 import {
   MensajeDto,
+  RegistroAdoptanteRespuestaDto,
   RegistroFundacionRespuestaDto,
   SesionRespuestaDto,
   UsuarioPerfilDto,
@@ -74,9 +75,12 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 5, ttl: MINUTO_MS } })
   @Post('register/adoptante')
-  @ApiOperation({ summary: 'Registra un adoptante y envía el correo de verificación' })
-  @ApiCreatedResponse({ type: MensajeDto })
-  registrarAdoptante(@Body() dto: RegistroAdoptanteDto): Promise<MensajeDto> {
+  @ApiOperation({
+    summary:
+      'Registra un adoptante y envía el correo de verificación (o activa la cuenta si la verificación es automática)',
+  })
+  @ApiCreatedResponse({ type: RegistroAdoptanteRespuestaDto })
+  registrarAdoptante(@Body() dto: RegistroAdoptanteDto): Promise<RegistroAdoptanteRespuestaDto> {
     return this.registro.registrarAdoptante(dto);
   }
 

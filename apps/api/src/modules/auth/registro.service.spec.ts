@@ -51,7 +51,7 @@ function uniqueViolation(constraint: string): QueryFailedError {
   return new QueryFailedError('INSERT', [], { code: '23505', constraint } as never);
 }
 
-function crear() {
+function crear(env: Record<string, string> = {}) {
   const usuarios = {
     existeEmail: jest.fn().mockResolvedValue(false),
     existeDocumento: jest.fn().mockResolvedValue(false),
@@ -77,6 +77,7 @@ function crear() {
     transaction: jest.fn((cb: (m: unknown) => Promise<unknown>) => cb(MANAGER)),
   };
   const eventos = { emit: jest.fn() };
+  const config = { get: (clave: string) => env[clave] };
   const service = new RegistroService(
     dataSource as never,
     usuarios as unknown as UsuariosService,
@@ -85,6 +86,7 @@ function crear() {
     storage as unknown as IStorageService,
     mail as unknown as IMailService,
     eventos as never,
+    config as never,
   );
   return { service, usuarios, fundaciones, verificacion, storage, mail, dataSource, eventos };
 }
@@ -100,6 +102,7 @@ describe('RegistroService — adoptante', () => {
     const r = await service.registrarAdoptante(ADOPTANTE);
 
     expect(r.mensaje).toContain('Revisa tu correo');
+    expect(r.verificacionRequerida).toBe(true);
     expect(dataSource.transaction).toHaveBeenCalledTimes(1);
     const [datos, manager] = usuarios.crearAdoptante.mock.calls[0];
     expect(manager).toBe(MANAGER);
@@ -110,10 +113,35 @@ describe('RegistroService — adoptante', () => {
       aceptaPoliticaDatos: true,
       fechaAceptacion: AHORA,
       segundoNombre: null,
+      emailVerificado: false,
       tokenVerificacionHash: 'hash',
     });
     expect(JSON.stringify(datos)).not.toContain('"tok"');
     expect(verificacion.enviarCorreo).toHaveBeenCalledWith('ana@example.com', 'Ana', 'tok');
+  });
+
+  it('con VERIFICACION_AUTOMATICA=false mantiene la verificación por correo', async () => {
+    const { service, verificacion } = crear({ VERIFICACION_AUTOMATICA: 'false' });
+    await expect(service.registrarAdoptante(ADOPTANTE)).resolves.toMatchObject({
+      verificacionRequerida: true,
+    });
+    expect(verificacion.enviarCorreo).toHaveBeenCalledTimes(1);
+  });
+
+  it('con verificación automática crea la cuenta verificada, sin token ni correo', async () => {
+    const { service, usuarios, verificacion, mail } = crear({ VERIFICACION_AUTOMATICA: 'true' });
+    await expect(service.registrarAdoptante(ADOPTANTE)).resolves.toEqual({
+      mensaje: 'Registro exitoso. Tu cuenta ya está activa: puedes ingresar.',
+      verificacionRequerida: false,
+    });
+    expect(usuarios.crearAdoptante.mock.calls[0][0]).toMatchObject({
+      emailVerificado: true,
+      tokenVerificacionHash: null,
+      tokenVerificacionExpira: null,
+    });
+    expect(verificacion.generarToken).not.toHaveBeenCalled();
+    expect(verificacion.enviarCorreo).not.toHaveBeenCalled();
+    expect(mail.enviar).not.toHaveBeenCalled();
   });
 
   it('rechaza a un menor de edad sin crear nada ni enviar correo', async () => {
