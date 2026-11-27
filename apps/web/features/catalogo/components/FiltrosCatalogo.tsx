@@ -1,11 +1,12 @@
 import Link from 'next/link';
+import { cn } from '@/shared/lib/utils';
 import { Boton } from '@/shared/ui/Boton';
 import { hayFiltros, TAMANOS } from '../lib/consulta';
 import { etiquetaTamano } from '@/shared/lib/formato-mascota';
 import type { Especie, FiltrosCatalogo as Filtros } from '../types';
 
 const CONTROL =
-  'bg-card border-border min-h-11 w-full rounded-md border px-3 py-2 text-base disabled:opacity-60';
+  'bg-card border-border enabled:hover:border-primary aria-invalid:border-destructive min-h-11 w-full min-w-0 rounded-md border px-3 py-2 text-base transition-colors aria-invalid:border-2 disabled:opacity-60';
 
 function mayuscula(texto: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
@@ -31,7 +32,11 @@ export function FiltrosCatalogo({
       method="get"
       action="/adoptar"
       aria-label="Filtrar mascotas"
-      className="bg-card border-border-suave grid gap-4 rounded-lg border p-4 sm:grid-cols-2 lg:grid-cols-4"
+      className={cn(
+        'bg-card border-border-suave grid grid-cols-2 gap-x-3 gap-y-4 rounded-xl border p-4 shadow-sm sm:gap-x-4 sm:p-5 lg:grid-cols-[1fr_1fr_1fr_1.3fr]',
+        // Los controles se alinean por abajo salvo que una nota o un error alargue una columna.
+        !errorRango && especies !== null && 'lg:items-end',
+      )}
     >
       <div className="flex flex-col gap-1.5">
         <label htmlFor="filtro-especie" className="text-base font-semibold">
@@ -76,7 +81,7 @@ export function FiltrosCatalogo({
           ))}
         </select>
       </div>
-      <div className="flex flex-col gap-1.5">
+      <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
         <label htmlFor="filtro-ciudad" className="text-base font-semibold">
           Ciudad
         </label>
@@ -89,10 +94,10 @@ export function FiltrosCatalogo({
           className={CONTROL}
         />
       </div>
-      <fieldset className="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-1">
+      <fieldset className="col-span-2 flex min-w-0 flex-col gap-1.5 sm:col-span-1">
         <legend className="text-base font-semibold">Rango de edad (en meses)</legend>
         <div className="flex gap-2">
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <label htmlFor="filtro-edad-min" className="text-muted-foreground text-sm">
               Desde
             </label>
@@ -108,7 +113,7 @@ export function FiltrosCatalogo({
               className={CONTROL}
             />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <label htmlFor="filtro-edad-max" className="text-muted-foreground text-sm">
               Hasta
             </label>
@@ -131,12 +136,14 @@ export function FiltrosCatalogo({
           </p>
         )}
       </fieldset>
-      <div className="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-4">
-        <Boton type="submit">Buscar</Boton>
+      <div className="col-span-2 flex flex-wrap items-center gap-3 lg:col-span-4">
+        <Boton type="submit" className="min-w-40 max-sm:flex-1">
+          Buscar
+        </Boton>
         {hayFiltros(filtros) && (
           <Link
             href="/adoptar"
-            className="hover:bg-muted inline-flex min-h-11 items-center rounded-md px-3 font-semibold underline"
+            className="hover:bg-muted inline-flex min-h-11 items-center rounded-full px-4 font-semibold underline"
           >
             Limpiar filtros
           </Link>

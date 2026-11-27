@@ -15,14 +15,17 @@ export function PaginaMensaje({
   accion?: ReactNode;
 }) {
   return (
-    <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-16 text-center">
+    <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-16 text-center sm:py-24">
       {codigo && (
-        <p aria-hidden="true" className="font-heading text-primary text-6xl font-extrabold">
+        <p
+          aria-hidden="true"
+          className="font-heading bg-acento text-acento-foreground rounded-full px-8 py-2 text-6xl font-extrabold"
+        >
           {codigo}
         </p>
       )}
-      <h1 className="text-3xl">{titulo}</h1>
-      <p className="text-muted-foreground">{children}</p>
+      <h1 className="text-titulo">{titulo}</h1>
+      <p className="text-muted-foreground max-w-prose text-lg">{children}</p>
       <div className="flex flex-wrap justify-center gap-3">
         {accion}
         <Boton comoHijo variante={accion ? 'contorno' : 'primario'}>

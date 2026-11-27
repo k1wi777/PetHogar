@@ -112,13 +112,13 @@ export function CampoFotos<T extends FieldValues>({
               {fotos.map((foto, i) => (
                 <li
                   key={foto.url}
-                  className="border-border-suave bg-card flex items-center gap-3 rounded-md border p-3"
+                  className="border-border-suave bg-card flex items-center gap-3 rounded-lg border p-3"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- vista local (blob:) que next/image no puede optimizar */}
                   <img
                     src={foto.url}
                     alt={`Vista previa de la foto ${foto.archivo.name}`}
-                    className="size-20 rounded object-cover"
+                    className="size-20 rounded-md object-cover"
                   />
                   <p className="min-w-0 flex-1 text-sm">
                     <span className="block truncate font-semibold">{foto.archivo.name}</span>

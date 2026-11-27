@@ -110,13 +110,13 @@ export function CampoDocumento<T extends FieldValues>({
             />
           </Campo>
           {vista && (
-            <div className="border-border-suave bg-card flex items-center gap-3 rounded-md border p-3">
+            <div className="border-border-suave bg-card flex items-center gap-3 rounded-lg border p-3">
               {vista.imagen && vista.url ? (
                 // eslint-disable-next-line @next/next/no-img-element -- vista local (blob:) que next/image no puede optimizar
                 <img
                   src={vista.url}
                   alt={`${textoVistaPrevia} ${vista.nombre}`}
-                  className="size-20 rounded object-cover"
+                  className="size-20 rounded-md object-cover"
                 />
               ) : (
                 <FileText className="text-muted-foreground size-12 shrink-0" aria-hidden="true" />

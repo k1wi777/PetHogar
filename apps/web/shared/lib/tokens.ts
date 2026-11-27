@@ -3,16 +3,18 @@
  * valores como variables CSS; una prueba comprueba que ambas copias coincidan.
  */
 export const TOKENS_COLOR = {
-  background: '#faf8f5',
-  foreground: '#1f2933',
+  background: '#fffbf9',
+  foreground: '#2d1b2e',
   card: '#ffffff',
-  'card-foreground': '#1f2933',
-  muted: '#efebe4',
-  'muted-foreground': '#52606d',
-  primary: '#0f6b63',
+  'card-foreground': '#2d1b2e',
+  muted: '#f6ebf0',
+  'muted-foreground': '#675064',
+  primary: '#86246a',
   'primary-foreground': '#ffffff',
-  secondary: '#e3efed',
-  'secondary-foreground': '#0b4f49',
+  secondary: '#fbe3ef',
+  'secondary-foreground': '#6a1a53',
+  acento: '#ffc23d',
+  'acento-foreground': '#2d1b2e',
   destructive: '#b42318',
   'destructive-foreground': '#ffffff',
   success: '#dcfce7',
@@ -22,9 +24,9 @@ export const TOKENS_COLOR = {
   info: '#dbeafe',
   'info-foreground': '#1e3a8a',
   neutral: '#e5e7eb',
-  'neutral-foreground': '#1f2933',
-  border: '#7b8794',
-  'border-suave': '#d9d3c7',
+  'neutral-foreground': '#2d1b2e',
+  border: '#8d7388',
+  'border-suave': '#ead9e2',
   ring: '#1d4ed8',
 } as const;
 
@@ -48,6 +50,13 @@ export const PARES_TEXTO: ReadonlyArray<readonly [NombreToken, NombreToken]> = [
   ['primary', 'card'],
   ['destructive', 'background'],
   ['destructive', 'card'],
+  ['acento-foreground', 'acento'],
+  ['primary', 'acento'],
+  ['primary', 'secondary'],
+  // Estados al pasar el puntero (botones) y opciones elegidas.
+  ['primary-foreground', 'secondary-foreground'],
+  ['foreground', 'muted'],
+  ['muted-foreground', 'secondary'],
 ];
 
 /** Elementos no textuales (bordes, foco) que requieren ≥ 3:1; el anillo se separa 2 px del control, por lo que se mide contra el fondo. */
@@ -56,4 +65,7 @@ export const PARES_NO_TEXTO: ReadonlyArray<readonly [NombreToken, NombreToken]> 
   ['border', 'card'],
   ['ring', 'background'],
   ['ring', 'card'],
+  ['ring', 'acento'],
+  // Borde de control sobre mango: `border` no llega a 3:1 ahí.
+  ['primary', 'acento'],
 ];

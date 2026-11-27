@@ -11,6 +11,7 @@ import { reenviarVerificacion, verificarCorreo } from '../api/autenticacion';
 import { useReenvio } from '../hooks/useReenvio';
 import { esquemaSolicitudCodigo, type DatosCorreo } from '../schemas/recuperacion';
 import { AvisoFormulario } from './AvisoFormulario';
+import { MarcoAcceso } from './MarcoAcceso';
 
 const SIN_TOKEN = 'El enlace de verificación no es válido. Solicita uno nuevo.';
 
@@ -50,22 +51,22 @@ export function VerificacionCorreo({ token }: { token?: string | null }) {
 
   if (token && resultado.estado === 'cargando') {
     return (
-      <div className="mx-auto flex max-w-md flex-col gap-4 px-4 py-12">
-        <h1 className="text-3xl">Verificando tu correo</h1>
+      <MarcoAcceso>
+        <h1 className="text-titulo">Verificando tu correo</h1>
         <p role="status">Un momento, estamos confirmando tu correo…</p>
-      </div>
+      </MarcoAcceso>
     );
   }
 
   if (resultado.estado === 'ok') {
     return (
-      <div className="mx-auto flex max-w-md flex-col gap-4 px-4 py-12">
-        <h1 className="text-3xl">Tu correo quedó verificado</h1>
+      <MarcoAcceso>
+        <h1 className="text-titulo">Tu correo quedó verificado</h1>
         <p role="status">Tu cuenta ya está activa. Ahora puedes ingresar.</p>
         <Boton comoHijo>
           <Link href="/ingresar">Ir a ingresar</Link>
         </Boton>
-      </div>
+      </MarcoAcceso>
     );
   }
 
@@ -85,8 +86,8 @@ function EnlaceInvalido({ mensaje }: { mensaje: string }) {
   );
   const reenvio = useReenvio(accion);
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-4 px-4 py-12">
-      <h1 className="text-3xl">No pudimos verificar tu correo</h1>
+    <MarcoAcceso>
+      <h1 className="text-titulo">No pudimos verificar tu correo</h1>
       <AvisoFormulario>{mensaje}</AvisoFormulario>
       <form
         onSubmit={handleSubmit(() => reenvio.reenviar())}
@@ -114,9 +115,12 @@ function EnlaceInvalido({ mensaje }: { mensaje: string }) {
           {reenvio.error}
         </p>
       )}
-      <Link href="/ingresar" className="text-primary font-semibold underline">
+      <Link
+        href="/ingresar"
+        className="text-primary inline-flex min-h-11 items-center font-semibold underline self-start"
+      >
         Volver a ingresar
       </Link>
-    </div>
+    </MarcoAcceso>
   );
 }

@@ -15,15 +15,15 @@ export function FundacionResponsable({ fundacion }: { fundacion: FundacionPublic
   return (
     <section
       aria-labelledby="fundacion-titulo"
-      className="bg-card border-border-suave rounded-lg border p-4"
+      className="bg-secondary text-secondary-foreground rounded-xl p-5 sm:p-6"
     >
       <h2 id="fundacion-titulo" className="text-2xl">
         Fundación responsable
       </h2>
-      <p className="mt-2 font-semibold">{fundacion.nombre}</p>
-      <p className="text-muted-foreground text-sm">{fundacion.ciudad}</p>
+      <p className="mt-2 text-lg font-bold break-words">{fundacion.nombre}</p>
+      <p className="text-sm font-medium">{fundacion.ciudad}</p>
       {fundacion.descripcion && <p className="mt-2">{fundacion.descripcion}</p>}
-      <Boton comoHijo variante="contorno" className="mt-3">
+      <Boton comoHijo variante="contorno" className="mt-4">
         <Link href={rutaDonarAFundacion(fundacion)}>Donar a esta fundación</Link>
       </Boton>
     </section>

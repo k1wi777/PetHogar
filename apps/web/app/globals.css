@@ -3,16 +3,18 @@
 
 /* Los valores se repiten desde shared/lib/tokens.ts (una prueba verifica que coincidan). */
 :root {
-  --background: #faf8f5;
-  --foreground: #1f2933;
+  --background: #fffbf9;
+  --foreground: #2d1b2e;
   --card: #ffffff;
-  --card-foreground: #1f2933;
-  --muted: #efebe4;
-  --muted-foreground: #52606d;
-  --primary: #0f6b63;
+  --card-foreground: #2d1b2e;
+  --muted: #f6ebf0;
+  --muted-foreground: #675064;
+  --primary: #86246a;
   --primary-foreground: #ffffff;
-  --secondary: #e3efed;
-  --secondary-foreground: #0b4f49;
+  --secondary: #fbe3ef;
+  --secondary-foreground: #6a1a53;
+  --acento: #ffc23d;
+  --acento-foreground: #2d1b2e;
   --destructive: #b42318;
   --destructive-foreground: #ffffff;
   --success: #dcfce7;
@@ -22,9 +24,9 @@
   --info: #dbeafe;
   --info-foreground: #1e3a8a;
   --neutral: #e5e7eb;
-  --neutral-foreground: #1f2933;
-  --border: #7b8794;
-  --border-suave: #d9d3c7;
+  --neutral-foreground: #2d1b2e;
+  --border: #8d7388;
+  --border-suave: #ead9e2;
   --ring: #1d4ed8;
 }
 
@@ -39,6 +41,8 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-acento: var(--acento);
+  --color-acento-foreground: var(--acento-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
@@ -56,6 +60,24 @@
     var(--font-texto), ui-sans-serif, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     sans-serif;
   --font-heading: var(--font-titulo), ui-rounded, 'Segoe UI', system-ui, sans-serif;
+
+  /* Escala de títulos fluidos (superficies públicas). */
+  --text-titulo: clamp(2rem, 1.5rem + 2vw, 3rem);
+  --text-titulo--line-height: 1.1;
+  --text-portada: clamp(3rem, 1.75rem + 5.5vw, 4.5rem);
+  --text-portada--line-height: 1;
+
+  /* Formas amables: campos 12 px, tarjetas y fotos 20–24 px; los botones usan `rounded-full`. */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+
+  /* Dos sombras suaves con desplazamiento, teñidas con el color del texto. */
+  --shadow-sm: 0 2px 4px rgb(45 27 46 / 0.06), 0 6px 16px -8px rgb(45 27 46 / 0.18);
+  --shadow-lg: 0 8px 16px -8px rgb(45 27 46 / 0.12), 0 24px 48px -16px rgb(45 27 46 / 0.28);
+  --shadow-md: var(--shadow-sm);
+  --shadow-xl: var(--shadow-lg);
 }
 
 @layer base {
@@ -73,12 +95,84 @@
   h2,
   h3 {
     font-family: var(--font-heading);
-    font-weight: 700;
-    line-height: 1.25;
+    font-weight: 800;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  /* Detalles que de otro modo pondría el navegador. */
+  ::selection {
+    background: var(--acento);
+    color: var(--acento-foreground);
+  }
+  input,
+  textarea {
+    caret-color: var(--primary);
+  }
+  input[type='radio'],
+  input[type='checkbox'] {
+    accent-color: var(--primary);
+  }
+  input[type='file']::file-selector-button {
+    margin-right: 0.75rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+    padding: 0.25rem 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  a {
+    text-underline-offset: 0.2em;
+  }
+  table {
+    font-variant-numeric: tabular-nums;
   }
   /* Foco visible global (R2): anillo de 2 px con desplazamiento. */
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
+  }
+}
+
+/* Movimiento: solo si la persona no pidió reducirlo. El estado base ya es el final y visible. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Única entrada de la portada: las fotos se asientan en su sitio. */
+  .entrada-portada > * {
+    animation: asentar 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .entrada-portada > :nth-child(2) {
+    animation-delay: 90ms;
+  }
+  .entrada-portada > :nth-child(3) {
+    animation-delay: 180ms;
+  }
+  /* Realce de la foto de una tarjeta al pasar el puntero o enfocar su enlace. */
+  .foto-tarjeta {
+    transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .tarjeta-mascota:hover .foto-tarjeta,
+  .tarjeta-mascota:focus-within .foto-tarjeta {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes asentar {
+  from {
+    transform: translateY(1.5rem) scale(0.95);
+  }
+}
+
+/* Con movimiento reducido tampoco giran ni laten los indicadores ni transiciona la interfaz. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-property: none !important;
   }
 }

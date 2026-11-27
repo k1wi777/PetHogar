@@ -25,10 +25,10 @@ export function EstadoError({
   return (
     <div
       role="alert"
-      className="border-destructive/40 bg-card flex flex-col items-center gap-3 rounded-lg border p-8 text-center"
+      className="border-destructive/40 bg-card flex flex-col items-center gap-3 rounded-xl border px-6 py-10 text-center"
     >
       <AlertTriangle className="text-destructive size-10" aria-hidden="true" />
-      <h2 className="font-heading text-xl font-bold">{titulo}</h2>
+      <h2 className="font-heading text-2xl font-extrabold">{titulo}</h2>
       <p className="text-muted-foreground max-w-prose">{texto}</p>
       <Boton variante="contorno" onClick={alReintentar} cargando={reintentando}>
         Reintentar

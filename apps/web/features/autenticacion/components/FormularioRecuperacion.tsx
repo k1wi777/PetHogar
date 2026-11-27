@@ -22,6 +22,7 @@ import {
 } from '../schemas/recuperacion';
 import { AvisoFormulario } from './AvisoFormulario';
 import { CampoContrasena } from './CampoContrasena';
+import { MarcoAcceso } from './MarcoAcceso';
 
 type Paso = 'correo' | 'codigo' | 'contrasena';
 
@@ -48,8 +49,8 @@ export function FormularioRecuperacion() {
   }, [paso]);
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-12">
-      <h1 className="text-3xl">Recuperar contraseña</h1>
+    <MarcoAcceso conFoto>
+      <h1 className="text-titulo">Recuperar contraseña</h1>
       <h2 ref={titulo} tabIndex={-1} className="text-xl font-bold focus:outline-none">
         {TITULOS[paso]}
       </h2>
@@ -88,11 +89,14 @@ export function FormularioRecuperacion() {
         />
       )}
       <p className="text-base">
-        <Link href="/ingresar" className="text-primary font-semibold underline">
+        <Link
+          href="/ingresar"
+          className="text-primary inline-flex min-h-11 items-center font-semibold underline"
+        >
           Volver a ingresar
         </Link>
       </p>
-    </div>
+    </MarcoAcceso>
   );
 }
 

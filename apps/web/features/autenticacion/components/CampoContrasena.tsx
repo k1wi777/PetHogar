@@ -16,7 +16,7 @@ function EntradaContrasena(props: ComponentProps<'input'>) {
         type="button"
         onClick={() => setVisible((v) => !v)}
         aria-pressed={visible}
-        className="border-border bg-card hover:bg-muted inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md border px-3 text-base font-semibold"
+        className="border-border bg-card hover:bg-muted inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-base font-semibold"
       >
         {visible ? (
           <EyeOff className="size-4" aria-hidden="true" />

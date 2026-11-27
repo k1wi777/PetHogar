@@ -75,10 +75,10 @@ describe('paleta de las gráficas', () => {
       const razones = adyacentes(n).map(([i, j]) =>
         razonContraste(PALETA_GRAFICA[i]!.color, PALETA_GRAFICA[j]!.color),
       );
-      // Cifras medidas: ningún par adyacente real llega a 3:1 y el peor es 1.05:1 (azul con verde).
+      // Cifras medidas: ningún par adyacente real llega a 3:1 y el peor es 1.06:1 (marrón con azul).
       expect(razones.every((r) => r < 3)).toBe(true);
       expect(Math.min(...razones)).toBeGreaterThanOrEqual(1.05);
-      expect(Math.max(...razones)).toBeLessThanOrEqual(1.63);
+      expect(Math.max(...razones)).toBeLessThanOrEqual(1.77);
       // El argumento solo se sostiene si el separador contrasta ≥ 3:1 con AMBOS lados de cada par.
       for (const [i, j] of adyacentes(n)) {
         for (const k of [i, j]) {

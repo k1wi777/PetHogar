@@ -14,7 +14,7 @@ export interface EstiloSerie {
  * (≥ 4.5:1). Una prueba lo comprueba con `contraste.ts`.
  */
 export const PALETA_GRAFICA: ReadonlyArray<EstiloSerie> = [
-  { color: '#0f6b63', patron: 'solido' },
+  { color: TOKENS_COLOR.primary, patron: 'solido' },
   { color: '#334155', patron: 'rayas' },
   { color: '#92400e', patron: 'puntos' },
   { color: '#1d4ed8', patron: 'cuadricula' },

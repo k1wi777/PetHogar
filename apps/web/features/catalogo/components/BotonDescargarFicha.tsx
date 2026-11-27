@@ -9,7 +9,7 @@ import { Boton } from '@/shared/ui/Boton';
 export function BotonDescargarFicha({ mascotaId, nombre }: { mascotaId: number; nombre: string }) {
   return (
     <div className="flex flex-col gap-1">
-      <Boton comoHijo variante="contorno">
+      <Boton comoHijo variante="contorno" className="sm:self-start">
         <a href={`${urlApiPublica()}/mascotas/${mascotaId}/ficha.pdf`}>
           <Download className="size-4" aria-hidden="true" />
           Descargar ficha (PDF) <span className="sr-only">de {nombre}</span>

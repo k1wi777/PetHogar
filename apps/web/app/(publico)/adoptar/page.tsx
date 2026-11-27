@@ -1,3 +1,4 @@
+import { PawPrint } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { listarEspecies } from '@/features/catalogo/api/especies';
@@ -52,16 +53,17 @@ export default async function CatalogoPage({
   const { data, total } = resultado;
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
-      <h1 className="text-3xl">Mascotas disponibles</h1>
+      <h1 className="text-titulo">Mascotas disponibles</h1>
       <FiltrosCatalogo filtros={filtros} especies={especies} errorRango={rangoInvalido} />
       <div role="status">
-        <p className="font-semibold">
+        <p className="font-heading text-xl font-extrabold">
           {total === 1 ? '1 mascota encontrada' : `${total} mascotas encontradas`}
         </p>
         {avisoPagina && <p className="text-muted-foreground text-sm">{avisoPagina}</p>}
       </div>
       {data.length === 0 ? (
         <EstadoVacio
+          icono={PawPrint}
           titulo="No hay mascotas con esos criterios"
           descripcion={
             hayFiltros(filtros)

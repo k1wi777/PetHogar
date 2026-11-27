@@ -20,7 +20,9 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const ficha = await fichaDe(id);
+  // Si la consulta falla se hereda el título del sitio; la página propaga el error a `error.tsx`.
+  const ficha = await fichaDe(id).catch(() => undefined);
+  if (ficha === undefined) return {};
   return ficha ? metadatosFicha(ficha) : METADATOS_NO_ENCONTRADA;
 }
 
@@ -29,26 +31,29 @@ export default async function FichaPage({ params }: Props) {
   const ficha = await fichaDe(id);
   if (!ficha) notFound();
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
       <Link
         href="/adoptar"
-        className="hover:bg-muted -ml-3 inline-flex min-h-11 items-center gap-1 rounded-md px-3 font-medium"
+        className="hover:bg-muted -ml-3 inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 font-semibold"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         Volver al catálogo
       </Link>
-      <div className="mt-2 flex flex-wrap items-center gap-3">
-        <h1 className="text-4xl">{ficha.nombre}</h1>
-        <BadgeEstado estado="disponible" />
-      </div>
-      <div className="mt-6 grid gap-8 lg:grid-cols-2">
+      {/* Móvil: foto, nombre y acción. Escritorio: la foto a la izquierda y todo lo demás al lado. */}
+      <div className="mt-2 grid items-start gap-6 lg:grid-cols-[6fr_5fr] lg:gap-10">
         <GaleriaFotos fotos={ficha.fotos} nombre={ficha.nombre} especie={ficha.especie} />
-        <div className="flex flex-col gap-6">
-          <DatosMascota ficha={ficha} />
-          <div className="flex flex-wrap items-start gap-4">
-            <AccionAdoptar mascotaId={ficha.id} />
-            <BotonDescargarFicha mascotaId={ficha.id} nombre={ficha.nombre} />
+        <div className="flex min-w-0 flex-col gap-8">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-portada min-w-0 break-words">{ficha.nombre}</h1>
+              <BadgeEstado estado="disponible" />
+            </div>
+            <div className="flex flex-col items-start gap-3">
+              <AccionAdoptar mascotaId={ficha.id} />
+              <BotonDescargarFicha mascotaId={ficha.id} nombre={ficha.nombre} />
+            </div>
           </div>
+          <DatosMascota ficha={ficha} />
           <HistorialMedico eventos={ficha.historial} />
           <FundacionResponsable fundacion={ficha.fundacion} />
         </div>

@@ -19,7 +19,7 @@ export default function ErrorGlobal({
           id="contenido"
           className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-16 text-center"
         >
-          <h1 className="text-3xl font-bold">Algo salió mal</h1>
+          <h1 className="text-titulo font-extrabold">Algo salió mal</h1>
           <p>
             Tuvimos un problema inesperado al cargar PetHogar. Inténtalo de nuevo; si continúa,
             vuelve más tarde.
@@ -28,7 +28,7 @@ export default function ErrorGlobal({
             <button
               type="button"
               onClick={reset}
-              className="bg-primary text-primary-foreground min-h-11 rounded-md px-4 py-2 text-base font-semibold"
+              className="bg-primary text-primary-foreground min-h-11 rounded-full px-5 py-2 text-base font-semibold shadow-sm"
             >
               Reintentar
             </button>
@@ -36,7 +36,7 @@ export default function ErrorGlobal({
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
               href="/"
-              className="border-border bg-card text-foreground min-h-11 rounded-md border px-4 py-2 text-base font-semibold"
+              className="border-border bg-card text-foreground inline-flex min-h-11 items-center rounded-full border px-5 py-2 text-base font-semibold"
             >
               Ir al inicio
             </a>

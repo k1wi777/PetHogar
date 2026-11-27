@@ -254,4 +254,28 @@ describe('CabeceraPublica', () => {
     expect(screen.queryByRole('link', { name: 'Ingresar' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Registrarme' })).toBeNull();
   });
+
+  it.each([
+    ['/adoptar', 'Adoptar'],
+    ['/mascotas/7', 'Adoptar'],
+    ['/donar', 'Donar'],
+    ['/ingresar', 'Ingresar'],
+    ['/registro', 'Registrarme'],
+    ['/registro-fundacion', 'Registrar fundación'],
+  ])('en %s marca con aria-current solo «%s»', (actual, nombre) => {
+    ruta = actual;
+    poner('anonimo');
+    render(<CabeceraPublica />);
+    const actuales = screen.getAllByRole('link', { current: 'page' });
+    expect(actuales).toHaveLength(1);
+    expect(actuales[0]).toHaveAccessibleName(nombre);
+  });
+
+  it('en la portada no marca ninguna sección y la marca se llama «PetHogar»', () => {
+    ruta = '/';
+    poner('anonimo');
+    render(<CabeceraPublica />);
+    expect(screen.queryByRole('link', { current: 'page' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'PetHogar' })).toHaveAttribute('href', '/');
+  });
 });

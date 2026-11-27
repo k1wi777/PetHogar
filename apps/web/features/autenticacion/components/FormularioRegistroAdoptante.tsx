@@ -14,6 +14,7 @@ import { CampoAceptacion } from './CampoAceptacion';
 import { CampoContrasena } from './CampoContrasena';
 import { CuentaActivada } from './CuentaActivada';
 import { RevisaTuCorreo } from './RevisaTuCorreo';
+import { MarcoAcceso } from './MarcoAcceso';
 
 const CAMPOS: ReadonlyArray<keyof DatosAdoptante> = [
   'primerNombre',
@@ -86,8 +87,8 @@ export function FormularioRegistroAdoptante() {
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-12">
-      <h1 className="text-3xl">Crear cuenta de adoptante</h1>
+    <MarcoAcceso ancho="amplio">
+      <h1 className="text-titulo">Crear cuenta de adoptante</h1>
       <p className="text-muted-foreground">
         Los campos con * son obligatorios. ¿Eres una fundación o refugio?{' '}
         <Link href="/registro-fundacion" className="text-primary font-semibold underline">
@@ -198,6 +199,6 @@ export function FormularioRegistroAdoptante() {
           Ingresar
         </Link>
       </p>
-    </div>
+    </MarcoAcceso>
   );
 }

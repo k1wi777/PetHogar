@@ -65,7 +65,7 @@ export function CampanaNotificaciones({ href }: { href: string }) {
         aria-expanded={abierto}
         aria-controls={abierto ? idPanel : undefined}
         onClick={() => setAbierto((a) => !a)}
-        className="hover:bg-muted relative inline-flex size-11 items-center justify-center rounded-md"
+        className="hover:bg-muted relative inline-flex size-11 items-center justify-center rounded-full"
       >
         <Bell className="size-6" aria-hidden="true" />
         {data !== undefined && data > 0 && (

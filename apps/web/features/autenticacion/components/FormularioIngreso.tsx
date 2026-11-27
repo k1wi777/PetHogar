@@ -19,6 +19,7 @@ import { traducirError } from '../lib/errores-servidor';
 import { esquemaLogin, type DatosLogin } from '../schemas/login';
 import { AvisoFormulario } from './AvisoFormulario';
 import { CampoContrasena } from './CampoContrasena';
+import { MarcoAcceso } from './MarcoAcceso';
 
 interface Fallo {
   mensaje: string;
@@ -67,8 +68,8 @@ export function FormularioIngreso({ siguiente }: { siguiente?: string | null }) 
   }
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-12">
-      <h1 className="text-3xl">Ingresar</h1>
+    <MarcoAcceso conFoto>
+      <h1 className="text-titulo">Ingresar</h1>
       <form
         onSubmit={handleSubmit(enviar)}
         noValidate
@@ -119,7 +120,10 @@ export function FormularioIngreso({ siguiente }: { siguiente?: string | null }) 
         </Boton>
       </form>
       <nav aria-label="Otras opciones" className="flex flex-col gap-2 text-base">
-        <Link href="/recuperar" className="text-primary font-semibold underline">
+        <Link
+          href="/recuperar"
+          className="text-primary inline-flex min-h-11 items-center font-semibold underline self-start"
+        >
           Olvidé mi contraseña
         </Link>
         <p>
@@ -134,6 +138,6 @@ export function FormularioIngreso({ siguiente }: { siguiente?: string | null }) 
           .
         </p>
       </nav>
-    </div>
+    </MarcoAcceso>
   );
 }

@@ -47,7 +47,7 @@ export function ImagenPrivada({
     return (
       <div
         role="alert"
-        className="border-border-suave flex min-h-32 min-w-0 flex-col items-center justify-center gap-2 rounded-md border p-3 text-center text-sm"
+        className="border-border-suave flex min-h-32 min-w-0 flex-col items-center justify-center gap-2 rounded-lg border p-3 text-center text-sm"
       >
         <ImageOff className="text-muted-foreground size-6" aria-hidden="true" />
         <p>No pudimos cargar la foto.</p>
@@ -66,11 +66,11 @@ export function ImagenPrivada({
       <div
         role="status"
         aria-busy="true"
-        className="bg-muted min-h-32 animate-pulse rounded-md"
+        className="bg-muted min-h-32 animate-pulse rounded-lg"
         aria-label="Cargando foto"
       />
     );
   }
   // eslint-disable-next-line @next/next/no-img-element -- es un object URL local, next/image no aplica
-  return <img src={src} alt={alt} className={className ?? 'h-auto max-w-full rounded-md'} />;
+  return <img src={src} alt={alt} className={className ?? 'h-auto max-w-full rounded-lg'} />;
 }

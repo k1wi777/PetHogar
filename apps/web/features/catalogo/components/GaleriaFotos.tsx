@@ -3,8 +3,8 @@ import Image from 'next/image';
 import type { FotoPublica } from '../types';
 
 /**
- * Galería sin estado ni JavaScript: figuras en una columna (móvil) o cuadrícula (escritorio), con
- * la principal primero. `unoptimized`: la API ya entrega la versión grande ya procesada.
+ * Galería sin estado ni JavaScript: la principal primero, grande y cuadrada, y las demás debajo en
+ * dos columnas. `unoptimized`: la API ya entrega la versión grande ya procesada.
  */
 export function GaleriaFotos({
   fotos,
@@ -23,17 +23,19 @@ export function GaleriaFotos({
       <div
         role="img"
         aria-label={`${nombre} aún no tiene fotos`}
-        className="bg-muted text-muted-foreground flex aspect-[4/3] items-center justify-center rounded-lg"
+        className="bg-secondary text-primary flex aspect-square items-center justify-center rounded-xl"
       >
-        <PawPrint className="size-20" aria-hidden="true" />
+        <PawPrint className="size-32 -rotate-12" aria-hidden="true" />
       </div>
     );
   }
   return (
-    <ul className={`grid gap-3 ${visibles.length > 1 ? 'lg:grid-cols-2' : ''}`}>
+    <ul className="grid grid-cols-2 gap-3">
       {visibles.map((foto, i) => (
-        <li key={foto.id} className={i === 0 && visibles.length > 1 ? 'lg:col-span-2' : undefined}>
-          <figure className="bg-muted relative aspect-[4/3] overflow-hidden rounded-lg">
+        <li key={foto.id} className={i === 0 ? 'col-span-2' : undefined}>
+          <figure
+            className={`bg-muted relative overflow-hidden rounded-xl ${i === 0 ? 'aspect-square shadow-lg' : 'aspect-[4/3]'}`}
+          >
             <Image
               src={foto.src}
               alt={
@@ -44,7 +46,7 @@ export function GaleriaFotos({
               fill
               unoptimized
               priority={i === 0}
-              sizes="(min-width: 1024px) 50vw, 100vw"
+              sizes={i === 0 ? '(min-width: 1024px) 55vw, 100vw' : '(min-width: 1024px) 28vw, 50vw'}
               className="object-cover"
             />
           </figure>

@@ -65,11 +65,14 @@ export function GrupoRadio<T extends FieldValues>({
                 {ayuda}
               </p>
             )}
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
+            <div className="flex flex-wrap gap-2">
               {opciones.map((o, i) => {
                 const id = `${base}-${o.valor}`;
                 return (
-                  <div key={o.valor} className="flex min-h-11 items-center gap-2">
+                  <div
+                    key={o.valor}
+                    className="border-border bg-card has-[:checked]:border-primary has-[:checked]:bg-secondary has-[:checked]:text-secondary-foreground flex min-h-11 items-center gap-2 rounded-full border pl-4 transition-colors"
+                  >
                     <input
                       id={id}
                       type="radio"
@@ -81,7 +84,7 @@ export function GrupoRadio<T extends FieldValues>({
                       onBlur={field.onBlur}
                       className="size-5"
                     />
-                    <label htmlFor={id} className="text-base">
+                    <label htmlFor={id} className="flex min-h-11 items-center pr-4 text-base">
                       {o.texto}
                     </label>
                   </div>

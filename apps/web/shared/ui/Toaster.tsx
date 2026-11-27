@@ -12,7 +12,10 @@ export function Toaster() {
       duration={6000}
       // La región es `aria-live="polite"`; sus textos por defecto vienen en inglés.
       customAriaLabel="Avisos"
-      toastOptions={{ closeButtonAriaLabel: 'Cerrar aviso' }}
+      toastOptions={{
+        closeButtonAriaLabel: 'Cerrar aviso',
+        style: { borderRadius: 'var(--radius-lg)' },
+      }}
     />
   );
 }

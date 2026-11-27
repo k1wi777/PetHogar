@@ -13,7 +13,7 @@ export function AvisoAlerta({ children, accion }: { children: ReactNode; accion?
       ref={ref}
       tabIndex={-1}
       role="alert"
-      className="border-destructive text-foreground bg-card flex flex-col gap-2 rounded-md border-2 p-3 text-base focus:outline-2"
+      className="border-destructive text-foreground bg-card flex flex-col gap-2 rounded-lg border-2 p-4 text-base focus:outline-2"
     >
       <p>{children}</p>
       {accion}

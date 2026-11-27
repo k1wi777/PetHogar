@@ -22,7 +22,7 @@ export function CampoAceptacion<T extends FieldValues>({
         const idError = `${id}-error`;
         return (
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-start gap-3">
+            <div className="flex items-center gap-3">
               <input
                 id={id}
                 type="checkbox"
@@ -34,9 +34,9 @@ export function CampoAceptacion<T extends FieldValues>({
                 aria-required="true"
                 aria-invalid={fieldState.error ? true : undefined}
                 aria-describedby={fieldState.error ? idError : undefined}
-                className="mt-1 size-6 shrink-0"
+                className="size-6 shrink-0"
               />
-              <label htmlFor={id} className="text-base">
+              <label htmlFor={id} className="flex min-h-11 items-center text-base">
                 {children}
               </label>
             </div>

@@ -38,7 +38,7 @@ export function Selector({
       <RadixSelect.Trigger
         id={id}
         className={cn(
-          'bg-card border-border data-[placeholder]:text-muted-foreground flex min-h-11 w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-base aria-invalid:border-destructive aria-invalid:border-2 disabled:opacity-60',
+          'bg-card border-border data-[placeholder]:text-muted-foreground enabled:hover:border-primary flex min-h-11 w-full items-center justify-between gap-2 rounded-md border px-3.5 py-2 text-left text-base transition-colors aria-invalid:border-destructive aria-invalid:border-2 disabled:opacity-60',
           className,
         )}
         {...aria}
@@ -54,12 +54,12 @@ export function Selector({
           sideOffset={4}
           className="bg-card border-border-suave z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border shadow-lg"
         >
-          <RadixSelect.Viewport className="p-1">
+          <RadixSelect.Viewport className="p-1.5">
             {opciones.map((o) => (
               <RadixSelect.Item
                 key={o.valor}
                 value={o.valor}
-                className="data-[highlighted]:bg-secondary data-[highlighted]:text-secondary-foreground relative flex min-h-10 cursor-pointer items-center rounded px-8 py-2 text-base select-none"
+                className="data-[highlighted]:bg-secondary data-[highlighted]:text-secondary-foreground relative flex min-h-11 cursor-pointer items-center rounded-sm px-8 py-2 text-base select-none"
               >
                 <RadixSelect.ItemIndicator className="absolute left-2">
                   <Check className="size-4" aria-hidden="true" />

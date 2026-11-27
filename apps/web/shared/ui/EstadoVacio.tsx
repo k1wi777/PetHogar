@@ -19,9 +19,11 @@ export function EstadoVacio({
   encabezado: Encabezado = 'h2',
 }: EstadoVacioProps) {
   return (
-    <div className="border-border-suave flex flex-col items-center gap-3 rounded-lg border border-dashed p-8 text-center">
-      <Icono className="text-muted-foreground size-10" aria-hidden="true" />
-      <Encabezado className="font-heading text-xl font-bold">{titulo}</Encabezado>
+    <div className="border-border-suave bg-card flex flex-col items-center gap-3 rounded-xl border px-6 py-10 text-center">
+      <span className="bg-secondary text-primary mb-1 flex size-20 items-center justify-center rounded-full">
+        <Icono className="size-10" aria-hidden="true" />
+      </span>
+      <Encabezado className="font-heading text-2xl font-extrabold">{titulo}</Encabezado>
       {descripcion && <p className="text-muted-foreground max-w-prose">{descripcion}</p>}
       {accion}
     </div>

@@ -33,7 +33,7 @@ export function DialogoConfirmacion({
   return (
     <Dialog.Root open={abierto} onOpenChange={onAbiertoChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+        <Dialog.Overlay className="bg-foreground/60 fixed inset-0 z-50" />
         <Dialog.Content
           onOpenAutoFocus={() => {
             abridor.current = document.activeElement as HTMLElement | null;
@@ -44,9 +44,11 @@ export function DialogoConfirmacion({
             const sinFoco = !document.activeElement || document.activeElement === document.body;
             if (sinFoco && abridor.current?.isConnected) abridor.current.focus();
           }}
-          className="bg-card fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg p-6 shadow-xl"
+          className="bg-card fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl p-6 shadow-lg"
         >
-          <Dialog.Title className="font-heading text-xl font-bold">{titulo}</Dialog.Title>
+          <Dialog.Title className="font-heading text-2xl font-extrabold text-balance">
+            {titulo}
+          </Dialog.Title>
           <Dialog.Description className="text-muted-foreground mt-2">
             {descripcion}
           </Dialog.Description>

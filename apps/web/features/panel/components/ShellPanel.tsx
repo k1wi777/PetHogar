@@ -11,6 +11,7 @@ import { MENU_POR_ROL, NOMBRE_PANEL } from '@/shared/lib/acceso';
 import { cn } from '@/shared/lib/utils';
 import { Boton } from '@/shared/ui/Boton';
 import { DialogoConfirmacion } from '@/shared/ui/DialogoConfirmacion';
+import { Marca } from '@/shared/ui/Marca';
 import { SaltarAlContenido } from '@/shared/ui/SaltarAlContenido';
 
 function esActiva(href: string, pathname: string, raiz: string): boolean {
@@ -33,8 +34,10 @@ export function MenuLateral({ rol, alNavegar }: { rol: Rol; alNavegar?: () => vo
                 aria-current={activa ? 'page' : undefined}
                 onClick={alNavegar}
                 className={cn(
-                  'flex min-h-11 items-center rounded-md px-3 py-2 text-base font-medium',
-                  activa ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground',
+                  'flex min-h-11 items-center rounded-full px-4 py-2 text-base font-semibold transition-colors',
+                  activa
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'hover:bg-muted text-foreground',
                 )}
               >
                 {o.etiqueta}
@@ -86,10 +89,10 @@ export function ShellPanel({
             </Boton>
           </Dialog.Trigger>
           <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50 md:hidden" />
-            <Dialog.Content className="bg-card fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85%] flex-col gap-4 p-4 shadow-xl md:hidden">
+            <Dialog.Overlay className="bg-foreground/60 fixed inset-0 z-40 md:hidden" />
+            <Dialog.Content className="bg-card fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85%] flex-col gap-4 overflow-y-auto rounded-r-xl p-4 shadow-lg md:hidden">
               <div className="flex items-center justify-between">
-                <Dialog.Title className="font-heading text-lg font-bold">
+                <Dialog.Title className="font-heading text-primary text-lg font-extrabold">
                   {NOMBRE_PANEL[rol]}
                 </Dialog.Title>
                 <Dialog.Close asChild>
@@ -106,9 +109,8 @@ export function ShellPanel({
           </Dialog.Portal>
         </Dialog.Root>
 
-        <Link href="/" className="font-heading text-primary shrink-0 text-xl font-extrabold">
-          PetHogar
-        </Link>
+        {/* Bajo `sm` la marca va sin icono: la cabecera debe caber a 360 px. */}
+        <Marca className="shrink-0 sm:text-xl" claseIcono="max-sm:hidden" />
         <div className="ml-auto flex min-w-0 items-center gap-2">
           {usuario && (
             <span className="hidden max-w-48 truncate text-sm font-medium sm:inline">
@@ -130,14 +132,14 @@ export function ShellPanel({
 
       <div className="flex flex-1">
         <aside className="bg-card border-border-suave hidden w-64 shrink-0 border-r p-4 md:block">
-          <p className="font-heading text-muted-foreground mb-3 text-sm font-bold">
+          <p className="font-heading text-primary mb-3 px-4 text-base font-extrabold">
             {NOMBRE_PANEL[rol]}
           </p>
           <MenuLateral rol={rol} />
         </aside>
         <main id="contenido" className="min-w-0 flex-1 p-4 md:p-8">
           {fundacion && fundacion.estadoValidacion !== 'aprobada' && (
-            <div role="status" className="bg-warning text-warning-foreground mb-6 rounded-md p-4">
+            <div role="status" className="bg-warning text-warning-foreground mb-6 rounded-lg p-4">
               {fundacion.estadoValidacion === 'pendiente'
                 ? 'Tu fundación está pendiente de validación. Podrás operar cuando sea aprobada.'
                 : 'La validación de tu fundación fue rechazada. Revisa la observación que te enviamos.'}

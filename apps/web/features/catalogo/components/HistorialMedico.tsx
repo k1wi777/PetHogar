@@ -13,8 +13,11 @@ export function HistorialMedico({ eventos }: { eventos: EventoMedico[] }) {
       ) : (
         <ol className="mt-3 flex flex-col gap-3">
           {eventos.map((e) => (
-            <li key={e.id} className="bg-card border-border-suave rounded-lg border p-4">
-              <p className="font-semibold">
+            <li
+              key={e.id}
+              className="bg-card border-border-suave rounded-lg border p-4 break-words"
+            >
+              <p className="text-primary font-bold">
                 {etiquetaTipoHistorial(e.tipo)} ·{' '}
                 <time dateTime={e.fecha}>{fechaLarga(e.fecha)}</time>
               </p>

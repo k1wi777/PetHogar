@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ErrorApi } from '@/shared/api/errores';
 import type { MascotaCatalogo } from '@/features/catalogo/types';
 import ErrorCatalogo from './error';
+import CargandoCatalogo from './loading';
 import CatalogoPage from './page';
 
 const listarMascotas = vi.fn();
@@ -153,6 +154,17 @@ describe('CatalogoPage', () => {
     await expect(CatalogoPage({ searchParams: Promise.resolve({}) })).rejects.toMatchObject({
       tipo: 'red',
     });
+  });
+});
+
+describe('carga del catálogo', () => {
+  it('tiene un único h1 visible a los lectores y anuncia la carga', () => {
+    render(<CargandoCatalogo />);
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Mascotas disponibles' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Cargando mascotas');
   });
 });
 

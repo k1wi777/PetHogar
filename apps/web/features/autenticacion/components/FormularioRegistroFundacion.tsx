@@ -14,6 +14,7 @@ import { esquemaFundacion, type DatosFundacion } from '../schemas/fundacion';
 import { AvisoFormulario } from './AvisoFormulario';
 import { CampoAceptacion } from './CampoAceptacion';
 import { CampoContrasena } from './CampoContrasena';
+import { MarcoAcceso } from './MarcoAcceso';
 
 const CAMPOS: ReadonlyArray<keyof DatosFundacion> = [
   'nombre',
@@ -30,9 +31,9 @@ const CAMPOS: ReadonlyArray<keyof DatosFundacion> = [
 
 function RegistroEnviado({ mensaje }: { mensaje: string }) {
   return (
-    <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-12 text-center">
+    <MarcoAcceso className="items-center text-center">
       <CheckCircle2 className="text-success size-12" aria-hidden="true" />
-      <h1 className="text-3xl">Recibimos el registro de tu fundación</h1>
+      <h1 className="text-titulo">Recibimos el registro de tu fundación</h1>
       <p role="status">{mensaje}</p>
       <p className="text-muted-foreground">
         Un administrador revisará tu documento. Recibirás un aviso cuando tu fundación sea aprobada
@@ -41,7 +42,7 @@ function RegistroEnviado({ mensaje }: { mensaje: string }) {
       <Boton comoHijo variante="contorno">
         <Link href="/ingresar">Ir a ingresar</Link>
       </Boton>
-    </div>
+    </MarcoAcceso>
   );
 }
 
@@ -83,8 +84,8 @@ export function FormularioRegistroFundacion() {
   if (enviado) return <RegistroEnviado mensaje={enviado} />;
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-12">
-      <h1 className="text-3xl">Registrar mi fundación</h1>
+    <MarcoAcceso ancho="amplio">
+      <h1 className="text-titulo">Registrar mi fundación</h1>
       <p className="text-muted-foreground">
         Los campos con * son obligatorios. Un administrador revisará tu documento antes de aprobar
         la fundación. ¿Quieres adoptar?{' '}
@@ -175,6 +176,6 @@ export function FormularioRegistroFundacion() {
           Ingresar
         </Link>
       </p>
-    </div>
+    </MarcoAcceso>
   );
 }

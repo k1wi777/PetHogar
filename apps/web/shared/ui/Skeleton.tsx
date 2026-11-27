@@ -13,7 +13,7 @@ export function Skeleton({
       <span className="sr-only">{etiqueta}…</span>
       <div
         aria-hidden="true"
-        className={cn('bg-muted h-full min-h-4 w-full animate-pulse rounded-md')}
+        className={cn('bg-muted h-full min-h-4 w-full animate-pulse rounded-lg')}
       />
     </div>
   );

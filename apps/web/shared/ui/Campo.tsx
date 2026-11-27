@@ -74,7 +74,7 @@ export function Entrada({ className, type = 'text', ...props }: ComponentProps<'
     <input
       type={type}
       className={cn(
-        'bg-card border-border placeholder:text-muted-foreground min-h-11 w-full rounded-md border px-3 py-2 text-base aria-invalid:border-destructive aria-invalid:border-2 disabled:opacity-60',
+        'bg-card border-border placeholder:text-muted-foreground enabled:hover:border-primary min-h-11 w-full rounded-md border px-3.5 py-2 text-base transition-colors aria-invalid:border-destructive aria-invalid:border-2 disabled:opacity-60',
         className,
       )}
       {...props}
@@ -86,7 +86,7 @@ export function AreaTexto({ className, ...props }: ComponentProps<'textarea'>) {
   return (
     <textarea
       className={cn(
-        'bg-card border-border placeholder:text-muted-foreground min-h-24 w-full rounded-md border px-3 py-2 text-base aria-invalid:border-destructive aria-invalid:border-2 disabled:opacity-60',
+        'bg-card border-border placeholder:text-muted-foreground enabled:hover:border-primary min-h-24 w-full rounded-md border px-3.5 py-2 text-base transition-colors aria-invalid:border-destructive aria-invalid:border-2 disabled:opacity-60',
         className,
       )}
       {...props}

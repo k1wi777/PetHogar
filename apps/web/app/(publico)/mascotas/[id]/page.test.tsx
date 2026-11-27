@@ -62,6 +62,13 @@ describe('FichaPage', () => {
   });
 });
 
+describe('fallo de la API en la ficha', () => {
+  it('generateMetadata no propaga el fallo y deja heredar el título del sitio', async () => {
+    obtenerFicha.mockRejectedValue(new ErrorApi({ tipo: 'red', mensaje: 'x' }));
+    await expect(generateMetadata(props('5'))).resolves.toEqual({});
+  });
+});
+
 describe('404 de la ficha', () => {
   it('es amable y vuelve al catálogo', () => {
     render(<MascotaNoEncontrada />);

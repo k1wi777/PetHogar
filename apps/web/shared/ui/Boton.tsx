@@ -5,13 +5,15 @@ import type { ButtonHTMLAttributes } from 'react';
 import { cn } from '@/shared/lib/utils';
 
 export const variantesBoton = cva(
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-base font-semibold transition-colors disabled:pointer-events-none disabled:opacity-60',
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2 text-center text-base font-semibold transition-colors duration-200 disabled:pointer-events-none disabled:opacity-60',
   {
     variants: {
       variante: {
-        primario: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        secundario: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        contorno: 'border border-border bg-card text-foreground hover:bg-muted',
+        primario: 'bg-primary text-primary-foreground shadow-sm hover:bg-secondary-foreground',
+        secundario:
+          'bg-secondary text-secondary-foreground hover:bg-secondary-foreground hover:text-primary-foreground',
+        contorno:
+          'border border-border bg-card text-foreground hover:border-primary hover:bg-muted',
         destructivo: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
         fantasma: 'text-foreground hover:bg-muted',
       },

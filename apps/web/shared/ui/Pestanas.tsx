@@ -28,15 +28,15 @@ export function Pestanas({ etiqueta, pestanas, valor, onCambio, className }: Pes
     <Tabs.Root value={valor} onValueChange={onCambio} className={className}>
       <Tabs.List
         aria-label={etiqueta}
-        className="border-border-suave flex gap-1 overflow-x-auto border-b"
+        className="bg-muted flex w-fit max-w-full gap-1 overflow-x-auto rounded-full p-1"
       >
         {pestanas.map((p) => (
           <Tabs.Trigger
             key={p.valor}
             value={p.valor}
             className={cn(
-              'min-h-11 shrink-0 rounded-t-md border-b-4 border-transparent px-4 py-2 text-base font-semibold',
-              'hover:bg-muted data-[state=active]:border-primary data-[state=active]:text-primary',
+              'text-foreground min-h-11 shrink-0 rounded-full px-5 py-2 text-base font-semibold transition-colors',
+              'hover:bg-card data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm',
             )}
           >
             {p.etiqueta}

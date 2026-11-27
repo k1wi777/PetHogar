@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-27T15:00:00-05:00",
+  "title": "Design System: PetHogar",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Ciruela",
+        "canonical": "#86246a",
+        "tonalRamp": [
+          "#3c1030",
+          "#641b4f",
+          "#8d266f",
+          "#b5318f",
+          "#d256ae",
+          "#e18ec9",
+          "#efc3e2",
+          "#faebf5"
+        ]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Ciruela suave",
+        "canonical": "#fbe3ef",
+        "tonalRamp": [
+          "#430a26",
+          "#701040",
+          "#9c1659",
+          "#c91d73",
+          "#e44494",
+          "#ed82b8",
+          "#f5bcd9",
+          "#fce9f2"
+        ]
+      },
+      "acento": {
+        "role": "tertiary",
+        "displayName": "Mango",
+        "canonical": "#ffc23d",
+        "tonalRamp": [
+          "#4c3400",
+          "#805700",
+          "#b27a00",
+          "#e69d00",
+          "#ffbc29",
+          "#ffd270",
+          "#ffe7b2",
+          "#fff7e5"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Blanco cálido",
+        "canonical": "#fffbf9",
+        "tonalRamp": [
+          "#4c1900",
+          "#802a00",
+          "#b23b00",
+          "#e64c00",
+          "#ff7029",
+          "#ffa070",
+          "#ffccb2",
+          "#ffeee5"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Tinta ciruela",
+        "canonical": "#2d1b2e",
+        "tonalRamp": [
+          "#2f1c30",
+          "#4f2f50",
+          "#6e4270",
+          "#8d5591",
+          "#ad78b0",
+          "#c8a5ca",
+          "#e2cfe3",
+          "#f5eff6"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Tinta suave",
+        "canonical": "#675064",
+        "tonalRamp": [
+          "#2b212a",
+          "#483846",
+          "#644e62",
+          "#81647d",
+          "#a1869e",
+          "#c1afbe",
+          "#ded4dc",
+          "#f4f1f3"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Rosa gris",
+        "canonical": "#f6ebf0",
+        "tonalRamp": [
+          "#351825",
+          "#58283e",
+          "#7b3756",
+          "#9e476f",
+          "#bd6b90",
+          "#d39db5",
+          "#e7cad7",
+          "#f7edf2"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Borde de control",
+        "canonical": "#8d7388",
+        "tonalRamp": [
+          "#2a2229",
+          "#463944",
+          "#62505f",
+          "#7e677a",
+          "#9f899b",
+          "#bfb0bc",
+          "#ddd5db",
+          "#f4f1f3"
+        ]
+      },
+      "ring": {
+        "role": "state",
+        "displayName": "Foco",
+        "canonical": "#1d4ed8",
+        "tonalRamp": [
+          "#091843",
+          "#0f2970",
+          "#15399d",
+          "#1b49ca",
+          "#426de6",
+          "#819eee",
+          "#bccbf6",
+          "#e9eefc"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Portada y nombre de la mascota."
+      },
+      "headline": {
+        "displayName": "Título de página",
+        "purpose": "Páginas públicas, de acceso y de mensaje."
+      },
+      "title": {
+        "displayName": "Título",
+        "purpose": "Secciones, tarjetas y diálogos."
+      },
+      "body": {
+        "displayName": "Texto",
+        "purpose": "Texto corrido."
+      },
+      "label": {
+        "displayName": "Etiqueta",
+        "purpose": "Etiquetas, botones y navegación."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sm",
+        "value": "0 2px 4px rgb(45 27 46 / 0.06), 0 6px 16px -8px rgb(45 27 46 / 0.18)",
+        "purpose": "Botón principal, tarjetas, filtros y tablas."
+      },
+      {
+        "name": "lg",
+        "value": "0 8px 16px -8px rgb(45 27 46 / 0.12), 0 24px 48px -16px rgb(45 27 46 / 0.28)",
+        "purpose": "Diálogos, desplegables y fotos protagonistas."
+      }
+    ],
+    "motion": [
+      {
+        "name": "entrada-portada",
+        "value": "700ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Única entrada: las fotos de la portada se asientan (retardos de 90 y 180 ms)."
+      },
+      {
+        "name": "realce-foto",
+        "value": "400ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Escala 1.05 de la foto de la tarjeta al pasar o enfocar; solo sin movimiento reducido."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Botón en píldora de 44 px de alto.",
+      "html": "<button class=\"ds-btn-primary\">Adoptar</button>",
+      "css": ".ds-btn-primary { font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 1rem; min-height: 44px; padding: 8px 20px; border-radius: 9999px; border: 0; background: #86246a; color: #ffffff; cursor: pointer; transition: background-color .2s; } .ds-btn-primary:hover { background: #6a1a53; } .ds-btn-primary:focus-visible { outline: 2px solid var(--ring, #1d4ed8); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botón de contorno",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Botón en píldora de 44 px de alto.",
+      "html": "<button class=\"ds-btn-outline\">Adoptar</button>",
+      "css": ".ds-btn-outline { font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 1rem; min-height: 44px; padding: 8px 20px; border-radius: 9999px; border: 1px solid #8d7388; background: #ffffff; color: #2d1b2e; cursor: pointer; transition: background-color .2s; } .ds-btn-outline:hover { background: #f6ebf0; } .ds-btn-outline:focus-visible { outline: 2px solid var(--ring, #1d4ed8); outline-offset: 2px; }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo con etiqueta, borde de control y radio de 12 px.",
+      "html": "<label class=\"ds-field\">Correo electrónico<input class=\"ds-input\" type=\"email\"></label>",
+      "css": ".ds-field { display: grid; gap: 6px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 1rem; color: #2d1b2e; } .ds-input { min-height: 44px; padding: 8px 14px; border: 1px solid #8d7388; border-radius: 12px; background: #fff; font: 400 1rem Inter, system-ui, sans-serif; caret-color: #86246a; } .ds-input:hover { border-color: #86246a; } .ds-input:focus-visible { outline: 2px solid var(--ring, #1d4ed8); outline-offset: 2px; }"
+    },
+    {
+      "name": "Navegación pública",
+      "kind": "nav",
+      "refersTo": "nav-link-current",
+      "description": "Enlaces en píldora con la sección actual marcada.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Principal\"><a href=\"#\" aria-current=\"page\">Adoptar</a><a href=\"#\">Donar</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 4px; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 1rem; } .ds-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 9999px; color: #2d1b2e; text-decoration: none; } .ds-nav a:hover { background: #f6ebf0; } .ds-nav a[aria-current] { background: #fbe3ef; color: #6a1a53; font-weight: 700; } .ds-nav a:focus-visible { outline: 2px solid var(--ring, #1d4ed8); outline-offset: 2px; }"
+    },
+    {
+      "name": "Insignia de estado",
+      "kind": "chip",
+      "description": "Estado siempre con texto.",
+      "html": "<span class=\"ds-chip\">Disponible</span>",
+      "css": ".ds-chip { display: inline-flex; padding: 4px 12px; border-radius: 9999px; background: #dcfce7; color: #14532d; font: 700 .875rem Inter, system-ui, sans-serif; }"
+    },
+    {
+      "name": "Tarjeta de mascota",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Foto 4:5 dominante, nombre y datos; un único enlace.",
+      "html": "<article class=\"ds-pet\"><div class=\"ds-pet-foto\"></div><div class=\"ds-pet-datos\"><a href=\"#\">Luna</a><p>Perro · Labrador · 12 meses</p></div></article>",
+      "css": ".ds-pet { position: relative; width: 260px; overflow: hidden; border: 1px solid #ead9e2; border-radius: 24px; background: #fff; box-shadow: 0 2px 4px rgb(45 27 46 / .06), 0 6px 16px -8px rgb(45 27 46 / .18); } .ds-pet-foto { aspect-ratio: 4/5; background: #fbe3ef; } .ds-pet-datos { padding: 20px; color: #2d1b2e; font-family: Inter, system-ui, sans-serif; } .ds-pet-datos a { font: 800 1.5rem Nunito, ui-rounded, sans-serif; color: inherit; text-decoration: none; } .ds-pet-datos a::after { content: ''; position: absolute; inset: 0; } .ds-pet-datos a:focus-visible { outline: 2px solid var(--ring, #1d4ed8); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Jornada de adopción en el barrio",
+    "overview": "Pañoletas de color, carteles amables y la foto del animal en grande. Color comprometido en las superficies persuasivas y paneles sobrios. Tema claro único.",
+    "keyCharacteristics": [
+      "Fotos de mascotas dominantes",
+      "Formas amables",
+      "Tinta ciruela sobre fondos cálidos",
+      "Movimiento mínimo"
+    ],
+    "rules": [
+      {
+        "name": "La regla del mango",
+        "body": "acento es fondo de campos; nunca texto sobre claro ni sustituto de warning.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla de los pares",
+        "body": "Todo par nuevo se mide: 4.5:1 en texto, 3:1 en bordes, foco y series contra la superficie que los rodea; sobre acento, borde primary.",
+        "section": "colors"
+      },
+      {
+        "name": "La regla sin antetítulos",
+        "body": "Sin rótulos sobre los encabezados ni texto en degradado.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do tomar los colores de los tokens y añadir cada par nuevo a las pruebas de contraste.",
+      "Do dejar que la foto domine las superficies persuasivas.",
+      "Do mantener controles de al menos 44 px y el foco visible.",
+      "Do animar solo dentro de `prefers-reduced-motion: no-preference`, con el estado base visible."
+    ],
+    "donts": [
+      "Don't usar mango como color de texto sobre claro ni como aviso.",
+      "Don't añadir antetítulos, texto en degradado, vidrio decorativo ni barras laterales de color nuevas.",
+      "Don't anidar tarjetas ni repetir tarjetas iguales de icono como estructura de página.",
+      "Don't presentar las fotos de demostración como mascotas en adopción."
+    ]
+  }
+}

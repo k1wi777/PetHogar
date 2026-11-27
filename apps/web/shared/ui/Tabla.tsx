@@ -8,7 +8,7 @@ export function Tabla({
   ...props
 }: HTMLAttributes<HTMLTableElement> & { titulo?: string }) {
   return (
-    <div className="border-border-suave overflow-x-auto rounded-md border">
+    <div className="border-border-suave bg-card overflow-x-auto rounded-lg border shadow-sm">
       <table className={cn('w-full border-collapse text-left text-base', className)} {...props}>
         {titulo && (
           <caption className="text-muted-foreground p-3 text-left text-sm">{titulo}</caption>
@@ -20,7 +20,7 @@ export function Tabla({
 }
 
 export function TablaCabecera(props: HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className="bg-muted" {...props} />;
+  return <thead className="bg-secondary text-secondary-foreground" {...props} />;
 }
 
 export function TablaCuerpo(props: HTMLAttributes<HTMLTableSectionElement>) {
@@ -32,7 +32,7 @@ export function TablaFila({ className, ...props }: HTMLAttributes<HTMLTableRowEl
 }
 
 export function TablaTitulo({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
-  return <th scope="col" className={cn('px-4 py-3 font-semibold', className)} {...props} />;
+  return <th scope="col" className={cn('px-4 py-3 font-bold', className)} {...props} />;
 }
 
 export function TablaCelda({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {

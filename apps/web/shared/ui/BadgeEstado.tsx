@@ -3,17 +3,20 @@ import { cn } from '@/shared/lib/utils';
 
 export type TonoBadge = 'exito' | 'aviso' | 'info' | 'peligro' | 'neutro';
 
-const tonos = cva('inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold', {
-  variants: {
-    tono: {
-      exito: 'bg-success text-success-foreground',
-      aviso: 'bg-warning text-warning-foreground',
-      info: 'bg-info text-info-foreground',
-      peligro: 'bg-destructive text-destructive-foreground',
-      neutro: 'bg-neutral text-neutral-foreground',
+const tonos = cva(
+  'inline-flex items-center rounded-full px-3 py-1 text-sm leading-snug font-bold whitespace-nowrap',
+  {
+    variants: {
+      tono: {
+        exito: 'bg-success text-success-foreground',
+        aviso: 'bg-warning text-warning-foreground',
+        info: 'bg-info text-info-foreground',
+        peligro: 'bg-destructive text-destructive-foreground',
+        neutro: 'bg-neutral text-neutral-foreground',
+      },
     },
   },
-});
+);
 
 /** Texto en español y tono de cada estado del dominio. El estado siempre se comunica con texto. */
 export const ESTADOS: Readonly<Record<string, { texto: string; tono: TonoBadge }>> = {
